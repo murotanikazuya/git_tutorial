@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE robot_config [
+<!ELEMENT robot_config (model , config)>
+<!ELEMENT model (#PCDATA)>
+<!ELEMENT config (joint)*>
+<!ELEMENT joint (pgain , dgain)>
+<!ATTLIST joint name CDATA #REQUIRED>
+<!ELEMENT pgain (#PCDATA)>
+<!ELEMENT dgain (#PCDATA)>
+]>
+<robot_config>
+  <model>HYDRA</model>
+
+  <config>
+    <eha name="EHA_rhip_vane">
+	  <ulim name="pos2">0x025E1AF2</ulim>
+	  <llim name="pos2">0x00000000</llim>
+	  <offset name="pos2">0x02fddf38</offset>
+	  <ulim name="vel1"></ulim>
+	  <llim name="vel2"></llim>
+	  <offset name="pos2"></offset>
+	  <conv name="pos1" val="bit_to_phys"></conv>
+	  <conv name="pos2" val="bit_to_phys"></conv>
+	  <conv name="vel1" val="bit_to_phys"></conv>
+	  <conv name="vel2" val="bit_to_phys"></conv>
+	  <conv name="tau1" val="bit_to_phys"></conv>
+	  <conv name="tau2" val="bit_to_phys"></conv>
+	  <conv name="tau3" val="bit_to_phys"></conv>
+	  <gain name="tau1" val="p"></gain>
+	  <gain name="tau1" val="i"></gain>
+	  <gain name="tau1" val="d"></gain>
+	  <gain name="tau2" val="p"></gain>
+	  <gain name="tau2" val="i"></gain>
+	  <gain name="tau2" val="d"></gain>
+	</eha>
+	<sensors>
+	  <fs name="rankle">
+		<conv name="fx" val="tau_bit_to_phys"></conv>
+		<conv name="fy" val="tau_bit_to_phys"></conv>
+		<conv name="fz" val="tau_bit_to_phys"></conv>
+		<conv name="mx" val="tau_bit_to_phys"></conv>
+		<conv name="my" val="tau_bit_to_phys"></conv>
+		<conv name="mz" val="tau_bit_to_phys"></conv>
+		<offset name="fx"></offset>
+		<offset name="fy"></offset>
+		<offset name="fz"></offset>
+		<offset name="mx"></offset>
+		<offset name="my"></offset>
+		<offset name="mz"></offset>
+	  </fs>
+
+	  <fs name="lankle">
+		<conv name="fx" val="tau_bit_to_phys"></conv>
+		<conv name="fy" val="tau_bit_to_phys"></conv>
+		<conv name="fz" val="tau_bit_to_phys"></conv>
+		<conv name="mx" val="tau_bit_to_phys"></conv>
+		<conv name="my" val="tau_bit_to_phys"></conv>
+		<conv name="mz" val="tau_bit_to_phys"></conv>
+		<offset name="fx"></offset>
+		<offset name="fy"></offset>
+		<offset name="fz"></offset>
+		<offset name="mx"></offset>
+		<offset name="my"></offset>
+		<offset name="mz"></offset>
+	  </fs>
+
+	  <imu name="1">
+		<conv name="omegax" val="vel_bit_to_phys"></conv>
+		<conv name="omegay" val="vel_bit_to_phys"></conv>
+		<conv name="omegaz" val="vel_bit_to_phys"></conv>
+		<conv name="accx" val="acc_bit_to_phys"></conv>
+		<conv name="accy" val="acc_bit_to_phys"></conv>
+		<conv name="accz" val="acc_bit_to_phys"></conv>
+		<offset name="accx"></offset>
+		<offset name="accy"></offset>
+		<offset name="accz"></offset>
+	  </imu>
+	</sensors>
+  </config>
+</robot_config>
+
+
