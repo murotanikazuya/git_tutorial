@@ -148,10 +148,16 @@ int CHydraShmServer::ReadCommand(int idx, joint_cmd_t jnt_cmd[], eha_cmd_t eha_c
 {
     for(int i=0; i<HYDRA_JNT_MAX; i++){
         jnt_cmd[i].DATA.pos_ref = SHM_HYDRA_JOINT_REFPOS_OUT(idx, i);
+        jnt_cmd[i].DATA.tau_ref = SHM_HYDRA_JOINT_REFTAU_OUT(idx, i);
+        jnt_cmd[i].DATA.vel_ref = SHM_HYDRA_JOINT_REFVEL_OUT(idx, i);
+        jnt_cmd[i].DATA.enable = SHM_HYDRA_JOINT_CTRLMODE_OUT(idx, i);
     }
 
     for(int i=0; i<EHA_MAX; i++) {
         eha_cmd[i].DATA.ctlword = SHM_HYDRA_EHA_CTRLWORD_OUT(idx, i);
+        eha_cmd[i].DATA.pos_ref = SHM_HYDRA_EHA_REFPOS_OUT(idx, i);
+        eha_cmd[i].DATA.vel_ref = SHM_HYDRA_EHA_REFVEL_OUT(idx, i);
+        eha_cmd[i].DATA.tau_ref = SHM_HYDRA_EHA_REFTAU_OUT(idx, i);
 //        eha_state[i].DATA.stsword = SHM_HYDRA_EHA_CTRLWORD_OUT(0, i);
     }
 
@@ -193,6 +199,11 @@ int CHydraShmServer::ReadStatus(int idx, joint_state_t jnt_state[], eha_state_t 
     }
     for(int i=0; i<EHA_MAX; i++) {
         eha_state[i].DATA.pos_act = SHM_HYDRA_EHA_POS_IN(idx, i);
+        eha_state[i].DATA.rawpos_act = SHM_HYDRA_EHA_RAWPOS_IN(idx, i);
+        eha_state[i].DATA.tau_act = SHM_HYDRA_EHA_TAU_IN(idx, i);
+        eha_state[i].DATA.tau2_act = SHM_HYDRA_EHA_TAU2_IN(idx, i);
+        eha_state[i].DATA.tau3_act = SHM_HYDRA_EHA_TAU3_IN(idx, i);
+        eha_state[i].DATA.vel_act = SHM_HYDRA_EHA_VEL_IN(idx, i);
         eha_state[i].DATA.stsword = SHM_HYDRA_EHA_STATUS_IN(idx, i);
     }
     return 0;

@@ -2745,9 +2745,6 @@ static EC_T_CHAR* TaAlarmText( EC_T_BYTE bAlarmCode)
 *
 * \return N/A
 */
-#define NO_LOG_3M
-#define NO_LOG_2MFS
-#define NO_LOG_IMU
 
 static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
 {
@@ -2769,6 +2766,13 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
     time_t              	timer;
     EC_T_CHAR           	datetime[256];
     EC_T_CHAR           	fname_pdo[256];
+
+    joint_state_t  jnt_state_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    joint_cmd_t    jnt_cmd_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    eha_state_t    eha_state_log[EHA_MAX];
+    eha_cmd_t      eha_cmd_log[EHA_MAX];
+    sensor_state_t sensor_state_log[1];
+    sensor_cmd_t   sensor_cmd_log[1];
 
     EC_CPUSET_ZERO( CpuSet );
     EC_CPUSET_SET( CpuSet, (pThreadParam->dwCpuIndex +2));
@@ -2873,7 +2877,86 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                 else
                     snprintf(pTmpBufAll, DATA_BUF_SIZE, "%d,", pShmServer->GetTimeInfo(sPutIdx));
 
-#ifndef NO_LOG_3M
+
+                pShmServer->ReadStatus(sPutIdx,jnt_state_log,eha_state_log,sensor_state_log);
+                pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
+
+                for(loop=0;loop<(HYDRA_JNT_MAX);loop++)
+                {
+                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
+                    if(Remain <= 1) break;
+
+                    if(flg_NewLabel==EC_TRUE)
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "jnt_pos_ref[%d],jnt_pos_act[%d],jnt_vel_ref[%d],jnt_vel_act[%d],jnt_tau_ref[%d],jnt_tau_act[%d],jnt_enabled[%d],",
+                                 loop,loop,loop,loop,loop,loop,loop);
+                        strcat(pTmpBufAll, pTmpBuf);
+                    }
+                    else
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "%lf,%lf,%lf,%lf,%lf,%lf,%d,",
+                                 jnt_cmd_log[loop].DATA.pos_ref,
+                                 jnt_state_log[loop].DATA.pos_act,
+                                 jnt_cmd_log[loop].DATA.vel_ref,
+                                 jnt_state_log[loop].DATA.vel_act,
+                                 jnt_cmd_log[loop].DATA.tau_ref,
+                                 jnt_state_log[loop].DATA.tau_act,
+                                 jnt_state_log[loop].DATA.enabled);
+                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+                    }
+                }
+                for(loop=0;loop<(HYDRA_HAND_JNT_MAX);loop++)
+                {
+                    if(flg_NewLabel==EC_TRUE)
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "jnt_pos_act[%d],jnt_vel_act[%d],",loop+HYDRA_JNT_MAX,loop+HYDRA_JNT_MAX);
+                        strcat(pTmpBufAll, pTmpBuf);
+                    }
+                    else
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "%lf,%lf,",
+                                 jnt_state_log[loop].DATA.pos_act,
+                                 jnt_state_log[loop].DATA.vel_act);
+                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+                    }
+                }
+                for(loop=0;loop<EHA_MAX;loop++)
+                {
+                    if(flg_NewLabel==EC_TRUE)
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "eha_pos_ref[%d],eha_pos_act[%d],eha_vel_ref[%d],eha_vel_act[%d],eha_rawpos_act[%d],eha_tau_ref[%d],eha_tau_act[%d],eha_tau2_act[%d],eha_tau3_act[%d],eha_ctrlwd[%d],eha_stswd[%d],",
+                                 loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop);
+                        strcat(pTmpBufAll, pTmpBuf);
+                    }
+                    else
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "%lf,%lf,%lf,%lf,%d,%lf,%lf,%lf,%lf,%d,%d,",
+                                 eha_cmd_log[loop].DATA.pos_ref,
+                                 eha_state_log[loop].DATA.pos_act,
+                                 eha_cmd_log[loop].DATA.vel_ref,
+                                 eha_state_log[loop].DATA.vel_act,
+                                 eha_state_log[loop].DATA.rawpos_act,
+                                 eha_cmd_log[loop].DATA.tau_ref,
+                                 eha_state_log[loop].DATA.tau_act,
+                                 eha_state_log[loop].DATA.tau2_act,
+                                 eha_state_log[loop].DATA.tau3_act,
+                                 eha_cmd_log[loop].DATA.ctlword,
+                                 eha_state_log[loop].DATA.stsword);
+                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+                    }
+                }
+
+
+#if 0
                 // MD4KW_3M
                 for(loop = 0; loop < pAllSlv->MD4KW_3MSlaves; loop++)
                 {
@@ -2954,8 +3037,7 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                         //printf("%s\n", pTmpBufAll);
                     }
                 }
-#endif //#ifndef NO_LOG_3M
-#ifndef NO_LOG_2MFS
+
                 // MD4KW_2MFS
                 for(loop = 0; loop < pAllSlv->MD4KW_2MFSSlaves; loop++)
                 {
@@ -3029,7 +3111,6 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                                   ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
                     }
                 }
-#endif//#ifndef NO_LOG_2MFS
 
                 // MD4KW_HAND
                 for(loop = 0; loop < pAllSlv->MD4KW_HandSlaves; loop++)
@@ -3168,7 +3249,6 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                     }
                 }
 
-#ifndef NO_LOG_IMU
                 // MD4KW_IMU
                 for(loop=0; loop<pAllSlv->MD4KW_IMUSlaves; loop++)
                 {
@@ -3202,7 +3282,7 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                                   ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
                     }
                 }
-#endif//#ifndef NO_LOG_IMU
+#endif //ko
 
                 // 改行 add
                 strcat(pTmpBufAll, "\n");

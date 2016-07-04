@@ -244,6 +244,9 @@ typedef union
 #define SHM_MD4KW_IMU_OUT(AccIdx, SlvIdx)            ACCOUT_MD4KW(AccIdx).SlvMD4KW_IMU[TM_OFFS+SlvIdx].MD4KW_IMU.tOutOrg
 
 #define SHM_HYDRA_EHA_CTRLWORD_OUT(AccIdx, JntIdx)   ACCOUT_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_ctrlword
+#define SHM_HYDRA_EHA_REFPOS_OUT(AccIdx, JntIdx)     ACCOUT_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_pos
+#define SHM_HYDRA_EHA_REFVEL_OUT(AccIdx, JntIdx)     ACCOUT_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_vel
+#define SHM_HYDRA_EHA_REFTAU_OUT(AccIdx, JntIdx)     ACCOUT_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_tau
 #define SHM_HYDRA_ENABLE_OUT(AccIdx)                 ACCOUT_MD4KW(AccIdx).EnableAll
 #define SHM_HYDRA_JOINT_CTRLMODE_OUT(AccIdx, JntIdx)   ACCOUT_MD4KW(AccIdx).Joints[(JntIdx)].ctrl_mode
 #define SHM_HYDRA_JOINT_REFPOS_OUT(AccIdx, JntIdx)   ACCOUT_MD4KW(AccIdx).Joints[(JntIdx)].joint_pos
