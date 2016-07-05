@@ -84,7 +84,7 @@ int CHydraShmServer::Init(void)
         perror("sem open failed");
         return -1;
     }
-
+    chmod("/run/shm/sem.HydraSync",S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP| S_IROTH|S_IWOTH);
     return 0;
 }
 
@@ -180,6 +180,11 @@ int CHydraShmServer::WriteStatus(const joint_state_t jnt_state[], const eha_stat
     }
     for(int i=0; i<EHA_MAX; i++) {
         SHM_HYDRA_EHA_POS_IN(1, i)    = eha_state[i].DATA.pos_act;
+        SHM_HYDRA_EHA_RAWPOS_IN(1,i)  = eha_state[i].DATA.rawpos_act;
+        SHM_HYDRA_EHA_TAU_IN(1,i)     = eha_state[i].DATA.tau_act;
+        SHM_HYDRA_EHA_TAU2_IN(1,i)    = eha_state[i].DATA.tau2_act;
+        SHM_HYDRA_EHA_TAU3_IN(1,i)    = eha_state[i].DATA.tau3_act;
+        SHM_HYDRA_EHA_VEL_IN(1,i)     = eha_state[i].DATA.vel_act;
         SHM_HYDRA_EHA_STATUS_IN(1, i) = eha_state[i].DATA.stsword;
     }
     return 0;

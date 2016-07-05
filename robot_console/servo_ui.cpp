@@ -62,8 +62,8 @@ CUDPComm *p_udp_comm = NULL;
 #include "robot_hydra_id.h"
 #include "7arm_id.h"
 
-#define EHA_ON 0x0101
-#define EHA_OFF 0x0100
+//#define EHA_ON 0x0101
+//#define EHA_OFF 0x0100
 
 // shared memory and semaphore
 #ifndef SHM_IN_NAME
@@ -344,7 +344,8 @@ int main(int argc,char *argv[])
     int ret;
 
     for(int j=0; j<HYDRA_JNT_MAX; j++) {
-        hydra_data.GetJointCmdPtr(0)[j].DATA.enable = 1;
+        //hydra_data.GetJointCmdPtr(0)[j].DATA.enable = 1;
+        hydra_data.GetJointCmdPtr(0)[j].DATA.enable = 0;
     }
 
     if(pthread_create(&thread_ui, NULL, servo_ui, &thread_data) != 0) {
@@ -384,15 +385,18 @@ int main(int argc,char *argv[])
             }
         }
 
-        p_comm->WriteStatus(hydra_data.GetJointStatePtr(0), hydra_data.GetEHAStatePtr(0), hydra_data.GetSensorStatePtr(0));
+        // ko //p_comm->WriteStatus(hydra_data.GetJointStatePtr(0), hydra_data.GetEHAStatePtr(0), hydra_data.GetSensorStatePtr(0));
         //p_comm->ReadCommand(hydra_data.GetJointCmdPtr(1), hydra_data.GetEHACmdPtr(1));
-        extseq = p_comm->ReadCommand(hydra_data.GetJointCmdPtr(1), hydra_data.GetEHACmdPtr(1), hydra_data.GetSensorCmdPtr(1));
+        // ko //extseq = p_comm->ReadCommand(hydra_data.GetJointCmdPtr(1), hydra_data.GetEHACmdPtr(1), hydra_data.GetSensorCmdPtr(1));
+
+
 
         for(int j=0; j<HYDRA_JNT_MAX; j++) {
+            hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
             for(int l=0; l<joint_to_EHA_power[j][0]; l++) {
                 int k = joint_to_EHA_power[j][l+1];
                 hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
-                        = (hydra_data.GetJointCmdPtr(0)[j].DATA.enable==1)?EHA_ON:EHA_OFF;
+                        = (hydra_data.GetJointCmdPtr(0)[j].DATA.enable==1)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //                fprintf(fp_log, "%04x-%d(%d) ",
 //                        hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword,
 //                        hydra_data.GetJointCmdPtr(0)[j].DATA.enable,
@@ -545,7 +549,7 @@ int initialize(void)
 
     //all_eha_switchの初期化
     for(int i=0;i<EHA_MAX;i++){
-        hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword = EHA_OFF;
+        hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword = EHA_CtrlWd_OFF[i];
     }
 
     //initialize all_joint_servo_switch

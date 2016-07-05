@@ -185,6 +185,201 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_L_LANKL0 0x0018249e//0x0018215e//0x001940E4
 #define LIM_L_LANKL1 0x00213b5d//0x002139df//0x001F944B
 
+/****************** motor encoder offset ********************/
+
+#define MENC_OFFSET_RHIP0  0 //0x000002cf //719
+#define MENC_OFFSET_RHIP1  0
+#define MENC_OFFSET_RHIP2  0
+#define MENC_OFFSET_RKNEE0 0
+#define MENC_OFFSET_RKNEE1 0
+#define MENC_OFFSET_RKNEE2 0
+#define MENC_OFFSET_LHIP0  0
+#define MENC_OFFSET_LHIP1  0
+#define MENC_OFFSET_LHIP2  0
+#define MENC_OFFSET_LKNEE0 0
+#define MENC_OFFSET_LKNEE1 0
+#define MENC_OFFSET_LKNEE2 0
+#define MENC_OFFSET_BODY0  0
+#define MENC_OFFSET_BODY1  0
+#define MENC_OFFSET_BODY2  0
+#define MENC_OFFSET_RSHLD0 7
+#define MENC_OFFSET_RSHLD1 544
+#define MENC_OFFSET_RSHLD2 476
+#define MENC_OFFSET_RELBW0 849
+#define MENC_OFFSET_RELBW1 585
+#define MENC_OFFSET_RELBW2 562
+#define MENC_OFFSET_RWRST0 867
+#define MENC_OFFSET_RWRST1 308
+#define MENC_OFFSET_RWRST2 810
+#define MENC_OFFSET_LSHLD0 873//875
+#define MENC_OFFSET_LSHLD1 6//6
+#define MENC_OFFSET_LSHLD2 721//725///////////////////
+#define MENC_OFFSET_LELBW0 998//999
+#define MENC_OFFSET_LELBW1 719//718
+#define MENC_OFFSET_LELBW2 921//926
+#define MENC_OFFSET_LWRST0 465
+#define MENC_OFFSET_LWRST1 409
+#define MENC_OFFSET_LWRST2 71
+#define MENC_OFFSET_RANKL0 0
+#define MENC_OFFSET_RANKL1 0
+#define MENC_OFFSET_LANKL0 0
+#define MENC_OFFSET_LANKL1 0
+
+
+
+const unsigned short EHA_CtrlWd_ON[] = {
+  0x0101, //rhip0 //0x0201
+  0x0101, //rhip1
+  0x0101, //rhip2
+  0x0101, //rknee0
+  0x0101, //rknee1
+  0x0101, //rknee2
+  0x0101, //rankle0
+  0x0101, //rankle1
+  0x0101, //lhip0
+  0x0101, //lhip1
+  0x0101, //lhip2
+  0x0101, //lknee0
+  0x0101, //lknee1
+  0x0101, //lknee2
+  0x0101, //lankle0
+  0x0101, //lankle1
+  0x0101, //body0
+  0x0101, //body1
+  0x0101, //body2
+  0x0201, //rshoulder0
+  0x0201, //rshoulder1
+  0x0201, //rshoulder2
+  0x0201, //relbow0
+  0x0201, //relbow1
+  0x0201, //relbow2
+  0x0201, //rwrist0
+  0x0201, //rwrist1
+  0x0201, //rwrist2
+  0x0201, //lshouldel0
+  0x0201, //lshouldel1
+  0x0201, //lshouldel2
+  0x0201, //lelbow0
+  0x0201, //lelbow1
+  0x0201, //lelbow2
+  0x0201, //lwlist0
+  0x0201, //lwlist1
+  0x0201, //lwlist2
+  0x0101, //rhand0
+  0x0101, //rhand1
+  0x0101, //rhand2
+  0x0101, //rhand3
+  0x0101, //rhand4
+  0x0101, //lhand0
+  0x0101, //lhand1
+  0x0101, //lhand2
+  0x0101, //lhand3
+  0x0101  //lhand4
+};
+
+const unsigned short EHA_CtrlWd_OFF[] = {
+  0x0100, //rhip0
+  0x0100, //rhip1
+  0x0100, //rhip2
+  0x0100, //rknee0
+  0x0100, //rknee1
+  0x0100, //rknee2
+  0x0100, //rankle0
+  0x0100, //rankle1
+  0x0100, //lhip0
+  0x0100, //lhip1
+  0x0100, //lhip2
+  0x0100, //lknee0
+  0x0100, //lknee1
+  0x0100, //lknee2
+  0x0100, //lankle0
+  0x0100, //lankle1
+  0x0100, //body0
+  0x0100, //body1
+  0x0100, //body2
+  0x0200, //rshoulder0
+  0x0200, //rshoulder1
+  0x0200, //rshoulder2
+  0x0200, //relbow0
+  0x0200, //relbow1
+  0x0200, //relbow2
+  0x0200, //rwrist0
+  0x0200, //rwrist1
+  0x0200, //rwrist2
+  0x0200, //lshouldel0
+  0x0200, //lshouldel1
+  0x0200, //lshouldel2
+  0x0200, //lelbow0
+  0x0200, //lelbow1
+  0x0200, //lelbow2
+  0x0200, //lwlist0
+  0x0200, //lwlist1
+  0x0200, //lwlist2
+  0x0100, //rhand0
+  0x0100, //rhand1
+  0x0100, //rhand2
+  0x0100, //rhand3
+  0x0100, //rhand4
+  0x0100, //lhand0
+  0x0100, //lhand1
+  0x0100, //lhand2
+  0x0100, //lhand3
+  0x0100  //lhand4
+};
+
+const unsigned short EHA_CtrlWd_Calib[] = {
+  0x0301, //rhip0
+  0x0301, //rhip1
+  0x0301, //rhip2
+  0x0301, //rknee0
+  0x0301, //rknee1
+  0x0301, //rknee2
+  0x0301, //rankle0
+  0x0301, //rankle1
+  0x0301, //lhip0
+  0x0301, //lhip1
+  0x0301, //lhip2
+  0x0301, //lknee0
+  0x0301, //lknee1
+  0x0301, //lknee2
+  0x0301, //lankle0
+  0x0301, //lankle1
+  0x0301, //body0
+  0x0301, //body1
+  0x0301, //body2
+  0x0301, //rshoulder0
+  0x0301, //rshoulder1
+  0x0301, //rshoulder2
+  0x0301, //relbow0
+  0x0301, //relbow1
+  0x0301, //relbow2
+  0x0301, //rwrist0
+  0x0301, //rwrist1
+  0x0301, //rwrist2
+  0x0301, //lshouldel0
+  0x0301, //lshouldel1
+  0x0301, //lshouldel2
+  0x0301, //lelbow0
+  0x0301, //lelbow1
+  0x0301, //lelbow2
+  0x0301, //lwlist0
+  0x0301, //lwlist1
+  0x0301, //lwlist2
+  0x0301, //rhand0
+  0x0301, //rhand1
+  0x0301, //rhand2
+  0x0301, //rhand3
+  0x0301, //rhand4
+  0x0301, //lhand0
+  0x0301, //lhand1
+  0x0301, //lhand2
+  0x0301, //lhand3
+  0x0301  //lhand4
+};
+
+
+
+
 const unsigned int EHA_ulim_hydra_MD4KW_3M[][3] = {
 	{LIM_U_RHIP0,  LIM_U_RHIP1,  LIM_U_RHIP2},   //rhip
 	{LIM_U_RKNEE0, LIM_U_RKNEE1, 0x0FFFFFFF},    //rknee
@@ -237,10 +432,52 @@ const EC_T_DWORD enc_offset_MD4KW_3M [][3] = {
 	{0x02B15C6E, (LIM_U_LWRST1+LIM_L_LWRST1)>>1, (LIM_U_LWRST2+LIM_L_LWRST2)>>1}  //lwrist
 };
 
+const EC_T_DWORD menc_offset_MD4KW_3M [][3] = {
+  {MENC_OFFSET_RHIP0,  MENC_OFFSET_RHIP1,  MENC_OFFSET_RHIP2},  //rhip
+  {MENC_OFFSET_RKNEE0, MENC_OFFSET_RKNEE1, MENC_OFFSET_RKNEE2}, //rknee
+  {MENC_OFFSET_LHIP0,  MENC_OFFSET_LHIP1,  MENC_OFFSET_LHIP2},  //lhip
+  {MENC_OFFSET_LKNEE0, MENC_OFFSET_LKNEE1, MENC_OFFSET_LKNEE2}, //lknee
+  {MENC_OFFSET_BODY0,  MENC_OFFSET_BODY1,  MENC_OFFSET_BODY2},  //body
+  {MENC_OFFSET_RSHLD0, MENC_OFFSET_RSHLD1, MENC_OFFSET_RSHLD2}, //rshoulder
+  {MENC_OFFSET_RELBW0, MENC_OFFSET_RELBW1, MENC_OFFSET_RELBW2}, //relbow
+  {MENC_OFFSET_RWRST0, MENC_OFFSET_RWRST1, MENC_OFFSET_RWRST2}, //rwrist
+  {MENC_OFFSET_LSHLD0, MENC_OFFSET_LSHLD1, MENC_OFFSET_LSHLD2}, //lshoulder
+  {MENC_OFFSET_LELBW0, MENC_OFFSET_LELBW1, MENC_OFFSET_LELBW2}, //lelbow
+  {MENC_OFFSET_LWRST0, MENC_OFFSET_LWRST1, MENC_OFFSET_LWRST2}  //lwrist
+};
+
+#define KEMF_MAXON_4P_200W 0x12
+
+const EC_T_WORD motor_KEMF_MD4KW_3M [][3] = {
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W},  //rhip
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //rknee
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W},  //lhip
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //lknee
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W},  //body
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //rshoulder
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //relbow
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //rwrist
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //lshoulder
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}, //lelbow
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W}  //lwrist
+};
+
+
 const EC_T_DWORD enc_offset_MD4KW_2MFS [][2] = {
 	{(LIM_U_RANKL0+LIM_L_RANKL0)>>1, (LIM_U_RANKL1+LIM_L_RANKL1)>>1},  //rankle
 	{(LIM_U_LANKL0+LIM_L_LANKL0)>>1, (LIM_U_LANKL1+LIM_L_LANKL1)>>1}   //lankle
 };
+
+const EC_T_DWORD menc_offset_MD4KW_2MFS [][2] = {
+	{MENC_OFFSET_RANKL0,MENC_OFFSET_RANKL1},  //rankle
+	{MENC_OFFSET_LANKL0,MENC_OFFSET_LANKL1}   //lankle
+};
+
+const EC_T_WORD motor_KEMF_MD4KW_2MFS [][2] = {
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W},  //rankle
+  {KEMF_MAXON_4P_200W, KEMF_MAXON_4P_200W} //lankle
+};
+
 
 const EC_T_DWORD enc_offset_MD4KW_hand [][5] = {
 	{0, 0, 0, 0, 0},
@@ -337,54 +574,139 @@ const double eha_phys_forcepres_hydra_MD4KW_3M[][3] = {
 //};
 
 //#define TESTNUM 3*2 //for 30V
-#define TESTNUM 1 //for 20V
+//#define TESTNUM 1 //for 20V
 //#define TESTNUM 5*2 //for 48V
 
-const int eha_pos_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
-//	{  -100/TESTNUM, 450/TESTNUM, -450/TESTNUM}, //rhip
-//	{ 200/TESTNUM,  200/TESTNUM, -200/TESTNUM}, //rknee with tandem encoder
-	{  -400/TESTNUM, 1000/TESTNUM, -1000/TESTNUM}, //rhip
-	{ 180/TESTNUM,  180/TESTNUM, -180/TESTNUM}, //rknee with tandem encoder
-//	{ -100/TESTNUM,  450/TESTNUM, -450/TESTNUM}, //lhip
-//	{ -200/TESTNUM,  -200/TESTNUM, 200/TESTNUM}, //lknee with both single or tandem encoder
-	{ -400/TESTNUM,  1000/TESTNUM, -1000/TESTNUM}, //lhip
-	{ -180/TESTNUM,  -180/TESTNUM, 180/TESTNUM}, //lknee with both single or tandem encoder
-	{ -450/TESTNUM,  450/TESTNUM,  100/TESTNUM}, //body
-	{ -200/TESTNUM,  200/TESTNUM, -200/TESTNUM}, //rshoulder
-	{  100/TESTNUM, -200/TESTNUM,  200/TESTNUM}, //relbow
-	{  200/TESTNUM,  200/TESTNUM, -200/TESTNUM}, //rwrist
-	{ -200/TESTNUM, -200/TESTNUM,  200/TESTNUM}, //lshoulder
-	{  100/TESTNUM,  200/TESTNUM, -200/TESTNUM}, //lelbow
-	{  200/TESTNUM,  200/TESTNUM, -200/TESTNUM}  //lwrist
+const int eha_pos_p_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
+  //  { -50, 1, -1}, //rhip
+  { 50, 1, -1}, //rhip
+  { 1,  1, -1}, //rknee with tandem encoder
+  { -1,  1, -1}, //lhip
+  { -1,  -1, 1}, //lknee with both single or tandem encoder
+  { -1,  1,  1}, //body
+  { -20,  20, -20}, //rshoulder
+  {  20, -20,  20}, //relbow
+  {  20,  20, -20}, //rwrist
+  { -20, -20,  20}, //lshoulder
+  {  20,  20, -20}, //lelbow
+  {  20,  20, -20}  //lwrist
 };
-const int eha_vel_gain_hydra_MD4KW_3M[][3] = {//10bitshifted
-	{ 150/TESTNUM,  500/TESTNUM, 500/TESTNUM}, //rhip
-	{ -400/TESTNUM,  400/TESTNUM, 400/TESTNUM}, //rknee with tandem encoder
-	{ 150/TESTNUM,  500/TESTNUM, 500/TESTNUM}, //lhip
-	{ 400/TESTNUM,  400/TESTNUM, 400/TESTNUM}, //lkneeQ
-	{ 400/TESTNUM,  400/TESTNUM, 0/TESTNUM}, //body
-	{ 100/TESTNUM,  200/TESTNUM, 200/TESTNUM}, //rshoulder
-	{ 100/TESTNUM,  300/TESTNUM, 300/TESTNUM}, //relbow
-	{ 100/TESTNUM,  100/TESTNUM, 100/TESTNUM}, //rwrist
-	{ 100/TESTNUM,  200/TESTNUM, 200/TESTNUM}, //lshoulder
-	{ 100/TESTNUM,  300/TESTNUM, 300/TESTNUM}, //lelbow
-	{ 100/TESTNUM,  100/TESTNUM, 100/TESTNUM}, //lwrist
+const int eha_pos_d_gain_hydra_MD4KW_3M[][3] = {//10bitshifted
+  	{ 10,  1, 1}, //rhip
+	{ -1,  1, 1}, //rknee with tandem encoder
+	{ 1,  1, 1}, //lhip
+	{ 1,  1, 1}, //lkneeQ
+	{ 1,  1, 1}, //body
+	{ 1,  1, 1}, //rshoulder
+	{ 1,  1, 1}, //relbow
+	{ 1,  1, 1}, //rwrist
+	{ 1,  1, 1}, //lshoulder
+	{ 1,  1, 1}, //lelbow
+	{ 1,  1, 1} //lwrist
 };
 
-const int eha_i_gain_hydra_MD4KW_3M[][3] = {//26+4bitshifted
-  { 50/TESTNUM,  100/TESTNUM, 100/TESTNUM}, //rhip
-//  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //rknee
-  { 10/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //rknee
-  { 50/TESTNUM,  100/TESTNUM, 100/TESTNUM}, //lhip
-  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //lknee
-  { 100/TESTNUM,  100/TESTNUM, 0/TESTNUM}, //body
-  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //rshoulder
-  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //relbow
-  { 0/TESTNUM,  0/TESTNUM, 0/TESTNUM}, //rwrist
-  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //lshoulder
-  { 50/TESTNUM,  50/TESTNUM, 50/TESTNUM}, //lelbow
-  { 0/TESTNUM,  0/TESTNUM, 0/TESTNUM}  //lwrist
+const int eha_pos_i_gain_hydra_MD4KW_3M[][3] = {
+  {450,0,0},  //rhip
+  {0,0,0},  //rknee
+  {0,0,0}, //lhip
+  {0,0,0},  //lknee
+  {0,0,0},  //body
+  {0,0,0},  //rshoulder
+  {0,0,0},  //relbow
+  {0,0,0},  //rwrist
+  {0,0,0},  //lshoulder
+  {0,0,0},  //lelbow
+  {0,0,0}   //lwrist
 };
+
+const int eha_vel_p_gain_hydra_MD4KW_3M[][3] = {
+  {18,0,0}, //rhip
+  {0,0,0}, //rknee
+  {0,0,0}, //lhip
+  {0,0,0}, //lknee 
+  {0,0,0}, //body
+  {18,18,18}, //rshoulder
+  {18,18,18}, //relbow
+  {18,18,18}, //rwrist
+  {18,18,18}, //lshoulder
+  {18,18,18}, //lelbow
+  {18,18,18}  //lwrist
+};
+const int eha_vel_d_gain_hydra_MD4KW_3M[][3] = {
+  {0,0,0},//rhip
+  {0,0,0},//rknee with tandem encoder
+  {0,0,0},//lhip
+  {0,0,0},//lkneeQ
+  {0,0,0},//body
+  {0,0,0},//rshoulder
+  {0,0,0},//relbow
+  {0,0,0},//rwrist
+  {0,0,0},//lshoulder
+  {0,0,0},//lelbow
+  {0,0,0} //lwrist
+};
+
+const int eha_vel_i_gain_hydra_MD4KW_3M[][3] = {
+  //  {20,0,0}, //rhip
+  {20,0,0}, //rhip
+  {0,0,0}, //rknee
+  {0,0,0},//lhip
+  {0,0,0}, //lknee
+  {0,0,0}, //body
+  {20,20,20}, //rshoulder
+  {20,20,20}, //relbow
+  {20,20,20}, //rwrist
+  {20,20,20}, //lshoulder
+  {20,20,20}, //lelbow
+  {20,20,20}  //lwrist
+};
+
+#define CUR_PGAIN_MAXON_4P_200W  0x80//0x0600
+#define CUR_IGAIN_MAXON_4P_200W  0xf00//0xf00
+//#define CUR_PGAIN_MAXON_4P_200W  0x0600
+//#define CUR_IGAIN_MAXON_4P_200W  0xf00
+
+const int eha_cur_p_gain_hydra_MD4KW_3M[][3] = {
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//rhip
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//rknee with tandem encoder
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//lhip
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//lknee with both single or tandem encoder
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//body
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//rshoulder
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//relbow
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//rwrist
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//lshoulder
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W},//lelbow
+  {CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W,CUR_PGAIN_MAXON_4P_200W} //lwrist
+};
+const int eha_cur_d_gain_hydra_MD4KW_3M[][3] = {
+  {0,0,0},    //rhip
+  {0,0,0},    //rknee with tandem encoder
+  {0,0,0},    //lhip
+  {0,0,0},    //lkneeQ
+  {0,0,0},    //body
+  {0,0,0},    //rshoulder
+  {0,0,0},    //relbow
+  {0,0,0},    //rwrist
+  {0,0,0},    //lshoulder
+  {0,0,0},    //lelbow
+  {0,0,0}     //lwrist
+};
+
+const int eha_cur_i_gain_hydra_MD4KW_3M[][3] = {//26+4bitshifted
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //rhip
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //rknee
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //lhip
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //lknee
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //body
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //rshoulder
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //relbow
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //rwrist
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //lshoulder
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W},  //lelbow
+  {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W}   //lwrist
+};
+
 
 const double eha_phys_pos_hydra_MD4KW_2MFS[][2] = {
 	{CONV_RTLA, -1*CONV_RTLA},
@@ -403,18 +725,45 @@ const double eha_phys_forcepres_hydra_MD4KW_2MFS[][2] = {
 //	{ 100,  100}, //right
 //	{ 100,  100}, //left
 //};
-const int eha_pos_gain_hydra_MD4KW_2MFS[][2] = {
-	{ -100/TESTNUM,  100/TESTNUM}, //right
-	{ -100/TESTNUM,  100/TESTNUM}, //left
+const int eha_pos_p_gain_hydra_MD4KW_2MFS[][2] = {
+	{ -100,  100}, //right
+	{ -100,  100}, //left
 };
-const int eha_vel_gain_hydra_MD4KW_2MFS[][2] = {
-	{ 200/TESTNUM,  200/TESTNUM}, //right
-	{ 200/TESTNUM,  200/TESTNUM}, //left
+const int eha_pos_d_gain_hydra_MD4KW_2MFS[][2] = {
+	{ 200,  200}, //right
+	{ 200,  200}, //left
 };
-const int eha_i_gain_hydra_MD4KW_2MFS[][2] = {
-	{ 50/TESTNUM,  50/TESTNUM}, //right
-	{ 50/TESTNUM,  50/TESTNUM}, //left
+const int eha_pos_i_gain_hydra_MD4KW_2MFS[][2] = {
+	{ 50,  50}, //right
+	{ 50,  50}, //left
 };
+
+const int eha_vel_p_gain_hydra_MD4KW_2MFS[][2] = {
+        { -100,  100}, //right
+        { -100,  100}, //left
+};
+const int eha_vel_d_gain_hydra_MD4KW_2MFS[][2] = {
+        { 200,  200}, //right
+        { 200,  200}, //left
+};
+const int eha_vel_i_gain_hydra_MD4KW_2MFS[][2] = {
+        { 50,  50}, //right
+        { 50,  50}, //left
+};
+
+const int eha_cur_p_gain_hydra_MD4KW_2MFS[][2] = {
+        { CUR_PGAIN_MAXON_4P_200W,  CUR_PGAIN_MAXON_4P_200W}, //right
+        { CUR_PGAIN_MAXON_4P_200W,  CUR_PGAIN_MAXON_4P_200W}, //left
+};
+const int eha_cur_d_gain_hydra_MD4KW_2MFS[][2] = {
+        { 0,  0}, //right
+        { 0,  0}, //left
+};
+const int eha_cur_i_gain_hydra_MD4KW_2MFS[][2] = {
+        { CUR_IGAIN_MAXON_4P_200W,  CUR_IGAIN_MAXON_4P_200W}, //right
+        { CUR_IGAIN_MAXON_4P_200W,  CUR_IGAIN_MAXON_4P_200W}, //left
+};
+
 const double eha_phys_pos_hydra_MD4KW_Hand[][21] = {
 	{CONV_hand, CONV_hand, CONV_hand, CONV_hand, CONV_hand, 
 	-1*CONV_finger, -1*CONV_finger, CONV_finger, CONV_finger, 
@@ -428,7 +777,7 @@ const double eha_phys_pos_hydra_MD4KW_Hand[][21] = {
 	-1*CONV_finger, -1*CONV_finger, CONV_finger, CONV_finger }
 };
 
-const int eha_pos_gain_hydra_MD4KW_Hand[][21] = {
+const int eha_pos_p_gain_hydra_MD4KW_Hand[][21] = {
 	{160, 160, 160, 160, 160, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0 },
@@ -436,7 +785,7 @@ const int eha_pos_gain_hydra_MD4KW_Hand[][21] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0 }
 };
-const int eha_vel_gain_hydra_MD4KW_Hand[][21] = {
+const int eha_pos_d_gain_hydra_MD4KW_Hand[][21] = {
 	{0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0 },

@@ -11,8 +11,8 @@
 #include "robot_hydra_id.h"
 #include "chydradatamanager.h"
 
-#define EHA_ON 0x0101
-#define EHA_OFF 0x0100
+//#define EHA_ON 0x0101
+//#define EHA_OFF 0x0100
 
 extern CHydraDataManager hydra_data;
 
@@ -47,6 +47,7 @@ extern int  interp_cnt;
 extern int  interp_length;
 extern bool interp_ready;
 extern bool filemotion_run;
+extern bool debug_mode;
 
 extern double **motion_data;
 extern int      motion_length;
@@ -532,16 +533,19 @@ void *servo_ui(void *param)
                     k = joint_to_joint_power[y][j+1];
                     hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
-                    all_joint_servo_switch[k] = all_joint_servo_switch[k];
+                    //all_joint_servo_switch[k] = all_joint_servo_switch[k];
+                    //hydra_data.GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
                     all_joint_resv_to_send[k] = false;
                 }
+                /*
                 for(j=0; j<joint_to_EHA_power[y][0]; j++) {
                     k = joint_to_EHA_power[y][j+1];
 //                    pthread_mutex_lock( &(thread_data->mutex) );
                     hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
-                            = (all_joint_servo_switch[y]==true)?EHA_ON:EHA_OFF;
+                            = (all_joint_servo_switch[y]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //                    pthread_mutex_unlock( &(thread_data->mutex) );
                 }
+                */
             }
         endcr:
             break;
@@ -560,14 +564,15 @@ void *servo_ui(void *param)
                     hydra_data.GetJointCmdPtr(1)[j].DATA.pos_ref
                             = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
                     all_joint_resv_to_send[j] = false;
-
+                    /*
                     for(l=0; l<joint_to_EHA_power[j][0]; l++) {
                         k = joint_to_EHA_power[j][l+1];
 //                        pthread_mutex_lock( &(thread_data->mutex) );
                         hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
-                                = (all_joint_servo_switch[j]==true)?EHA_ON:EHA_OFF;
+                                = (all_joint_servo_switch[j]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
+                    */
                 }
             }
         endf12:
@@ -825,7 +830,7 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
     wbkgd(pWnd, COLOR_PAIR(0));
     for( i=jnt_start; i<jnt_end; i++ ) {
         if(i==jnt_sel) {
-            if( hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_ON ) {
+            if( hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
                 wattrset(pWnd, COLOR_PAIR(8));
 //                sel_mode = 5;
             }
@@ -834,7 +839,7 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 //                sel_mode = 5;
             }
         }
-        else if(hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_ON) {
+        else if(hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
             wattrset(pWnd, COLOR_PAIR(7));
 //            sel_mode = 7;
         }
@@ -849,14 +854,28 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 //        pthread_mutex_lock( &(thread_data->mutex) );
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[1] + x_offset);
-        wprintw(pWnd, "%07.2f", (hydra_data.GetEHAStatePtr(0)[i].DATA.pos_act)*1000);
+        if(debug_mode)
+        {
+            wprintw(pWnd, "%08x", hydra_data.GetEHAStatePtr(0)[i].DATA.rawpos_act);
+        }else{
+            wprintw(pWnd, "%07.2f", (hydra_data.GetEHAStatePtr(0)[i].DATA.pos_act)*1000);
+        }
 //        wprintw(pWnd, "%08x", all_eha_rawpos[i] );
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
+        /*
+        if(debug_mode)
+        {
+            wprintw(pWnd, "%08x", hydra_data.GetEHACmdPtr(0)[i].DATA.rawpos_ref);
+        }else{
+            wprintw(pWnd, "%07.2f", (hydra_data.GetEHACmdPtr(0)[i].DATA.pos_ref)*1000);
+        }
+        */
 //  wprintw(pWnd,"%07.2f", RAD2DEG(all_eha_refpos[i]));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
-        waddstr(pWnd, ( (hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_ON) ? "ON" : "OFF"));
+        waddstr(pWnd, ( (hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
+        //waddstr(pWnd, ( (all_eha_servo_switch[i]==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
         wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);
@@ -1021,7 +1040,7 @@ void turn_off_all_EHA(void)
             k = joint_to_EHA_power[j][l+1];
 //            pthread_mutex_lock( pmutex );
             hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
-                    = (all_joint_servo_switch[j]==true)?EHA_ON:EHA_OFF;
+                    = (all_joint_servo_switch[j]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //            pthread_mutex_unlock( pmutex );
         }
     }

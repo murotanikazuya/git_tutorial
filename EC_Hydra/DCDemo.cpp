@@ -1183,9 +1183,9 @@ Find slave parameters.
 \return EC_E_NOERROR on success, error code otherwise.
 */
 static EC_T_DWORD myAppPrepare(
-        CAtEmLogging*       poLog,          /* [in]  Logging instance */
-        EC_T_INT            nVerbose        /* [in]  Verbosity level */
-        )
+    CAtEmLogging*       poLog,          /* [in]  Logging instance */ 
+    EC_T_INT            nVerbose        /* [in]  Verbosity level */
+    )
 {
     EC_T_INT	loop;
     EC_T_WORD 	wFixedAddress = 0;
@@ -1202,8 +1202,8 @@ static EC_T_DWORD myAppPrepare(
             /* now get the offset of this device in the process data buffer and some other infos */
             if(ecatGetSlaveInfo(EC_TRUE, wFixedAddress, &tAllSlv.MD4KW_3M[loop].Info) != EC_E_NOERROR) {
                 LogError("ERROR: emGetSlaveInfo() returns with error." );
-            }
-        }
+	    }
+	}
     }
 
     /*******************************************************************************/
@@ -1216,8 +1216,8 @@ static EC_T_DWORD myAppPrepare(
             /* now get the offset of this device in the process data buffer and some other infos */
             if(ecatGetSlaveInfo(EC_TRUE, wFixedAddress, &tAllSlv.MD4KW_2MFS[loop].Info) != EC_E_NOERROR) {
                 LogError("ERROR: emGetSlaveInfo() returns with error." );
-            }
-        }
+    	    }
+    	}
     }
     /*******************************************************************************/
     /* Searching for: YNL MD4KW-Hand slave-unit                                      */
@@ -1229,8 +1229,8 @@ static EC_T_DWORD myAppPrepare(
             /* now get the offset of this device in the process data buffer and some other infos */
             if(ecatGetSlaveInfo(EC_TRUE, wFixedAddress, &tAllSlv.MD4KW_Hand[loop].Info) != EC_E_NOERROR) {
                 LogError("ERROR: emGetSlaveInfo() returns with error." );
-            }
-        }
+    	    }
+    	}
     }
     /*******************************************************************************/
     /* Searching for: YNL MD4KW-IMU slave-unit                                      */
@@ -1242,8 +1242,8 @@ static EC_T_DWORD myAppPrepare(
             /* now get the offset of this device in the process data buffer and some other infos */
             if(ecatGetSlaveInfo(EC_TRUE, wFixedAddress, &tAllSlv.MD4KW_IMU[loop].Info) != EC_E_NOERROR) {
                 LogError("ERROR: emGetSlaveInfo() returns with error." );
-            }
-        }
+    	    }
+    	}
     }
 
     // LogSave Task Start
@@ -1263,632 +1263,998 @@ static EC_T_DWORD myAppPrepare(
 */
 
 static EC_T_DWORD myAppSetup(
-        CAtEmLogging*      poLog,           /* [in]  Logging instance */
-        EC_T_INT           nVerbose,        /* [in]  verbosity level */
-        EC_T_DWORD         dwClntId,        /* [in]  EtherCAT master client id */
-        EC_T_CHAR*		   pParamFile)
+    CAtEmLogging*      poLog,           /* [in]  Logging instance */     
+    EC_T_INT           nVerbose,        /* [in]  verbosity level */
+    EC_T_DWORD         dwClntId,        /* [in]  EtherCAT master client id */
+	EC_T_CHAR*		   pParamFile)
 {
-    EC_T_DWORD              dwRes                       = EC_E_NOERROR;
-    EC_T_DWORD				dwSlaveId;
-    EC_T_WORD				wObIndex;
-    EC_T_DWORD				dwDataLen;
+	EC_T_DWORD              dwRes                       = EC_E_NOERROR;
+	EC_T_DWORD				dwSlaveId;
+	EC_T_WORD				wObIndex;
+	EC_T_DWORD				dwDataLen;
 
-    ifstream   ifs;
-    string     csv_file_path (pParamFile);
-    string     line;
-    ifs.open(csv_file_path.c_str() );
-    if (ifs.good())
-    {
-        getline(ifs, line);	// 一度だけ空読み
-        while (getline(ifs, line) )
-        {
-            stringstream ss(line);
-            string 		value;
-            int			index;
-            EC_T_DWORD	ibuf[SETPARAM_MAX];
+	ifstream   ifs;
+	string     csv_file_path (pParamFile);
+	string     line;
+	ifs.open(csv_file_path.c_str() );
+	if (ifs.good())
+	{
+		getline(ifs, line);	// 一度だけ空読み
+		while (getline(ifs, line) ) 
+		{
+			stringstream ss(line);
+			string 		value;
+			int			index;
+			EC_T_DWORD	ibuf[SETPARAM_MAX];
 
-            for ( index = 0;index < SETPARAM_MAX; index++)
-            {
-                if(getline(ss, value, ',') == 0)
-                {
-                    break;
-                }
+			for ( index = 0;index < SETPARAM_MAX; index++)
+			{
+				if(getline(ss, value, ',') == 0) 
+				{
+					break;
+				}
 
-                ibuf[index] = strtol(value.c_str(), NULL, 0);
-            }
+				ibuf[index] = strtol(value.c_str(), NULL, 0);
+			}
 
-            dwRes = ecatCoeSdoDownload(
-                        ibuf[SETPARAM_SLVID], ibuf[SETPARAM_INDEX], 0x00,
-                        (EC_T_BYTE*)&ibuf[SETPARAM_VALUE], ibuf[SETPARAM_SIZE], MBX_TIMEOUT, 0);
-            if( dwRes != EC_E_NOERROR ) {
-                LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                break;
-            }
-            LogMsg("<SDO Setup> type:%d,no:%d,jo:%d,index:0x%04x,size:%d,value:%d(%x)",
-                   ibuf[SETPARAM_BDTYPE], ibuf[SETPARAM_SLVNO], ibuf[SETPARAM_JOINT],
-                   ibuf[SETPARAM_INDEX], ibuf[SETPARAM_SIZE], ibuf[SETPARAM_VALUE], ibuf[SETPARAM_VALUE] );
-        }
-        ifs.close();
-    }
-    else
-    {
-        EC_T_DWORD				dwOutDataLen 	= 0;
-        EC_T_INT				loop;
-        EC_T_INT                jnt;
-        EC_T_BYTE               servo_dir;
-        EC_T_DWORD              offset;
-        EC_T_WORD				wReset;
-        EC_T_WORD				wGain;
+			dwRes = ecatCoeSdoDownload( 
+					ibuf[SETPARAM_SLVID], ibuf[SETPARAM_INDEX], 0x00, 
+					(EC_T_BYTE*)&ibuf[SETPARAM_VALUE], ibuf[SETPARAM_SIZE], MBX_TIMEOUT, 0);
+			if( dwRes != EC_E_NOERROR ) {
+				LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+				break;
+			}
+			LogMsg("<SDO Setup> type:%d,no:%d,jo:%d,index:0x%04x,size:%d,value:%d(%x)", 
+					ibuf[SETPARAM_BDTYPE], ibuf[SETPARAM_SLVNO], ibuf[SETPARAM_JOINT],
+					ibuf[SETPARAM_INDEX], ibuf[SETPARAM_SIZE], ibuf[SETPARAM_VALUE], ibuf[SETPARAM_VALUE] );
+		}
+		ifs.close();
+	}
+	else
+	{
+		EC_T_DWORD				dwOutDataLen 	= 0;
+		EC_T_INT				loop;
+		EC_T_INT                jnt;
+		EC_T_BYTE               servo_dir;
+		EC_T_DWORD              offset;
+		EC_T_WORD				wReset;
+		EC_T_WORD				wGain;
 
-        EC_T_DWORD				dwSlaveId;
-        EC_T_WORD				wObIndex;
-        EC_T_DWORD				dwDataLen;
-        EC_T_BYTE				*pbyData;
+		EC_T_DWORD				dwSlaveId;
+		EC_T_WORD				wObIndex;
+		EC_T_DWORD				dwDataLen;
+		EC_T_BYTE				*pbyData;
 
 #ifdef	PARAM_OUTPUT
-        FILE					*fpPO 				= EC_NULL;
-        EC_T_CHAR           	fname_po[256];
-        EC_T_CHAR				tmpBuf[DATA_BUF_SIZE];
+		FILE					*fpPO 				= EC_NULL;
+		EC_T_CHAR           	fname_po[256];
+		EC_T_CHAR				tmpBuf[DATA_BUF_SIZE];
 
-        OsMemset(fname_po, 	0, 	sizeof(fname_po));
-        snprintf(fname_po,	256, "%s%s", "param_out", 	FILE_EXT);
-        fpPO	= OsFopen( fname_po, 	"w+" );
-        if(fpPO == EC_NULL) {
-            printf("\n!!param output file open NG!!\n");
-            return EC_E_ERROR;
-        }
+		OsMemset(fname_po, 	0, 	sizeof(fname_po));
+		snprintf(fname_po,	256, "%s%s", "param_out", 	FILE_EXT);
+		fpPO	= OsFopen( fname_po, 	"w+" );
+		if(fpPO == EC_NULL) {
+			printf("\n!!param output file open NG!!\n");
+			return EC_E_ERROR;
+		}
 
-        OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-        snprintf(tmpBuf, DATA_BUF_SIZE, "bdtype,slaveno,joint,slaveid,index,size,value\n");
-        OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+		OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+		snprintf(tmpBuf, DATA_BUF_SIZE, "bdtype,slaveno,joint,slaveid,index,size,value\n");
+		OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif 
 
-        //setup 3M
-        for(loop = 0; loop < tAllSlv.MD4KW_3MSlaves; loop++) {
-            for(jnt = 0; jnt < 3; jnt++) {
-#if 1
-                //servo direction
-                servo_dir = 0x00;
-                if( eha_phys_pos_hydra_MD4KW_3M[loop][jnt]<0)
-                    servo_dir |= 0x01;
-                if( eha_pos_gain_hydra_MD4KW_3M[loop][jnt]<0)
-                    servo_dir |= 0x10;
+		//setup 3M
+		for(loop = 0; loop < tAllSlv.MD4KW_3MSlaves; loop++) {
+			for(jnt = 0; jnt < 3; jnt++) {
+#if 1 //3M_1
+				//servo direction
+				servo_dir = 0x00;
+				if( eha_phys_pos_hydra_MD4KW_3M[loop][jnt]<0)
+					servo_dir |= 0x01;
+				if( eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]<0)
+					servo_dir |= 0x10;
 
-                /*********** Reset ************************************************/
-                wReset = 0x8000;
+				/*********** Reset ************************************************/
+				wReset = 0x8000;
 
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
 
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                dwSlaveId 	= tAllSlv.MD4KW_3M[loop].Info.dwSlaveId;
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wReset);
-
-#ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo Direction ************************************************/
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7046|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&servo_dir;
-                dwDataLen 	= sizeof(servo_dir);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, servo_dir);
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				dwSlaveId 	= tAllSlv.MD4KW_3M[loop].Info.dwSlaveId;
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wReset);
 
 #ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
-                /*********** Servo P Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_pos_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_pos_gain_hydra_MD4KW_3M[loop][jnt] : eha_pos_gain_hydra_MD4KW_3M[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
+				/*********** Servo Direction ************************************************/
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
 
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7011|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7046|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&servo_dir;
+				dwDataLen 	= sizeof(servo_dir);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, servo_dir);
 
 #ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
-                /*********** Servo D Gain ************************************************/
-                //wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
-                wGain = (EC_T_WORD)(eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
+				/*********** Servo P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
 
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7013|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7011|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
 
 #ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
-                /*********** Servo I Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_i_gain_hydra_MD4KW_3M[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7012|(jnt<<8)), 0x00);
+				/*********** Servo D Gain ************************************************/
+				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
+            	wGain = (EC_T_WORD)(eha_pos_d_gain_hydra_MD4KW_3M[loop][jnt]);
 
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7012|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7013|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
 
 #ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
-                /*********** Enc Offset ************************************************/
-                offset = enc_offset_MD4KW_3M[loop][jnt];
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7050|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&offset;
-                dwDataLen 	= sizeof(offset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, offset);
+				/*********** Servo I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7012|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7012|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
 
 #ifdef	PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
-                /*********** Un-Reset ************************************************/
-                wReset = 0x0000;
 
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+				/*********** Vel P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7021|(jnt<<8)), 0x00);
 
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wReset);
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7021|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelPGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
 
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-#endif
-            }
-        }
-        //setup 2MFS
-        for(loop = tAllSlv.MD4KW_2MFSSlaves-1; loop >=0 ; loop--) {
-            for(jnt = 0; jnt < 2; jnt++) {
-#if 1
-                servo_dir = 0x00;
-                if( eha_phys_pos_hydra_MD4KW_2MFS[loop][jnt]<0)
-                    servo_dir |= 0x01;
-                if( eha_pos_gain_hydra_MD4KW_2MFS[loop][jnt]<0)
-                    servo_dir |= 0x10;
-                /*********** Reset ************************************************/
-                wReset = 0x8000;
-
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                dwSlaveId 	= tAllSlv.MD4KW_2MFS[loop].Info.dwSlaveId;
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wReset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo Direction ************************************************/
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7046|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&servo_dir;
-                dwDataLen 	= sizeof(servo_dir);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, servo_dir);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo P Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_pos_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_pos_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_pos_gain_hydra_MD4KW_2MFS[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7011|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo D Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_gain_hydra_MD4KW_2MFS[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7013|(jnt<<8));
-                //pbyData		= (EC_T_BYTE*)&wReset;
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo I Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7012|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7012|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Enc Offset ************************************************/
-                offset = enc_offset_MD4KW_2MFS[loop][jnt];
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7050|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&offset;
-                dwDataLen 	= sizeof(offset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, offset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Un-Reset ************************************************/
-                wReset = 0x0000;
-
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wReset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-#endif
-            }
-        }
-        for(loop = 0; loop < tAllSlv.MD4KW_HandSlaves; loop++) {
-            EC_T_WORD fing_dir=0;
-#if 1
-            for(jnt = 0; jnt < 5; jnt++) {
-                servo_dir = 0x00;
-                if( eha_phys_pos_hydra_MD4KW_Hand[loop][jnt]<0)
-                    servo_dir |= 0x01;
-                if( eha_pos_gain_hydra_MD4KW_Hand[loop][jnt]<0)
-                    servo_dir |= 0x10;
-
-                /*********** Reset ************************************************/
-                wReset = 0x8000;
-
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                dwSlaveId 	= tAllSlv.MD4KW_Hand[loop].Info.dwSlaveId;
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wReset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-#if 1
-                /*********** Servo Direction ************************************************/
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7046|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&servo_dir;
-                dwDataLen 	= sizeof(servo_dir);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, servo_dir);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo P Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_pos_gain_hydra_MD4KW_Hand[loop][jnt]<0) ? -eha_pos_gain_hydra_MD4KW_Hand[loop][jnt] : eha_pos_gain_hydra_MD4KW_Hand[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
-
-                wObIndex 	= (0x7011|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d",
-                       &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wGain);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Servo D Gain ************************************************/
-                wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_Hand[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_Hand[loop][jnt] : eha_vel_gain_hydra_MD4KW_Hand[loop][jnt]);
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
-
-                wObIndex 	= (0x7013|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wGain;
-                dwDataLen 	= sizeof(wGain);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d",
-                       &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wGain);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Enc Offset ************************************************/
-                offset = enc_offset_MD4KW_hand[loop][jnt];
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
-
-                wObIndex 	= (0x7050|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&offset;
-                dwDataLen 	= sizeof(offset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d",
-                       &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, offset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-#endif
-                /*********** Un-Reset ************************************************/
-                wReset = 0x0000;
-
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
-
-                /* Performs a CoE SDO download to an EtherCAT slave device. */
-                wObIndex 	= (0x7000|(jnt<<8));
-                pbyData		= (EC_T_BYTE*)&wReset;
-                dwDataLen 	= sizeof(wReset);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wReset);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-            }
-            fing_dir=0;
-            for(jnt=0; jnt<16; jnt++) {
-                /*********** Finger Enc Offset ************************************************/
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                       tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7520|jnt), 0x00);
-
-                wObIndex 	= (0x7520|jnt);
-                pbyData		= (EC_T_BYTE*)&(enc_offset_MD4KW_fingers[loop][jnt]);
-                dwDataLen 	= sizeof(EC_T_WORD);
-                dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-                if( dwRes != EC_E_NOERROR ) {
-                    LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                    break;
-                }
-                LogMsg("<CoE> Slave:%s(cfg-addr:%d) FingerEncOffset:%d",
-                       &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, enc_offset_MD4KW_fingers[loop][jnt]);
-
-#ifdef PARAM_OUTPUT
-                OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Finger Enc Offset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, enc_offset_MD4KW_fingers[loop][jnt]);
-                OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-
-                /*********** Calc Finger Dir Reg********************************************/
-                if(eha_phys_pos_hydra_MD4KW_Hand[loop][jnt+5]<0)
-                    fing_dir |= (0x0001<<jnt);
-            }
-
-            /*********** Set Finger Dir Reg ********************************************/
-            LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh",
-                   tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, 0x7530, 0x00);
-
-            wObIndex 	= 0x7530;
-            pbyData		= (EC_T_BYTE*)&fing_dir;
-            dwDataLen 	= sizeof(fing_dir);
-            dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
-            if( dwRes != EC_E_NOERROR ) {
-                LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
-                break;
-            }
-
-            LogMsg("<CoE> Slave:%s(cfg-addr:%d) FingerEncOffset:%d",
-                   &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, fing_dir);
-
-#ifdef PARAM_OUTPUT
-            OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-            snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Set Finger Dir Reg\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, fing_dir);
-            OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
-#endif  // PARAM_OUTPUT
-#endif
-
-        }
 #ifdef	PARAM_OUTPUT
-        OsFflush(fpPO);
-        OsFclose(fpPO);
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Vel D Gain ************************************************/
+				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
+            	wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7023|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7023|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Vel I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7022|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7022|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelIGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7031|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7031|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurPGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur D Gain ************************************************/
+				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
+            	wGain = (EC_T_WORD)(eha_cur_d_gain_hydra_MD4KW_3M[loop][jnt]);
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7033|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7033|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurDGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7032|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7032|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurIGain:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+
+
+
+				/*********** Enc Offset ************************************************/
+				offset = enc_offset_MD4KW_3M[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7050|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(offset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, offset);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** MEnc Offset ************************************************/
+				offset = menc_offset_MD4KW_3M[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7051|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7051|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(offset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc1Offset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, offset);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// MEnc Offset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** motor k_emf ************************************************/
+				wGain = motor_KEMF_MD4KW_3M[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7045|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7045|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) MotorKEMF:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Motor KEMF\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+
+				/*********** Un-Reset ************************************************/
+				wReset = 0x0000;
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_3M[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, wReset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+#endif  //3M_1
+			}
+		}
+		//setup 2MFS
+		for(loop = tAllSlv.MD4KW_2MFSSlaves-1; loop >=0 ; loop--) {
+			for(jnt = 0; jnt < 2; jnt++) {
+#if 1  //2MFS
+				servo_dir = 0x00;
+				if( eha_phys_pos_hydra_MD4KW_2MFS[loop][jnt]<0)
+					servo_dir |= 0x01;
+				if( eha_pos_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0)
+					servo_dir |= 0x10;
+				/*********** Reset ************************************************/
+				wReset = 0x8000;
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				dwSlaveId 	= tAllSlv.MD4KW_2MFS[loop].Info.dwSlaveId;
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wReset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo Direction ************************************************/
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7046|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&servo_dir;
+				dwDataLen 	= sizeof(servo_dir);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, servo_dir);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_pos_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_pos_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7011|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo D Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_d_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_pos_d_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_pos_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7013|(jnt<<8));
+				//pbyData		= (EC_T_BYTE*)&wReset;
+                pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_pos_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_pos_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7012|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7012|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Vel P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7021|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7021|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelPGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Vel D Gain ************************************************/
+            	wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7023|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7023|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel D Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Vel I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					   tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7022|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7022|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) VelIGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel I Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_cur_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_cur_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_cur_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7031|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7031|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurPGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur P Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur D Gain ************************************************/
+				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
+            	wGain = (EC_T_WORD)(eha_cur_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7033|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7033|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurDGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur D Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Cur I Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_cur_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_cur_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_cur_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					   tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7032|(jnt<<8)), 0x00);
+				
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7032|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) CurIGain:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur I Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+
+				/*********** Enc Offset ************************************************/
+				offset = enc_offset_MD4KW_2MFS[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7050|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(offset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, offset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** MEnc Offset ************************************************/
+				offset = menc_offset_MD4KW_2MFS[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7051|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7051|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(offset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc1Offset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, offset);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// MEnc Offset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** motor k_emf ************************************************/
+				wGain = motor_KEMF_MD4KW_2MFS[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7045|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7045|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) MotorKEMF:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wGain);
+
+#ifdef	PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Motor KEMF\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+
+				/*********** Un-Reset ************************************************/
+				wReset = 0x0000;
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, wReset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+#endif  // 2MFS
+			}
+		}
+		for(loop = 0; loop < tAllSlv.MD4KW_HandSlaves; loop++) {
+			EC_T_WORD fing_dir=0;
+#if 1 //hand1
+			for(jnt = 0; jnt < 5; jnt++) {
+				servo_dir = 0x00;
+				if( eha_phys_pos_hydra_MD4KW_Hand[loop][jnt]<0)
+					servo_dir |= 0x01;
+				if( eha_pos_p_gain_hydra_MD4KW_Hand[loop][jnt]<0)
+					servo_dir |= 0x10;
+
+				/*********** Reset ************************************************/
+				wReset = 0x8000;
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				dwSlaveId 	= tAllSlv.MD4KW_Hand[loop].Info.dwSlaveId;
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wReset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+#if 1 //hand2
+				/*********** Servo Direction ************************************************/
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7046|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7046|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&servo_dir;
+				dwDataLen 	= sizeof(servo_dir);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDir:%02x", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, servo_dir);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo P Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_p_gain_hydra_MD4KW_Hand[loop][jnt]<0) ? -eha_pos_p_gain_hydra_MD4KW_Hand[loop][jnt] : eha_pos_p_gain_hydra_MD4KW_Hand[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
+
+				wObIndex 	= (0x7011|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoPGain:%d", 
+						&tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wGain);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Servo D Gain ************************************************/
+				wGain = (EC_T_WORD)((eha_pos_d_gain_hydra_MD4KW_Hand[loop][jnt]<0) ? -eha_pos_d_gain_hydra_MD4KW_Hand[loop][jnt] : eha_pos_d_gain_hydra_MD4KW_Hand[loop][jnt]);
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
+
+				wObIndex 	= (0x7013|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wGain;
+				dwDataLen 	= sizeof(wGain);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) ServoDGain:%d", 
+						&tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wGain);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Enc Offset ************************************************/
+				offset = enc_offset_MD4KW_hand[loop][jnt];
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
+
+				wObIndex 	= (0x7050|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&offset;
+				dwDataLen 	= sizeof(offset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Enc0Offset:%d", 
+						&tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, offset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+#endif //hand2
+				/*********** Un-Reset ************************************************/
+				wReset = 0x0000;
+
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7000|(jnt<<8)), 0x00);
+
+				/* Performs a CoE SDO download to an EtherCAT slave device. */
+				wObIndex 	= (0x7000|(jnt<<8));
+				pbyData		= (EC_T_BYTE*)&wReset;
+				dwDataLen 	= sizeof(wReset);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) Reset:%d", &tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, wReset);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+			}
+			fing_dir=0;
+			for(jnt=0; jnt<16; jnt++) {
+				/*********** Finger Enc Offset ************************************************/
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+						tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, (0x7520|jnt), 0x00);
+
+				wObIndex 	= (0x7520|jnt);
+				pbyData		= (EC_T_BYTE*)&(enc_offset_MD4KW_fingers[loop][jnt]);
+				dwDataLen 	= sizeof(EC_T_WORD);
+				dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+				if( dwRes != EC_E_NOERROR ) {
+					LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+					break;
+				}
+				LogMsg("<CoE> Slave:%s(cfg-addr:%d) FingerEncOffset:%d", 
+						&tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, enc_offset_MD4KW_fingers[loop][jnt]);
+
+#ifdef PARAM_OUTPUT
+				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Finger Enc Offset\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, enc_offset_MD4KW_fingers[loop][jnt]);
+				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+
+				/*********** Calc Finger Dir Reg********************************************/
+				if(eha_phys_pos_hydra_MD4KW_Hand[loop][jnt+5]<0)
+					fing_dir |= (0x0001<<jnt);
+			}
+
+			/*********** Set Finger Dir Reg ********************************************/
+			LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
+					tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName, tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, 0x7530, 0x00);
+
+			wObIndex 	= 0x7530;
+			pbyData		= (EC_T_BYTE*)&fing_dir;
+			dwDataLen 	= sizeof(fing_dir);
+			dwRes = ecatCoeSdoDownload( dwSlaveId, wObIndex, 0x00, pbyData, dwDataLen, MBX_TIMEOUT, 0);
+			if( dwRes != EC_E_NOERROR ) {
+				LogError( "====> error in COE SDO Download! (Result = %s)", EcErrorText(dwRes) );
+				break;
+			}
+
+			LogMsg("<CoE> Slave:%s(cfg-addr:%d) FingerEncOffset:%d", 
+					&tAllSlv.MD4KW_Hand[loop].Info.abyDeviceName[0], tAllSlv.MD4KW_Hand[loop].Info.wPhysAddress, fing_dir);
+
+#ifdef PARAM_OUTPUT
+			OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
+			snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Set Finger Dir Reg\n", BDTYPE_MD4KW_HAND, loop, jnt, dwSlaveId, wObIndex, dwDataLen, fing_dir);
+			OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
+#endif  // PARAM_OUTPUT
+#endif  //hand1
+
+		}
+#ifdef	PARAM_OUTPUT
+		OsFflush(fpPO);
+		OsFclose(fpPO);
 #endif 
-    }
-    return EC_E_NOERROR;
+	}
+	return EC_E_NOERROR;
 }
 
 /***************************************************************************************************/
