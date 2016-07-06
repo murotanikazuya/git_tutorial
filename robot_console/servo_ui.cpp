@@ -78,7 +78,8 @@ CUDPComm *p_udp_comm = NULL;
 #define SEM_ECATSYNC_NAME ("/HydraSync")
 #endif
 
-#define POS_STEP DEG2RAD(0.004)
+//#define POS_STEP DEG2RAD(0.004)
+#define POS_STEP DEG2RAD(0.4)
 
 CHydraShmClient *p_hydra_shm = NULL;
 
@@ -116,6 +117,7 @@ int interp_length;
 bool interp_run;
 bool grasp_run;
 bool interp_ready;
+bool filemotion_en = false;
 bool filemotion_run;
 
 //double hand_motion[INTERP_LEN][10];
@@ -280,6 +282,10 @@ int main(int argc,char *argv[])
     /* process command line options */
     while( (getopt_result=getopt(argc, argv, "r:t:a:f:l:s:dgh"))!=-1 ) {
         switch(getopt_result) {
+        case 'f':
+            strcpy(motionfilename, optarg);
+            filemotion_en = true;
+            break;
         case 'r':
             port_base = atoi(optarg);
             break;
@@ -330,10 +336,47 @@ int main(int argc,char *argv[])
     fprintf(fp_log, "application start\n");
     fflush(fp_log);
 
-
     if( (fp_debug = fopen("./debug.log","w"))==NULL ) {
         perror("Cannot open debug file");
         return -1;
+    }
+
+    if(filemotion_en){
+        int ret;
+        num_joints=HYDRA_JNT_MAX;
+        if( (fp_motion = fopen(motionfilename,"r"))==NULL ) {
+            perror("Cannot open motion file");
+            return -1;
+        }
+        motion_length = CheckMotionFileLength(fp_motion);
+        fprintf(fp_log, "motion %s length =%d\n", motionfilename, motion_length);
+        fflush(fp_log);
+
+        motion_data   = AllocateMotionData(num_joints, motion_length);
+        if(motion_data==NULL) {
+            fprintf(stderr, "Failed to allocate motion data\n");
+            return -1;
+        }
+
+        ret = LoadMotionFile(fp_motion, motion_data, num_joints, motion_length);
+        if(ret != motion_length) {
+            fprintf(fp_log,
+                    "motion length mismatch defined=%d actual=%d\n",
+                    motion_length, ret);
+            return -1;
+        }
+        strcpy(motion_name, motionfilename);
+
+        fprintf(fp_log, "motion length = %d\n", motion_length);
+        fflush(fp_log);
+        for(int i=0; i<1; i++) {
+            for(int j=0; j<num_joints+1; j++) {
+                fprintf(fp_log, "%f ", motion_data[i][j]);
+            }
+            fprintf(fp_log, "\n");
+        }
+        memcpy(all_joint_finalpos, &(motion_data[0][1]), sizeof(double)*num_joints);
+
     }
 
     char tmp_char[256];
@@ -392,7 +435,7 @@ int main(int argc,char *argv[])
 
 
         for(int j=0; j<HYDRA_JNT_MAX; j++) {
-            hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
+            //hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
             for(int l=0; l<joint_to_EHA_power[j][0]; l++) {
                 int k = joint_to_EHA_power[j][l+1];
                 hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
@@ -461,11 +504,17 @@ int main_func(void)
     if(interp_run) {
         if(interp_cnt <= interp_length) {
             for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                /*
                 hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref
                     = all_joint_initpos[loop] 
                     + (all_joint_finalpos[loop] - all_joint_initpos[loop])
                     *((double)interp_cnt)/((double)interp_length);
                 all_joint_pos_tgt[loop] = hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref;
+                */
+                all_joint_refpos_to_send[loop]
+                    = all_joint_initpos[loop]
+                    + (all_joint_finalpos[loop] - all_joint_initpos[loop])
+                    *((double)interp_cnt)/((double)interp_length);
             }
             if(interp_cnt%100==0)
                 fprintf(fp_log, 
@@ -483,11 +532,17 @@ int main_func(void)
     else if(grasp_run) {
         if(interp_cnt <= interp_length) {
             for(loop = 31; loop < HYDRA_JNT_MAX; loop++) {
+                /*
                 hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref
                     = all_joint_initpos[loop]
                     + (all_joint_finalpos[loop] - all_joint_initpos[loop])
                     *((double)interp_cnt)/((double)interp_length);
                 all_joint_pos_tgt[loop] = hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref;
+                */
+                all_joint_refpos_to_send[loop]
+                    = all_joint_initpos[loop]
+                    + (all_joint_finalpos[loop] - all_joint_initpos[loop])
+                    *((double)interp_cnt)/((double)interp_length);
             }
             interp_cnt++;
         } else {
@@ -501,14 +556,21 @@ int main_func(void)
 
 #endif
     for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+        all_joint_pos_tgt[loop] = CHK_LIM(all_joint_refpos_to_send[loop]
+                                          +(all_joint_ampl[loop]*sin(cnt/1000.0*all_joint_freq_hz[loop]*2*M_PI+all_joint_phase[loop]))
+                                          ,
+                                          all_joint_angle_limit[loop][0],all_joint_angle_limit[loop][1]);
+        //all_joint_pos_tgt[loop] = all_joint_refpos_to_send[loop];
+        //all_joint_pos_tgt[loop] = DEG2RAD(30);
+
         if((hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref - all_joint_pos_tgt[loop])>POS_STEP)
             hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref - POS_STEP;
         else if((all_joint_pos_tgt[loop] - hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref)>POS_STEP)
             hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref + POS_STEP;
         else
             hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref = all_joint_pos_tgt[loop];
-//        hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref += (all_joint_ampl[loop]*
-//                                        sin(cnt/1000.0*all_joint_freq_hz[loop]*2*M_PI+all_joint_phase[loop]));
+            //hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref += (all_joint_ampl[loop]*
+             //                          sin(cnt/1000.0*all_joint_freq_hz[loop]*2*M_PI+all_joint_phase[loop]));
     }
 
     

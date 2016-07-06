@@ -159,26 +159,29 @@ int CylinderToKnee(const double z_cmd1,const double z_cmd2, double *q_ans, p_1jo
 		z2_cmd_offset = z_cmd2*1000 + p_joint.z1_0;
 		q1 = asin((p_joint.a*p_joint.a + z1_cmd_offset*z1_cmd_offset + p_joint.r*p_joint.r - p_joint.l*p_joint.l)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z1_cmd_offset*z1_cmd_offset))) - atan(p_joint.a/z1_cmd_offset) + 55*M_PI/180;
 		q2 = asin((p_joint.l*p_joint.l - p_joint.a*p_joint.a - z2_cmd_offset*z2_cmd_offset - p_joint.r*p_joint.r)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z2_cmd_offset*z2_cmd_offset))) - atan(-p_joint.a/z2_cmd_offset) + 55*M_PI/180;	
+        *q_ans = q1;
 	}else if(!strcmp(p_joint.name,"rknee")){
 		z1_cmd_offset = z_cmd1*1000 + p_joint.z1_0;
 		z2_cmd_offset = z_cmd2*1000 + p_joint.z2_0;
 		q1 = asin((p_joint.l*p_joint.l - p_joint.a*p_joint.a - z1_cmd_offset*z1_cmd_offset - p_joint.r*p_joint.r)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z1_cmd_offset*z1_cmd_offset))) - atan(-p_joint.a/z1_cmd_offset) + 55*M_PI/180;
 		q2 = asin((p_joint.a*p_joint.a + z2_cmd_offset*z2_cmd_offset + p_joint.r*p_joint.r - p_joint.l*p_joint.l)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z2_cmd_offset*z2_cmd_offset))) - atan(p_joint.a/z2_cmd_offset) + 55*M_PI/180;	
+        *q_ans = q2;
 	}else{
 		return -1;
 	}
+	//*q_ans = (q1 + q2) / 2.0;
 
-	*q_ans = (q1 + q2) / 2.0;
+
 	return 0;
 }
 
 int KneeToCylinder(const double q_cmd, double *z_ans1, double *z_ans2, p_1joint_t p_joint){
 	if(!strcmp(p_joint.name, "lknee")){
-		*z_ans1 = p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((-p_joint.a + p_joint.r*cos(q_cmd - 55*M_PI/180)),2)) - p_joint.z1_0;
-		*z_ans2 = -p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((p_joint.a - p_joint.r*cos(q_cmd - 55*M_PI/180)),2)) - p_joint.z2_0;
+		*z_ans1 = p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((-p_joint.a + p_joint.r*cos(q_cmd - 55*M_PI/180)),2));
+		*z_ans2 = -p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((p_joint.a - p_joint.r*cos(q_cmd - 55*M_PI/180)),2));
 	}else if(!strcmp(p_joint.name, "rknee")){	
-		*z_ans1 = -p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((p_joint.a - p_joint.r*cos(q_cmd - 55*M_PI/180)),2)) - p_joint.z1_0;
-		*z_ans2 = p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((-p_joint.a + p_joint.r*cos(q_cmd - 55*M_PI/180)),2)) - p_joint.z2_0;
+		*z_ans1 = -p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((p_joint.a - p_joint.r*cos(q_cmd - 55*M_PI/180)),2));
+		*z_ans2 = p_joint.r*sin(q_cmd - 55*M_PI/180) + sqrt(p_joint.l*p_joint.l - pow((-p_joint.a + p_joint.r*cos(q_cmd - 55*M_PI/180)),2));
 	}else{
 		return -1;
 	}

@@ -56,7 +56,7 @@ extern char     motion_name[256];
 
 extern FILE* fp_log;
 
-static double all_joint_refpos_to_send[HYDRA_JNT_MAX];
+extern double all_joint_refpos_to_send[HYDRA_JNT_MAX];
 bool all_joint_resv_to_send[HYDRA_JNT_MAX];
 
 static thread_data_t *thread_data;
@@ -73,6 +73,7 @@ static void print_title_EHA(WINDOW *pTitleWnd);
 static int  show_quit_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y);
 static void show_help_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y);
 static void turn_off_all_EHA(void);
+static void turn_off_all_joint(void);
 static int  reload_motion_file(char *filename);
 static int  show_dialog_get_filename(WINDOW *pWnd, char *filename, int size_x, int scroll_panel_size_y);
 
@@ -254,12 +255,13 @@ void *servo_ui(void *param)
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
                         all_joint_refpos_to_send[y]
-                                = hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.01);
+                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.01);
+                                += DEG2RAD(0.01);
 //                        pthread_mutex_lock( &(thread_data->mutex) );
 //                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        all_joint_pos_tgt[y]
-                            = CHK_LIM(all_joint_refpos_to_send[y],
-                                      all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
+                        //all_joint_pos_tgt[y]
+                        //    = CHK_LIM(all_joint_refpos_to_send[y],
+                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
                 }
@@ -275,12 +277,13 @@ void *servo_ui(void *param)
 //                if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
                         all_joint_refpos_to_send[y]
-                                = hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.1);
+                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.1);
+                                += DEG2RAD(0.1);
 //                        pthread_mutex_lock( &(thread_data->mutex) );
 //                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        all_joint_pos_tgt[y]
-                            = CHK_LIM(all_joint_refpos_to_send[y],
-                                      all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
+                        //all_joint_pos_tgt[y]
+                        //    = CHK_LIM(all_joint_refpos_to_send[y],
+                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
 //                }
@@ -296,12 +299,13 @@ void *servo_ui(void *param)
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
                         all_joint_refpos_to_send[y]
-                                = hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref - DEG2RAD(0.01);
+                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref - DEG2RAD(0.01);
+                                -= DEG2RAD(0.01);
 //                        pthread_mutex_lock( &(thread_data->mutex) );
 //                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        all_joint_pos_tgt[y]
-                            = CHK_LIM(all_joint_refpos_to_send[y],
-                                      all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
+                        //all_joint_pos_tgt[y]
+                        //    = CHK_LIM(all_joint_refpos_to_send[y],
+                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
                 }
@@ -316,12 +320,13 @@ void *servo_ui(void *param)
                 //               if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
                         all_joint_refpos_to_send[y]
-                                = hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref -DEG2RAD(0.1);
+                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref -DEG2RAD(0.1);
+                                -= DEG2RAD(0.1);
 //                        pthread_mutex_lock( &(thread_data->mutex) );
 //                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        all_joint_pos_tgt[y]
-                            = CHK_LIM(all_joint_refpos_to_send[y],
-                                      all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
+                        //all_joint_pos_tgt[y]
+                        //    = CHK_LIM(all_joint_refpos_to_send[y],
+                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
                     //}
@@ -397,6 +402,8 @@ void *servo_ui(void *param)
                         k = joint_to_joint_power[y][j+1];
 //                        pthread_mutex_lock( &(thread_data->mutex) );
                         hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
+                                 = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+                        all_joint_refpos_to_send[k]
                                 = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                         all_joint_servo_switch[k] = new_state;
@@ -411,6 +418,8 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
 //                pthread_mutex_lock( &(thread_data->mutex) );
                 hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
+                        = hydra_data.GetJointStatePtr(0)[y].DATA.pos_act;
+                all_joint_refpos_to_send[y]
                         = hydra_data.GetJointStatePtr(0)[y].DATA.pos_act;
 //                pthread_mutex_unlock( &(thread_data->mutex) );
                 all_joint_resv_to_send[y] = true;
@@ -500,7 +509,8 @@ void *servo_ui(void *param)
             break;
         }
         case KEY_DC:
-            turn_off_all_EHA( );
+            //turn_off_all_EHA( );
+            turn_off_all_joint( );
             break;
 
         case '?': // show help
@@ -512,7 +522,8 @@ void *servo_ui(void *param)
             if(show_quit_dialog(pWnd, size_x, scroll_panel_size_y)<0)
                 goto skip_quit;
 
-            turn_off_all_EHA( );
+            //turn_off_all_EHA( );
+            turn_off_all_joint( );
 
             thread_end_flg = 0;
 
@@ -532,9 +543,12 @@ void *servo_ui(void *param)
                 for(j=0; j<joint_to_joint_power[y][0]; j++) {
                     k = joint_to_joint_power[y][j+1];
                     hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
+                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+                    all_joint_refpos_to_send[k]
                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+                    //all_joint_pos_tgt[k] = all_joint_refpos_to_send[k];
                     //all_joint_servo_switch[k] = all_joint_servo_switch[k];
-                    //hydra_data.GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
+                    hydra_data.GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
                     all_joint_resv_to_send[k] = false;
                 }
                 /*
@@ -563,6 +577,10 @@ void *servo_ui(void *param)
                 for(j=0; j<HYDRA_JNT_MAX; j++) {
                     hydra_data.GetJointCmdPtr(1)[j].DATA.pos_ref
                             = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
+                    all_joint_refpos_to_send[j]
+                            = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
+                    //all_joint_pos_tgt[j] = all_joint_refpos_to_send[j];
+                    hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
                     all_joint_resv_to_send[j] = false;
                     /*
                     for(l=0; l<joint_to_EHA_power[j][0]; l++) {
@@ -1029,7 +1047,7 @@ void show_help_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y)
     }
 }
 
-void turn_off_all_EHA(void)
+void turn_off_all_EHA(void)  // this function does not work!!!
 {
     int j, k, l;
     
@@ -1043,6 +1061,16 @@ void turn_off_all_EHA(void)
                     = (all_joint_servo_switch[j]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //            pthread_mutex_unlock( pmutex );
         }
+    }
+}
+
+void turn_off_all_joint(void)  // this function does not work!!!
+{
+    for(int j=0; j<HYDRA_JNT_MAX; j++) {
+        all_joint_servo_switch[j] = false;
+        all_joint_resv_to_send[j] = false;
+        hydra_data.GetJointCmdPtr(1)[j].DATA.enable = 0;
+
     }
 }
 
