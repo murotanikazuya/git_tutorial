@@ -541,6 +541,34 @@ const double eha_phys_forcepres_hydra_MD4KW_3M[][3] = {
 	{   VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}  //lwrist
 };
 
+const double eha_phys_forcestrain_hydra_MD4KW_3M[][3] = {
+        {   VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //rhip
+        {-1*CYL7M_BIT_TO_N, -1*CYL21M_BIT_TO_N,    0},              //rknee
+        {   VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //lhip
+        {-1*CYL7M_BIT_TO_N, -1*CYL21M_BIT_TO_N,    0},              //lknee
+        {   CYL7M_BIT_TO_N, -1*CYL7M_BIT_TO_N,     0},              //body
+        {-1*VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}, //rshoulder
+        {   VANE_BIT_TO_Nm,    CYL21M_BIT_TO_N,    0},              //relbow
+        {   VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}, //rwrist
+        {-1*VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //lshoulder
+        {   VANE_BIT_TO_Nm,    CYL21M_BIT_TO_N,    0},              //lelbow
+        {   VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}  //lwrist
+};
+
+const double eha_phys_forcecomple_hydra_MD4KW_3M[][3] = {
+        {   VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //rhip
+        {-1*CYL7M_BIT_TO_N, -1*CYL21M_BIT_TO_N,    0},              //rknee
+        {   VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //lhip
+        {-1*CYL7M_BIT_TO_N, -1*CYL21M_BIT_TO_N,    0},              //lknee
+        {   CYL7M_BIT_TO_N, -1*CYL7M_BIT_TO_N,     0},              //body
+        {-1*VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}, //rshoulder
+        {   VANE_BIT_TO_Nm,    CYL21M_BIT_TO_N,    0},              //relbow
+        {   VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}, //rwrist
+        {-1*VANE_BIT_TO_Nm,    CYL7M_BIT_TO_N,  -1*CYL7M_BIT_TO_N}, //lshoulder
+        {   VANE_BIT_TO_Nm,    CYL21M_BIT_TO_N,    0},              //lelbow
+        {   VANE_BIT_TO_Nm, -1*CYL7M_BIT_TO_N,     CYL7M_BIT_TO_N}  //lwrist
+};
+
 
 //const int eha_pos_gain_hydra_MD4KW_3M[][3] = {
 //    //{  -100,  150, -150}, //rhip

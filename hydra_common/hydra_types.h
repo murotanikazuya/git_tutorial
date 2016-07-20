@@ -13,11 +13,14 @@ typedef union {
         double pos_act;
         double vel_act;
         double tau_act;
+        double tau2_act;////
+        double tau3_act;////
         double pos_cmd;
         double vel_cmd;
         double tau_cmd;
     } DATA;
-    unsigned char BYTE[56];
+    //unsigned char BYTE[56];
+    unsigned char BYTE[72];
 } joint_state_t;
 
 typedef union
@@ -187,8 +190,10 @@ typedef union
 #define ACCIN_MD4KW(AccIdx)   pShmIn_MD4KW->Acc[(pShmIn_MD4KW->Idx + AccIdx) % SHM_ACCNUM_MAX]
 #define	ACCOUT_MD4KW(AccIdx)  pShmOut_MD4KW->Acc[(pShmOut_MD4KW->Idx + AccIdx) % SHM_ACCNUM_MAX]
 
+
 // 共通
 #define	SHM_MSEC(AccIdx) 		ACCIN_MD4KW(AccIdx).iMsec
+
 
 
 // MD4KWドライバ用アクセス関数群
@@ -209,6 +214,8 @@ typedef union
 #define SHM_HYDRA_JOINT_POS_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_pos
 #define SHM_HYDRA_JOINT_VEL_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_vel
 #define SHM_HYDRA_JOINT_TAU_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_tau
+#define SHM_HYDRA_JOINT_TAU2_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_tau2
+#define SHM_HYDRA_JOINT_TAU3_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_tau3
 #define SHM_HYDRA_JOINT_STATUS_IN(AccIdx, JntIdx)    ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_status
 
 #define SHM_HYDRA_HAND_POS_IN(AccIdx, JntIdx)       ACCIN_MD4KW(AccIdx).Hands[(JntIdx)].joint_pos
@@ -601,6 +608,8 @@ typedef struct _S_SHM_INPUT_ACC_JOINT_STATE
     EC_T_REAL  joint_pos;
     EC_T_REAL  joint_vel;
     EC_T_REAL  joint_tau;
+    EC_T_REAL  joint_tau2;
+    EC_T_REAL  joint_tau3;
     EC_T_BYTE  joint_status;
 } S_SHM_INPUT_ACC_JOINT_STATE;
 

@@ -87,9 +87,16 @@ public:
         SHM_MSEC(1) = time_msec;
         return;
     }
+    //virtual int GetTimeInfo(int idx)
+    virtual int GetTimeInfo(void)
+    {
+        //return SHM_MSEC(idx);
+        return SHM_MSEC(0);
+    }
+
     virtual int GetTimeInfo(int idx)
     {
-        return SHM_MSEC(idx);
+        return pShmIn_MD4KW->Acc[idx % SHM_ACCNUM_MAX].iMsec;
     }
 
     void SetShmInName(const char name_shmin[])

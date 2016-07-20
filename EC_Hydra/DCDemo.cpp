@@ -132,6 +132,8 @@ static EC_T_DWORD RasNotifyWrapper(EC_T_DWORD dwCode, EC_T_NOTIFYPARMS* pParms);
 #endif
 static EC_T_VOID  tEcJobTask(EC_T_VOID* pvThreadParamDesc);
 static EC_T_VOID  tLogSaveTask(EC_T_VOID* pvThreadParamDesc);
+static EC_T_VOID  tLogSaveTask_jnt_tau_calib(EC_T_VOID* pvThreadParamDesc);
+static EC_T_VOID  tLogSaveTask_dbg(EC_T_VOID* pvThreadParamDesc);
 
 
 /*-MYAPP---------------------------------------------------------------------*/
@@ -2350,10 +2352,14 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
     unsigned int	  all_EHA_rawpos[EHA_MAX];
     EC_T_REAL       all_EHA_vel[EHA_MAX];
     EC_T_REAL       all_EHA_tau[EHA_MAX];
+    EC_T_REAL       all_EHA_tau2[EHA_MAX];
+    EC_T_REAL       all_EHA_tau3[EHA_MAX];
 
     EC_T_REAL       all_joint_pos[HYDRA_JNT_MAX];
     EC_T_REAL       all_joint_vel[HYDRA_JNT_MAX];
     EC_T_REAL       all_joint_tau[HYDRA_JNT_MAX];
+    EC_T_REAL       all_joint_tau2[HYDRA_JNT_MAX];
+    EC_T_REAL       all_joint_tau3[HYDRA_JNT_MAX];
 
     EC_T_INT          ret;
     static EC_T_BYTE  cnt=0;
@@ -2409,11 +2415,17 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
-        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*1.0f;
-        eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
+        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*1.0f;//*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        //eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
         eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
+        all_EHA_tau[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau_act;
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act;
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act;
+
+
 
         eha_status = EHA_NO_ERR;
         ch_num = 1;
@@ -2434,9 +2446,15 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][1]/2e-4;
+
+        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*1.0f;//*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        /*
         eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][1];
         eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*1.0f;
         eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
+        */
         eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
@@ -2465,9 +2483,15 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act  = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
+
+        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        /*
         eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
         eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*1.0f;
         eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
+        */
         eha_state[eha_num_hydra].DATA.stsword  = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
@@ -2725,11 +2749,15 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
     }
     cnt++;
     ActForceToTorqueAll(all_joint_pos, all_EHA_tau, all_joint_tau);
+    //ActForceToTorqueAll(all_joint_pos, all_EHA_tau2, all_joint_tau2);
+    //ActForceToTorqueAll(all_joint_pos, all_EHA_tau3, all_joint_tau3);
 
     for(loop = 0; loop<HYDRA_JNT_MAX; loop++) {
         joint_state[loop].DATA.pos_act = all_joint_pos[loop];
         joint_state[loop].DATA.vel_act = all_joint_vel[loop];
         joint_state[loop].DATA.tau_act = all_joint_tau[loop];
+        joint_state[loop].DATA.tau2_act = all_joint_tau2[loop];
+        joint_state[loop].DATA.tau3_act = all_joint_tau3[loop];
     }
 
     pIPC->WriteStatus(joint_state, eha_state, sensor_state);
@@ -3671,6 +3699,424 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
             OsFflush(fpPdo);
         }
 
+        OsSleep(20);
+
+    } while( !pThreadParam->bThreadShutdown );
+
+    OsFclose(fpPdo);
+
+    if( EC_NULL != pTmpBuf) {
+        OsFree(pTmpBuf);
+        pTmpBuf = EC_NULL;
+    }
+
+    if( EC_NULL != pTmpBufAll) {
+        OsFree(pTmpBufAll);
+        pTmpBufAll = EC_NULL;
+    }
+    pThreadParam->bThreadRunning = EC_FALSE;
+
+    return;
+}
+
+static EC_T_VOID tLogSaveTask_jnt_tau_calib( EC_T_VOID* pvThreadParamDesc )
+{
+    T_THREAD_PARAM* 		pThreadParam  		= (T_THREAD_PARAM*)pvThreadParamDesc;
+    EC_T_DWORD				Remain;
+    EC_T_CPUSET         	CpuSet;
+    EC_T_INT				loop;
+
+    //T_SHM_INPUT_ACC_MD4KW	*pAccIn 			= EC_NULL;
+    //T_SHM_OUTPUT_ACC_MD4KW	*pAccOut 			= EC_NULL;
+
+    static EC_T_INT			sPutIdx 			= 0;
+    FILE					*fpPdo 				= EC_NULL;
+    EC_T_CHAR				*pTmpBuf			= EC_NULL;
+    EC_T_CHAR				*pTmpBufAll			= EC_NULL;
+    T_ALL_SLAVE_INFO*		pAllSlv				= EC_NULL;
+
+    struct tm           	*local;
+    time_t              	timer;
+    EC_T_CHAR           	datetime[256];
+    EC_T_CHAR           	fname_pdo[256];
+    static int kotemp;
+
+    joint_state_t  jnt_state_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    joint_cmd_t    jnt_cmd_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    eha_state_t    eha_state_log[EHA_MAX];
+    eha_cmd_t      eha_cmd_log[EHA_MAX];
+    sensor_state_t sensor_state_log[1];
+    sensor_cmd_t   sensor_cmd_log[1];
+
+    EC_CPUSET_ZERO( CpuSet );
+    EC_CPUSET_SET( CpuSet, (pThreadParam->dwCpuIndex +2));
+    OsSetThreadAffinity( EC_NULL, CpuSet );
+
+    pAllSlv  = (T_ALL_SLAVE_INFO*)pThreadParam->pvApplSpecParm1;
+
+    OsMemset(fname_pdo, 	0, 	sizeof(fname_pdo));
+    OsMemset(datetime, 		0, 	sizeof(datetime));
+
+    // 最初にOPENするファイルだけ、従来どおりのファイル名とする(gnuplotで使用する関係上)
+    snprintf(fname_pdo,	256, "%s%s", "pdo", 	FILE_EXT);
+    fpPdo	= OsFopen( fname_pdo, 	"w+" );
+
+    // いずれかでもOPENに失敗した場合
+    if(fpPdo == EC_NULL) {
+        printf("\n\n!!file open NG!!\n\n");
+        pThreadParam->bThreadRunning = EC_FALSE;
+        return;
+    }
+
+    // root権限でfopenしているため、アクセス権限の設定をしなおす
+    chmod(fname_pdo, 	S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP| S_IROTH|S_IWOTH);
+
+    pTmpBuf 	= (EC_T_CHAR*)OsMalloc(DATA_BUF_SIZE);
+    pTmpBufAll  = (EC_T_CHAR*)OsMalloc(DATA_BUF_ALLSIZE);
+    if((pTmpBuf == EC_NULL) || (pTmpBufAll == EC_NULL))
+    {
+        printf("\n\n!! Malloc NG!!\n\n");
+        pThreadParam->bThreadRunning = EC_FALSE;
+        return;
+    }
+
+    // 各Slaveの状態取得が完了するまで待つ
+    OsWaitForEvent(pThreadParam->pvTimingEvent, EC_WAITINFINITE);
+    pThreadParam->bThreadRunning = EC_TRUE;
+
+    do {
+        // もし、新規ファイル指定がされている場合
+        if(flg_NewFile == EC_TRUE)
+        {
+
+            //現ファイルをクローズ
+            if (OsFclose(fpPdo) == EOF)  {
+                printf("\n\n!!file close NG!!\n\n");
+                pThreadParam->bThreadRunning = EC_FALSE;
+                break;
+            }
+
+            OsMemset(fname_pdo, 	0, 	sizeof(fname_pdo));
+            OsMemset(datetime, 		0, 	sizeof(datetime));
+
+            //現在の日付、時刻を取得
+            time(&timer);
+            local = localtime(&timer);
+            snprintf(datetime, 256, "_%04d%02d%02d_%02d%02d%02d",
+                     local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+
+            //ファイルを再オープン
+            snprintf(fname_pdo,	256, "%s%s%s", "pdo",		datetime,	FILE_EXT);
+            fpPdo	= OsFopen( fname_pdo, 	"w+" );
+            if(fpPdo == EC_NULL) {
+                printf("\n\n!!file open NG!!\n\n");
+                pThreadParam->bThreadRunning = EC_FALSE;
+                break;
+            }
+
+            // root権限でfopenしているため、アクセス権限の設定をしなおす
+            chmod(fname_pdo, 	S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP| S_IROTH|S_IWOTH);
+
+            //初期化
+            sPutIdx 	   	= pShmServer->GetShmInIdx();
+            flg_NewFile 	= EC_FALSE;
+            flg_NewLabel   	= EC_TRUE;
+            flg_FileUpdate 	= EC_TRUE;
+        }
+
+        // もし書き込み停止が指定されている場合
+        if(flg_FileUpdate == EC_FALSE)
+        {
+            sPutIdx = pShmServer->GetShmInIdx();
+        }
+
+        //
+        // PDOデータの保存処理
+        //
+        //
+        if(sPutIdx != pShmServer->GetShmInIdx())
+        {
+            do {
+
+                // 共有メモリの参照Indexから、対象面をまるごとポインタで参照する
+//                pAccIn  = &pShmIn_MD4KW->Acc[sPutIdx];
+//                pAccOut = &pShmOut_MD4KW->Acc[sPutIdx];
+
+                OsMemset(pTmpBuf, 		0, DATA_BUF_SIZE);
+                OsMemset(pTmpBufAll, 	0, DATA_BUF_ALLSIZE);
+
+                // msec set
+                if(flg_NewLabel == EC_TRUE)
+                    snprintf(pTmpBufAll, DATA_BUF_SIZE, "time,");
+                else
+                    snprintf(pTmpBufAll, DATA_BUF_SIZE, "%d,", pShmServer->GetTimeInfo(sPutIdx));
+
+
+                pShmServer->ReadStatus(sPutIdx,jnt_state_log,eha_state_log,sensor_state_log);
+                pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
+
+                for(loop=20;loop<=22;loop++) // rwrist
+                {
+                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
+                    if(Remain <= 1) break;
+
+                    if(flg_NewLabel==EC_TRUE)
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "jnt_pos[%d],jnt_tau1[%d],jnt_tau2[%d],jnt_tau3[%d],",
+                                 loop,loop,loop,loop);
+                        strcat(pTmpBufAll, pTmpBuf);
+                    }
+                    else
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "%d,%lf,%lf,%lf,",clock_kang,
+                                 //jnt_state_log[loop].DATA.pos_act,
+                                 jnt_state_log[loop].DATA.tau_act, //from pressure sensor
+                                 jnt_state_log[loop].DATA.tau2_act, //from strain gauge
+                                 jnt_state_log[loop].DATA.tau3_act); //from complementary filter
+                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+                    }
+                }
+
+                for(loop=25;loop<=27;loop++)
+                {
+                    if(flg_NewLabel==EC_TRUE)
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "eha_pos[%d],eha_tau1[%d],eha_tau2[%d],eha_tau3[%d],",
+                                 loop,loop,loop,loop);
+                        strcat(pTmpBufAll, pTmpBuf);
+                    }
+                    else
+                    {
+                        snprintf(pTmpBuf,DATA_BUF_SIZE,
+                                 "%lf,%lf,%lf,%lf,",
+                                 eha_state_log[loop].DATA.pos_act,
+                                 eha_state_log[loop].DATA.tau_act,
+                                 eha_state_log[loop].DATA.tau2_act,
+                                 eha_state_log[loop].DATA.tau3_act
+                                 );
+
+                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+                    }
+                }
+                kotemp++;
+
+
+                // 改行 add
+                strcat(pTmpBufAll, "\n");
+                OsFwrite( pTmpBufAll, OsStrlen(pTmpBufAll), 1, fpPdo);
+
+                if(flg_NewLabel == EC_TRUE)
+                {
+                    // labelflg off
+                    flg_NewLabel = EC_FALSE;
+                }
+                else
+                {
+                    // indexを更新
+                    sPutIdx++;
+                    sPutIdx %= SHM_ACCNUM_MAX;
+                }
+            } while(sPutIdx != pShmServer->GetShmInIdx());
+
+            // IO負荷の多いフラッシュはまとめて一気に行う
+            OsFflush(fpPdo);
+        }
+
+        OsSleep(20);
+
+    } while( !pThreadParam->bThreadShutdown );
+
+    OsFclose(fpPdo);
+
+    if( EC_NULL != pTmpBuf) {
+        OsFree(pTmpBuf);
+        pTmpBuf = EC_NULL;
+    }
+
+    if( EC_NULL != pTmpBufAll) {
+        OsFree(pTmpBufAll);
+        pTmpBufAll = EC_NULL;
+    }
+    pThreadParam->bThreadRunning = EC_FALSE;
+
+    return;
+}
+
+static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
+{
+    T_THREAD_PARAM* 		pThreadParam  		= (T_THREAD_PARAM*)pvThreadParamDesc;
+    EC_T_DWORD				Remain;
+    EC_T_CPUSET         	CpuSet;
+    EC_T_INT				loop;
+
+    //T_SHM_INPUT_ACC_MD4KW	*pAccIn 			= EC_NULL;
+    //T_SHM_OUTPUT_ACC_MD4KW	*pAccOut 			= EC_NULL;
+
+    static EC_T_INT			sPutIdx 			= 0;
+    //static EC_T_INT			sPutIdx2 			= 0;
+    FILE					*fpPdo 				= EC_NULL;
+    EC_T_CHAR				*pTmpBuf			= EC_NULL;
+    EC_T_CHAR				*pTmpBufAll			= EC_NULL;
+    T_ALL_SLAVE_INFO*		pAllSlv				= EC_NULL;
+
+    struct tm           	*local;
+    time_t              	timer;
+    EC_T_CHAR           	datetime[256];
+    EC_T_CHAR           	fname_pdo[256];
+    static int kotemp;
+
+    joint_state_t  jnt_state_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    joint_cmd_t    jnt_cmd_log[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+    eha_state_t    eha_state_log[EHA_MAX];
+    eha_cmd_t      eha_cmd_log[EHA_MAX];
+    sensor_state_t sensor_state_log[1];
+    sensor_cmd_t   sensor_cmd_log[1];
+
+    EC_CPUSET_ZERO( CpuSet );
+    EC_CPUSET_SET( CpuSet, (pThreadParam->dwCpuIndex +2));
+    OsSetThreadAffinity( EC_NULL, CpuSet );
+
+    pAllSlv  = (T_ALL_SLAVE_INFO*)pThreadParam->pvApplSpecParm1;
+
+    OsMemset(fname_pdo, 	0, 	sizeof(fname_pdo));
+    OsMemset(datetime, 		0, 	sizeof(datetime));
+
+    // 最初にOPENするファイルだけ、従来どおりのファイル名とする(gnuplotで使用する関係上)
+    snprintf(fname_pdo,	256, "%s%s", "pdo", 	FILE_EXT);
+    fpPdo	= OsFopen( fname_pdo, 	"w+" );
+
+    // いずれかでもOPENに失敗した場合
+    if(fpPdo == EC_NULL) {
+        printf("\n\n!!file open NG!!\n\n");
+        pThreadParam->bThreadRunning = EC_FALSE;
+        return;
+    }
+
+    // root権限でfopenしているため、アクセス権限の設定をしなおす
+    chmod(fname_pdo, 	S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP| S_IROTH|S_IWOTH);
+
+    pTmpBuf 	= (EC_T_CHAR*)OsMalloc(DATA_BUF_SIZE);
+    pTmpBufAll  = (EC_T_CHAR*)OsMalloc(DATA_BUF_ALLSIZE);
+    if((pTmpBuf == EC_NULL) || (pTmpBufAll == EC_NULL))
+    {
+        printf("\n\n!! Malloc NG!!\n\n");
+        pThreadParam->bThreadRunning = EC_FALSE;
+        return;
+    }
+
+    // 各Slaveの状態取得が完了するまで待つ
+    OsWaitForEvent(pThreadParam->pvTimingEvent, EC_WAITINFINITE);
+    pThreadParam->bThreadRunning = EC_TRUE;
+
+    do {
+        // もし、新規ファイル指定がされている場合
+        if(flg_NewFile == EC_TRUE)
+        {
+
+            //現ファイルをクローズ
+            if (OsFclose(fpPdo) == EOF)  {
+                printf("\n\n!!file close NG!!\n\n");
+                pThreadParam->bThreadRunning = EC_FALSE;
+                break;
+            }
+
+            OsMemset(fname_pdo, 	0, 	sizeof(fname_pdo));
+            OsMemset(datetime, 		0, 	sizeof(datetime));
+
+            //現在の日付、時刻を取得
+            time(&timer);
+            local = localtime(&timer);
+            snprintf(datetime, 256, "_%04d%02d%02d_%02d%02d%02d",
+                     local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+
+            //ファイルを再オープン
+            snprintf(fname_pdo,	256, "%s%s%s", "pdo",		datetime,	FILE_EXT);
+            fpPdo	= OsFopen( fname_pdo, 	"w+" );
+            if(fpPdo == EC_NULL) {
+                printf("\n\n!!file open NG!!\n\n");
+                pThreadParam->bThreadRunning = EC_FALSE;
+                break;
+            }
+
+            // root権限でfopenしているため、アクセス権限の設定をしなおす
+            chmod(fname_pdo, 	S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP| S_IROTH|S_IWOTH);
+
+            //初期化
+            sPutIdx 	   	= pShmServer->GetShmInIdx();
+            flg_NewFile 	= EC_FALSE;
+            flg_NewLabel   	= EC_TRUE;
+            flg_FileUpdate 	= EC_TRUE;
+        }
+
+        // もし書き込み停止が指定されている場合
+        if(flg_FileUpdate == EC_FALSE)
+        {
+            sPutIdx = pShmServer->GetShmInIdx();
+        }
+
+        //
+        // PDOデータの保存処理
+        //
+        //
+        if(sPutIdx != pShmServer->GetShmInIdx())
+        {
+            do {
+
+                // 共有メモリの参照Indexから、対象面をまるごとポインタで参照する
+//                pAccIn  = &pShmIn_MD4KW->Acc[sPutIdx];
+//                pAccOut = &pShmOut_MD4KW->Acc[sPutIdx];
+
+                OsMemset(pTmpBuf, 		0, DATA_BUF_SIZE);
+                OsMemset(pTmpBufAll, 	0, DATA_BUF_ALLSIZE);
+
+                // msec set
+                if(flg_NewLabel == EC_TRUE)
+                    snprintf(pTmpBufAll, DATA_BUF_SIZE, "time,");
+                else
+                    snprintf(pTmpBufAll, DATA_BUF_SIZE, "%d,", pShmServer->GetTimeInfo(sPutIdx));
+                    //snprintf(pTmpBufAll, DATA_BUF_SIZE, "%d,", pShmServer->GetTimeInfo());
+
+
+                pShmServer->ReadStatus(sPutIdx,jnt_state_log,eha_state_log,sensor_state_log);
+                pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
+
+                snprintf(pTmpBuf,DATA_BUF_SIZE,
+                         "%d,%d,%d,%d,",
+                         clock_kang,
+                         pShmServer->GetTimeInfo(sPutIdx),
+                         //pShmServer->GetTimeInfo(),
+                         sPutIdx,
+                         pShmServer->GetShmInIdx()
+                         );
+                OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
+                          ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
+
+
+                // 改行 add
+                strcat(pTmpBufAll, "\n");
+                OsFwrite( pTmpBufAll, OsStrlen(pTmpBufAll), 1, fpPdo);
+
+                if(flg_NewLabel == EC_TRUE)
+                {
+                    // labelflg off
+                    flg_NewLabel = EC_FALSE;
+                }
+                else
+                {
+                    // indexを更新
+                    sPutIdx++;
+                    sPutIdx %= SHM_ACCNUM_MAX;
+                }
+            } while(sPutIdx != pShmServer->GetShmInIdx());
+
+            // IO負荷の多いフラッシュはまとめて一気に行う
+            OsFflush(fpPdo);
+        }
         OsSleep(20);
 
     } while( !pThreadParam->bThreadShutdown );

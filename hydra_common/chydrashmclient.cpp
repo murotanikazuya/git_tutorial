@@ -27,10 +27,12 @@ int CHydraShmClient::ReadStatus(joint_state_t jnt_state[], eha_state_t eha_state
 
     // read shm and store data
     for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
-        jnt_state[loop].DATA.pos_act = SHM_HYDRA_JOINT_POS_IN(0, loop);
-        jnt_state[loop].DATA.vel_act = SHM_HYDRA_JOINT_VEL_IN(0, loop);
-        jnt_state[loop].DATA.tau_act = SHM_HYDRA_JOINT_TAU_IN(0, loop);
-        jnt_state[loop].DATA.enabled = SHM_HYDRA_JOINT_STATUS_IN(0, loop);
+        jnt_state[loop].DATA.pos_act  = SHM_HYDRA_JOINT_POS_IN(0, loop);
+        jnt_state[loop].DATA.vel_act  = SHM_HYDRA_JOINT_VEL_IN(0, loop);
+        jnt_state[loop].DATA.tau_act  = SHM_HYDRA_JOINT_TAU_IN(0, loop);
+        //jnt_state[loop].DATA.tau2_act = SHM_HYDRA_JOINT_TAU2_IN(0, loop);
+        //jnt_state[loop].DATA.tau3_act = SHM_HYDRA_JOINT_TAU3_IN(0, loop);
+        jnt_state[loop].DATA.enabled  = SHM_HYDRA_JOINT_STATUS_IN(0, loop);
     }
     for(loop = 0; loop < HYDRA_HAND_JNT_MAX; loop++) {
         jnt_state[loop+HYDRA_JNT_MAX].DATA.pos_act = SHM_HYDRA_HAND_POS_IN(0, loop);

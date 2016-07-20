@@ -131,6 +131,7 @@ void CHydraShmServer::Close()
     }
 }
 
+/*       //ko
 int CHydraShmServer::ReadCommand(joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sensor_cmd_t senosr_cmd[])
 {
     for(int i=0; i<HYDRA_JNT_MAX; i++){
@@ -143,35 +144,60 @@ int CHydraShmServer::ReadCommand(joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sen
     }
     return 0;
 }
+*/       //ko
 
 int CHydraShmServer::ReadCommand(int idx, joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sensor_cmd_t sensor_cmd[])
 {
+    int Idx = idx % SHM_ACCNUM_MAX;
     for(int i=0; i<HYDRA_JNT_MAX; i++){
-        jnt_cmd[i].DATA.pos_ref = SHM_HYDRA_JOINT_REFPOS_OUT(idx, i);
-        jnt_cmd[i].DATA.tau_ref = SHM_HYDRA_JOINT_REFTAU_OUT(idx, i);
-        jnt_cmd[i].DATA.vel_ref = SHM_HYDRA_JOINT_REFVEL_OUT(idx, i);
-        jnt_cmd[i].DATA.enable = SHM_HYDRA_JOINT_CTRLMODE_OUT(idx, i);
+        jnt_cmd[i].DATA.pos_ref = pShmOut_MD4KW->Acc[Idx].Joints[i].joint_pos;
+        jnt_cmd[i].DATA.tau_ref = pShmOut_MD4KW->Acc[Idx].Joints[i].joint_tau;
+        jnt_cmd[i].DATA.vel_ref = pShmOut_MD4KW->Acc[Idx].Joints[i].joint_vel;
+        jnt_cmd[i].DATA.enable  = pShmOut_MD4KW->Acc[Idx].Joints[i].ctrl_mode;
     }
 
     for(int i=0; i<EHA_MAX; i++) {
-        eha_cmd[i].DATA.ctlword = SHM_HYDRA_EHA_CTRLWORD_OUT(idx, i);
-        eha_cmd[i].DATA.pos_ref = SHM_HYDRA_EHA_REFPOS_OUT(idx, i);
-        eha_cmd[i].DATA.vel_ref = SHM_HYDRA_EHA_REFVEL_OUT(idx, i);
-        eha_cmd[i].DATA.tau_ref = SHM_HYDRA_EHA_REFTAU_OUT(idx, i);
-//        eha_state[i].DATA.stsword = SHM_HYDRA_EHA_CTRLWORD_OUT(0, i);
+        eha_cmd[i].DATA.ctlword = pShmOut_MD4KW->Acc[Idx].Actuators[i].EHA_ctrlword;
+        eha_cmd[i].DATA.pos_ref = pShmOut_MD4KW->Acc[Idx].Actuators[i].EHA_pos;
+        eha_cmd[i].DATA.vel_ref = pShmOut_MD4KW->Acc[Idx].Actuators[i].EHA_vel;
+        eha_cmd[i].DATA.tau_ref = pShmOut_MD4KW->Acc[Idx].Actuators[i].EHA_tau;
     }
-
-    sensor_cmd[0].DATA.ft_sensor[0].ctlword = SHM_HYDRA_FS_CTRLWORD_OUT(idx, 0);
-    sensor_cmd[0].DATA.ft_sensor[1].ctlword = SHM_HYDRA_FS_CTRLWORD_OUT(idx, 1);
-    sensor_cmd[0].DATA.imu[0].ctlword       = SHM_HYDRA_IMU_CTRLWORD_OUT(idx, 0);
+    sensor_cmd[0].DATA.ft_sensor[0].ctlword = pShmOut_MD4KW->Acc[Idx].FS[0].ctrlword;
+    sensor_cmd[0].DATA.ft_sensor[1].ctlword = pShmOut_MD4KW->Acc[Idx].FS[1].ctrlword;
+    sensor_cmd[0].DATA.imu[0].ctlword       = pShmOut_MD4KW->Acc[Idx].IMU[0].ctrlword;
     return 0;
 }
+
+int CHydraShmServer::ReadCommand(joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sensor_cmd_t sensor_cmd[])
+{
+    for(int i=0; i<HYDRA_JNT_MAX; i++){
+        jnt_cmd[i].DATA.pos_ref = SHM_HYDRA_JOINT_REFPOS_OUT(0, i);
+        jnt_cmd[i].DATA.tau_ref = SHM_HYDRA_JOINT_REFTAU_OUT(0, i);
+        jnt_cmd[i].DATA.vel_ref = SHM_HYDRA_JOINT_REFVEL_OUT(0, i);
+        jnt_cmd[i].DATA.enable = SHM_HYDRA_JOINT_CTRLMODE_OUT(0, i);
+    }
+
+    for(int i=0; i<EHA_MAX; i++) {
+        eha_cmd[i].DATA.ctlword = SHM_HYDRA_EHA_CTRLWORD_OUT(0, i);
+        eha_cmd[i].DATA.pos_ref = SHM_HYDRA_EHA_REFPOS_OUT(0, i);
+        eha_cmd[i].DATA.vel_ref = SHM_HYDRA_EHA_REFVEL_OUT(0, i);
+        eha_cmd[i].DATA.tau_ref = SHM_HYDRA_EHA_REFTAU_OUT(0, i);
+    }
+
+    sensor_cmd[0].DATA.ft_sensor[0].ctlword = SHM_HYDRA_FS_CTRLWORD_OUT(0, 0);
+    sensor_cmd[0].DATA.ft_sensor[1].ctlword = SHM_HYDRA_FS_CTRLWORD_OUT(0, 1);
+    sensor_cmd[0].DATA.imu[0].ctlword       = SHM_HYDRA_IMU_CTRLWORD_OUT(0, 0);
+    return 0;
+}
+
 int CHydraShmServer::WriteStatus(const joint_state_t jnt_state[], const eha_state_t eha_state[], const sensor_state_t sensor_state[])
 {
     for(int i=0; i<HYDRA_JNT_MAX; i++) {
         SHM_HYDRA_JOINT_POS_IN(1, i)    = jnt_state[i].DATA.pos_act;
         SHM_HYDRA_JOINT_VEL_IN(1, i)    = jnt_state[i].DATA.vel_act;
         SHM_HYDRA_JOINT_TAU_IN(1, i)    = jnt_state[i].DATA.tau_act;
+        SHM_HYDRA_JOINT_TAU2_IN(1, i)    = jnt_state[i].DATA.tau2_act;
+        SHM_HYDRA_JOINT_TAU3_IN(1, i)    = jnt_state[i].DATA.tau3_act;
         SHM_HYDRA_JOINT_STATUS_IN(1, i) = jnt_state[i].DATA.enabled;
     }
     for(int i=0; i<HYDRA_HAND_JNT_MAX; i++) {
@@ -192,24 +218,53 @@ int CHydraShmServer::WriteStatus(const joint_state_t jnt_state[], const eha_stat
 
 int CHydraShmServer::ReadStatus(int idx, joint_state_t jnt_state[], eha_state_t eha_state[], sensor_state_t sensor_state[])
 {
+    int Idx = idx % SHM_ACCNUM_MAX;
     for(int i=0; i<HYDRA_JNT_MAX; i++) {
-        jnt_state[i].DATA.pos_act = SHM_HYDRA_JOINT_POS_IN(idx, i);
-        jnt_state[i].DATA.vel_act = SHM_HYDRA_JOINT_VEL_IN(idx, i);
-        jnt_state[i].DATA.tau_act = SHM_HYDRA_JOINT_TAU_IN(idx, i);
-        jnt_state[i].DATA.enabled = SHM_HYDRA_JOINT_STATUS_IN(idx, i);
+        jnt_state[i].DATA.pos_act  = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_pos;
+        jnt_state[i].DATA.vel_act  = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_vel;
+        jnt_state[i].DATA.tau_act  = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau;
+        jnt_state[i].DATA.tau2_act = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau2;
+        jnt_state[i].DATA.tau3_act = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau3;
+        jnt_state[i].DATA.enabled  = pShmIn_MD4KW->Acc[Idx].Joints[i].status;
     }
     for(int i=0; i<HYDRA_HAND_JNT_MAX; i++) {
-        jnt_state[i+HYDRA_JNT_MAX].DATA.pos_act = SHM_HYDRA_HAND_POS_IN(idx, i);
-        jnt_state[i+HYDRA_JNT_MAX].DATA.vel_act = SHM_HYDRA_HAND_VEL_IN(idx, i);
+        jnt_state[i+HYDRA_JNT_MAX].DATA.pos_act = pShmIn_MD4KW->Acc[Idx].Hands[i].joint_pos;
+        jnt_state[i+HYDRA_JNT_MAX].DATA.vel_act = pShmIn_MD4KW->Acc[Idx].Hands[i].joint_vel;
     }
     for(int i=0; i<EHA_MAX; i++) {
-        eha_state[i].DATA.pos_act = SHM_HYDRA_EHA_POS_IN(idx, i);
-        eha_state[i].DATA.rawpos_act = SHM_HYDRA_EHA_RAWPOS_IN(idx, i);
-        eha_state[i].DATA.tau_act = SHM_HYDRA_EHA_TAU_IN(idx, i);
-        eha_state[i].DATA.tau2_act = SHM_HYDRA_EHA_TAU2_IN(idx, i);
-        eha_state[i].DATA.tau3_act = SHM_HYDRA_EHA_TAU3_IN(idx, i);
-        eha_state[i].DATA.vel_act = SHM_HYDRA_EHA_VEL_IN(idx, i);
-        eha_state[i].DATA.stsword = SHM_HYDRA_EHA_STATUS_IN(idx, i);
+        eha_state[i].DATA.pos_act    = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_pos;
+        eha_state[i].DATA.rawpos_act = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_rawpos;
+        eha_state[i].DATA.tau_act    = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_tau;
+        eha_state[i].DATA.tau2_act   = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_tau2;
+        eha_state[i].DATA.tau3_act   = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_tau3;
+        eha_state[i].DATA.vel_act    = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_vel;
+        eha_state[i].DATA.stsword    = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_status;
+    }
+    return 0;
+}
+
+int CHydraShmServer::ReadStatus(joint_state_t jnt_state[], eha_state_t eha_state[], sensor_state_t sensor_state[])
+{
+    for(int i=0; i<HYDRA_JNT_MAX; i++) {
+        jnt_state[i].DATA.pos_act  = SHM_HYDRA_JOINT_POS_IN(0, i);
+        jnt_state[i].DATA.vel_act  = SHM_HYDRA_JOINT_VEL_IN(0, i);
+        jnt_state[i].DATA.tau_act  = SHM_HYDRA_JOINT_TAU_IN(0, i);
+        jnt_state[i].DATA.tau2_act = SHM_HYDRA_JOINT_TAU2_IN(0, i);
+        jnt_state[i].DATA.tau3_act = SHM_HYDRA_JOINT_TAU3_IN(0, i);
+        jnt_state[i].DATA.enabled  = SHM_HYDRA_JOINT_STATUS_IN(0, i);
+    }
+    for(int i=0; i<HYDRA_HAND_JNT_MAX; i++) {
+        jnt_state[i+HYDRA_JNT_MAX].DATA.pos_act = SHM_HYDRA_HAND_POS_IN(0, i);
+        jnt_state[i+HYDRA_JNT_MAX].DATA.vel_act = SHM_HYDRA_HAND_VEL_IN(0, i);
+    }
+    for(int i=0; i<EHA_MAX; i++) {
+        eha_state[i].DATA.pos_act    = SHM_HYDRA_EHA_POS_IN(0, i);
+        eha_state[i].DATA.rawpos_act = SHM_HYDRA_EHA_RAWPOS_IN(0, i);
+        eha_state[i].DATA.tau_act    = SHM_HYDRA_EHA_TAU_IN(0, i);
+        eha_state[i].DATA.tau2_act   = SHM_HYDRA_EHA_TAU2_IN(0, i);
+        eha_state[i].DATA.tau3_act   = SHM_HYDRA_EHA_TAU3_IN(0, i);
+        eha_state[i].DATA.vel_act    = SHM_HYDRA_EHA_VEL_IN(0, i);
+        eha_state[i].DATA.stsword    = SHM_HYDRA_EHA_STATUS_IN(0, i);
     }
     return 0;
 }
