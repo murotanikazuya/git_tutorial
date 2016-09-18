@@ -80,6 +80,8 @@ int CHydraShmClient::WriteCommand(const joint_cmd_t jnt_cmd[], const eha_cmd_t e
 
     for(loop=0; loop<EHA_MAX; loop++) {
         SHM_HYDRA_EHA_CTRLWORD_OUT(1, loop) = (unsigned short)((eha_cmd[loop].DATA.ctlword)&0xffff);
+        //SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = eha_cmd[loop].DATA.rawpos_ref;
+        SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = eha_cmd[loop].DATA.pos_ref;
     }
 
     SHM_HYDRA_FS_CTRLWORD_OUT(1,0)  = sensor_cmd[0].DATA.ft_sensor[0].ctlword;

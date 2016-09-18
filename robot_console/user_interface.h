@@ -74,6 +74,15 @@ const char eha_names[][25] = {
 	"EHA_lhand_rng"
 };
 
+const char eef_names[][25] = {
+    "rhand_x",
+    "rhand_y",
+    "rhand_z",
+    "lhand_x",
+    "lhand_y",
+    "lhand_z"
+};
+
 const int eha_to_joint[EHA_MAX]=
 {//ehaの番号からjointの番号を返す,直交二軸は取り敢えずjointの番号を昇順で書いとく
  JOINT_HYDRA_RHIP_YAW,
@@ -144,7 +153,7 @@ const double all_joint_angle_limit[][2] = {//radians
     { DEG2RAD(-30),    DEG2RAD(90)   },//rscaplae
     { DEG2RAD(-90),    DEG2RAD(90)   },
 	{ DEG2RAD(-117.5), DEG2RAD(17.5) },
-	{ DEG2RAD(-30),    DEG2RAD(90)   },
+    { DEG2RAD(-65),    DEG2RAD(90)   }, //rshoulder
 	{ DEG2RAD(-117),   DEG2RAD(9)    },
 	{ DEG2RAD(-10),    DEG2RAD(110)  },
     { DEG2RAD(-90),  DEG2RAD(90) },
@@ -152,7 +161,7 @@ const double all_joint_angle_limit[][2] = {//radians
     { DEG2RAD(-90),    DEG2RAD(30)   },//lscaplae
     { DEG2RAD(-90),    DEG2RAD(90)   },
 	{ DEG2RAD(-17.5),  DEG2RAD(117.5)},
-	{ DEG2RAD(-90),    DEG2RAD(30)   },
+    { DEG2RAD(-90),    DEG2RAD(65)   }, //lshoulder
 	{ DEG2RAD(-117),   DEG2RAD(9)    },
 	{ DEG2RAD(-110),   DEG2RAD(10)   },
     { DEG2RAD(-90),  DEG2RAD(90) },

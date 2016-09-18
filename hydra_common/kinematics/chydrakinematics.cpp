@@ -8,11 +8,15 @@ CHydraKinematics::CHydraKinematics()
         jnt[i].p_i_ij.x() = pij[i][0];
         jnt[i].p_i_ij.y() = pij[i][1];
         jnt[i].p_i_ij.z() = pij[i][2];
+        jnt[i].v_i_ij.x() = pij[i][0]; // define v here
+        jnt[i].v_i_ij.y() = pij[i][1]; // define v here
+        jnt[i].v_i_ij.z() = pij[i][2]; // define v here
         jnt[i].a_i_ij.x() = aij[i][0];
         jnt[i].a_i_ij.y() = aij[i][1];
         jnt[i].a_i_ij.z() = aij[i][2];
         jnt[i].R_i_ij_ini = Rodrigues(jnt[i].a_i_ij, aij[i][3]);
         jnt[i].q_ij = 0;
+        jnt[i].dq_ij = 0;
         jnt[i].s_j_j.x() = sij[i][0];
         jnt[i].s_j_j.y() = sij[i][1];
         jnt[i].s_j_j.z() = sij[i][2];
@@ -26,6 +30,10 @@ CHydraKinematics::CHydraKinematics()
             jnt[i].child[j] = &jnt[child[i][j+1]];
         }
 
+        jnt[i].I_J_lin.resize(3,58+6);
+        jnt[i].I_J_lin.setZero();
+        jnt[i].I_J_rot.resize(3,58+6);
+        jnt[i].I_J_rot.setZero();
     }
 }
 CHydraKinematics::~CHydraKinematics()
@@ -67,6 +75,15 @@ void CHydraKinematics::ForwardKinematics()
         jnt[i].s_0_jj = jnt[i].R_0_j * jnt[i].s_j_j;
         jnt[i].s_0_j  = jnt[i].p_0_j + jnt[i].s_0_jj;
     }
+
+
+    // Calculate jacobians
+    for(int i=1; i<58; i++){
+        GetJointLinJac(i);
+        GetJointRotJac(i);
+    }
+
+
     //JOINT_HYDRA_LWRIST_PITCH
     i = 31;
     CalcStatics(i);
@@ -92,6 +109,35 @@ void CHydraKinematics::ForwardKinematics()
             break;
         }
     }
+}
+
+void CHydraKinematics::GetJointLinJac(int joint){
+    jnt[joint].I_J_lin.block(0,0,3,3) = Matrix<double,3,3>::Identity();
+    int parent_i = -1;
+    for(int i = 0; i < jnt[joint].num_parent; ++i){
+        parent_i = parent[joint][1+i]; //jnt[joint].parent[i];
+        Vector3d a_0_ij = jnt[parent_i].R_0_j * jnt[parent_i].a_i_ij; // could probably be put into kinematics
+        Vector3d p_0_ij = jnt[joint].p_0_j - jnt[parent_i].p_0_j;
+        jnt[joint].I_J_lin.block(0,parent_i,3,1) = a_0_ij.cross(p_0_ij);
+    }
+}
+
+void CHydraKinematics::GetJointRotJac(int joint){
+    jnt[joint].I_J_rot.block(0,3,3,3) = Matrix<double,3,3>::Identity();
+    int parent_i = -1;
+    for(int i = 0; i < jnt[joint].num_parent; ++i){
+        parent_i = parent[joint][1+i]; //jnt[joint].parent[i];
+        Vector3d a_0_ij = jnt[parent_i].R_0_j * jnt[parent_i].a_i_ij;
+        jnt[joint].I_J_lin.block(0,parent_i,3,1) = a_0_ij;
+    }
+}
+
+MatrixXd CHydraKinematics::GetJlinTEST(int j){
+    return jnt[j].I_J_lin;
+}
+
+MatrixXd CHydraKinematics::GetJrotTEST(int j){
+    return jnt[j].I_J_rot;
 }
 
 Matrix3d CHydraKinematics::Rodrigues(Vector3d w, double dt)

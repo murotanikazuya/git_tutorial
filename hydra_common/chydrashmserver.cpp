@@ -225,7 +225,7 @@ int CHydraShmServer::ReadStatus(int idx, joint_state_t jnt_state[], eha_state_t 
         jnt_state[i].DATA.tau_act  = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau;
         jnt_state[i].DATA.tau2_act = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau2;
         jnt_state[i].DATA.tau3_act = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau3;
-        jnt_state[i].DATA.enabled  = pShmIn_MD4KW->Acc[Idx].Joints[i].status;
+        jnt_state[i].DATA.enabled  = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_status;
     }
     for(int i=0; i<HYDRA_HAND_JNT_MAX; i++) {
         jnt_state[i+HYDRA_JNT_MAX].DATA.pos_act = pShmIn_MD4KW->Acc[Idx].Hands[i].joint_pos;

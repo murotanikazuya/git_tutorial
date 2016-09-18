@@ -22,6 +22,7 @@ extern CHydraDataManager hydra_data;
 //extern eha_cmd_t      eha_cmd[EHA_MAX];
 extern double all_joint_tau_fk[HYDRA_JNT_MAX];
 extern double all_joint_pos_tgt[HYDRA_JNT_MAX];
+extern double all_joint_tau_tgt[HYDRA_JNT_MAX];
 
 extern double all_joint_initpos[HYDRA_JNT_MAX];
 extern double all_joint_finalpos[HYDRA_JNT_MAX];
@@ -31,6 +32,7 @@ extern double all_joint_freq_hz[HYDRA_JNT_MAX];
 extern double all_joint_phase[HYDRA_JNT_MAX];
 
 extern bool   all_joint_servo_switch[HYDRA_JNT_MAX];
+extern bool   arm_IK_switch[2];
 //extern unsigned short all_eha_switch[EHA_MAX];//
 //extern double all_eha_pos[EHA_MAX];
 //extern unsigned int all_eha_rawpos[EHA_MAX];
@@ -38,6 +40,9 @@ extern bool   all_joint_servo_switch[HYDRA_JNT_MAX];
 //extern double all_eha_tau[EHA_MAX];
 //extern double all_eha_tau2[EHA_MAX];
 //extern double all_eha_tau3[EHA_MAX];
+
+extern double  eef_to_print[6];
+extern double  eef_to_update[6];
 
 extern int thread_end_flg;
 
@@ -70,6 +75,8 @@ static void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start,
 static void print_labels_EHA(WINDOW *pLabelWnd);
 static void print_menu_EHA(WINDOW *pMenuWnd);
 static void print_title_EHA(WINDOW *pTitleWnd);
+static void print_row_CART(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jnt_end);
+static void print_labels_CART(WINDOW *pLabelWnd);
 static int  show_quit_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y);
 static void show_help_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y);
 static void turn_off_all_EHA(void);
@@ -79,9 +86,19 @@ static int  show_dialog_get_filename(WINDOW *pWnd, char *filename, int size_x, i
 
 const int label_x_pos[]={0, 23, 32, 41, 46,56,66,76}; //52, 57, 66, 80};
 
+/*
 enum E_VIEW_MODE {
     E_VIEW_JOINT,
-    E_VIEW_EHA};
+    E_VIEW_EHA,
+    E_VIEW_CART
+};
+*/
+#define E_VIEW_JOINT 0
+#define E_VIEW_EHA   1
+#define E_VIEW_CART  2
+#define E_VIEW_MAX   3
+
+#define CART_MAX     6
 
 void *servo_ui(void *param)
 {  
@@ -92,6 +109,7 @@ void *servo_ui(void *param)
 
     int view_mode=0;
     int x=0,y=0;
+    static int y_prev[E_VIEW_MAX];
     int key;
 
     int size_x, size_y;
@@ -116,10 +134,26 @@ void *servo_ui(void *param)
 
     jnt_start = y;
 
+    switch(view_mode){
+    case E_VIEW_JOINT:
+        jnt_end   = (scroll_panel_size_y>HYDRA_JNT_MAX)?HYDRA_JNT_MAX:scroll_panel_size_y;
+        break;
+    case E_VIEW_EHA:
+        jnt_end   = (scroll_panel_size_y>EHA_MAX)?EHA_MAX:scroll_panel_size_y;
+        break;
+    case E_VIEW_CART:
+        jnt_end   = (scroll_panel_size_y>CART_MAX)?CART_MAX:scroll_panel_size_y;
+        break;
+    default:
+        break;
+    }
+
+    /*
     if(view_mode==E_VIEW_JOINT)
         jnt_end   = (scroll_panel_size_y>HYDRA_JNT_MAX)?HYDRA_JNT_MAX:scroll_panel_size_y;
     else if(view_mode==E_VIEW_EHA)
         jnt_end   = (scroll_panel_size_y>EHA_MAX)?EHA_MAX:scroll_panel_size_y;
+        */
 
     x = 1;
 
@@ -127,7 +161,7 @@ void *servo_ui(void *param)
     while(1){
 
         erase();
-
+        /*
         if(view_mode==E_VIEW_JOINT) {
             print_labels_joint(pLabelWnd);
             print_row_joint(pWnd, y, x, jnt_start, jnt_end);
@@ -140,6 +174,29 @@ void *servo_ui(void *param)
             print_menu_EHA(pMenuWnd);
             print_title_EHA(pTitleWnd);
         }
+        */
+        switch(view_mode){
+        case E_VIEW_JOINT:
+            print_labels_joint(pLabelWnd);
+            print_row_joint(pWnd, y, x, jnt_start, jnt_end);
+            print_menu_joint(pMenuWnd);
+            print_title_joint(pTitleWnd);
+            break;
+        case E_VIEW_EHA:
+            print_labels_EHA(pLabelWnd);
+            print_row_EHA(pWnd, y, x, jnt_start, jnt_end);
+            print_menu_EHA(pMenuWnd);
+            print_title_EHA(pTitleWnd);
+            break;
+        case E_VIEW_CART:
+            print_labels_CART(pLabelWnd);
+            print_row_CART(pWnd,y,x,jnt_start,jnt_end);
+            break;
+        default:
+            //print_labels_CART(pLabelWnd);
+            //print_row_CART(pLabelWnd,y,x,jnt_start,jnt_end);
+            break;
+        }
 
         refresh();//表示更新
 
@@ -149,14 +206,30 @@ void *servo_ui(void *param)
         //矢印キーの処理
         switch(key){
         case '\t':
+            y_prev[view_mode] = y;
             view_mode++;
-            view_mode &= 0x1;
-            y = 0;
+            view_mode %= E_VIEW_MAX;
+            y = y_prev[view_mode];
             jnt_start = 0;
+            switch(view_mode){
+            case E_VIEW_JOINT:
+                jnt_end   = (scroll_panel_size_y>HYDRA_JNT_MAX)?HYDRA_JNT_MAX:scroll_panel_size_y;
+                break;
+            case E_VIEW_EHA:
+                jnt_end   = (scroll_panel_size_y>EHA_MAX)?EHA_MAX:scroll_panel_size_y;
+                break;
+            case E_VIEW_CART:
+                jnt_end   = (scroll_panel_size_y>CART_MAX)?CART_MAX:scroll_panel_size_y;
+                break;
+            default:
+                break;
+            }
+            /*
             if(view_mode==E_VIEW_JOINT)
                 jnt_end   = (scroll_panel_size_y>HYDRA_JNT_MAX)?HYDRA_JNT_MAX:scroll_panel_size_y;
             else if(view_mode==E_VIEW_EHA)
                 jnt_end   = (scroll_panel_size_y>EHA_MAX)?EHA_MAX:scroll_panel_size_y;
+            */
             break;
 
         case KEY_UP:
@@ -164,10 +237,22 @@ void *servo_ui(void *param)
                 if(jnt_start>0) {
                     jnt_start--;
                     jnt_end = jnt_start + scroll_panel_size_y;
+                    switch(view_mode){
+                    case E_VIEW_JOINT:
+                        jnt_end = (jnt_end>HYDRA_JNT_MAX-1)?HYDRA_JNT_MAX-1:jnt_end;
+                        break;
+                    case E_VIEW_EHA:
+                        jnt_end = (jnt_end>EHA_MAX-1)?EHA_MAX-1:jnt_end;
+                        break;
+                    case E_VIEW_CART:
+                        jnt_end = (jnt_end>CART_MAX-1)?CART_MAX-1:jnt_end;
+                    }
+                    /*
                     if(view_mode==E_VIEW_JOINT)
                         jnt_end = (jnt_end>HYDRA_JNT_MAX-1)?HYDRA_JNT_MAX-1:jnt_end;
                     else if(view_mode==E_VIEW_EHA)
                         jnt_end = (jnt_end>EHA_MAX-1)?EHA_MAX-1:jnt_end;
+                    */
                 }
                 y = jnt_start;
             }
@@ -177,6 +262,30 @@ void *servo_ui(void *param)
 
         case KEY_DOWN:
             if(y==jnt_end-1) {
+                switch(view_mode){
+                case E_VIEW_JOINT:
+                    if(jnt_end<HYDRA_JNT_MAX) {
+                        jnt_end++;
+                        jnt_start = jnt_end - scroll_panel_size_y;
+                        jnt_start = (jnt_start<0)?0:jnt_start;
+                    }
+                    break;
+                case E_VIEW_EHA:
+                    if(jnt_end<EHA_MAX) {
+                        jnt_end++;
+                        jnt_start = jnt_end - scroll_panel_size_y;
+                        jnt_start = (jnt_start<0)?0:jnt_start;
+                    }
+                    break;
+                case E_VIEW_CART:
+                    if(jnt_end<CART_MAX) {
+                        jnt_end++;
+                        jnt_start = jnt_end - scroll_panel_size_y;
+                        jnt_start = (jnt_start<0)?0:jnt_start;
+                    }
+                    break;
+                }
+                /*
                 if(view_mode==E_VIEW_JOINT) {
                     if(jnt_end<HYDRA_JNT_MAX) {
                         jnt_end++;
@@ -191,6 +300,7 @@ void *servo_ui(void *param)
                         jnt_start = (jnt_start<0)?0:jnt_start;
                     }
                 }
+                */
                 y = jnt_end-1;
             }
             else
@@ -200,10 +310,17 @@ void *servo_ui(void *param)
         case KEY_RIGHT:
             // x++;
             // x &= 0x1;
+            if(view_mode==E_VIEW_CART){
+                    eef_to_update[y] += 0.001;
+            }
+
             break;
         case KEY_LEFT :
             // x--;
             // x &= 0x1;
+            if(view_mode==E_VIEW_CART){
+                    eef_to_update[y] -= 0.001;
+            }
             break;
         case KEY_F(2):
         {
@@ -254,15 +371,8 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y]
-                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.01);
-                                += DEG2RAD(0.01);
-//                        pthread_mutex_lock( &(thread_data->mutex) );
-//                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        //all_joint_pos_tgt[y]
-                        //    = CHK_LIM(all_joint_refpos_to_send[y],
-                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
-//                        pthread_mutex_unlock( &(thread_data->mutex) );
+                        all_joint_refpos_to_send[y] += DEG2RAD(0.01);
+                        all_joint_tau_tgt[y] += 0.1;
                     }
                 }
             }
@@ -274,20 +384,16 @@ void *servo_ui(void *param)
                 break;
             interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
-//                if(all_joint_servo_switch[y]) {
-                    if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y]
-                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref + DEG2RAD(0.1);
-                                += DEG2RAD(0.1);
-//                        pthread_mutex_lock( &(thread_data->mutex) );
-//                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        //all_joint_pos_tgt[y]
-                        //    = CHK_LIM(all_joint_refpos_to_send[y],
-                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
-//                        pthread_mutex_unlock( &(thread_data->mutex) );
-                    }
-//                }
-            }
+                if(!all_joint_resv_to_send[y]) {
+                    all_joint_refpos_to_send[y] += DEG2RAD(0.5);
+                    all_joint_tau_tgt[y] += 1;
+                }
+            }/*
+            else if(view_mode==E_VIEW_EHA) {
+                //all_eha_reftau[y]=all_eha_reftau[y]+30;
+                all_eha_reftau[y]=all_eha_reftau[y]+200; //0.5A
+                //all_eha_reftau[y]=all_eha_reftau[y]+30; //0.35MPa : 100N
+            }*/
             break;
 
         case 'd':
@@ -298,15 +404,8 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y]
-                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref - DEG2RAD(0.01);
-                                -= DEG2RAD(0.01);
-//                        pthread_mutex_lock( &(thread_data->mutex) );
-//                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        //all_joint_pos_tgt[y]
-                        //    = CHK_LIM(all_joint_refpos_to_send[y],
-                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
-//                        pthread_mutex_unlock( &(thread_data->mutex) );
+                        all_joint_refpos_to_send[y] -= DEG2RAD(0.01);
+                        all_joint_tau_tgt[y] -= 0.1;
                     }
                 }
             }
@@ -317,19 +416,10 @@ void *servo_ui(void *param)
                 break;
             interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
-                //               if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y]
-                                //= hydra_data.GetJointCmdPtr(0)[y].DATA.pos_ref -DEG2RAD(0.1);
-                                -= DEG2RAD(0.1);
-//                        pthread_mutex_lock( &(thread_data->mutex) );
-//                        hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        //all_joint_pos_tgt[y]
-                        //    = CHK_LIM(all_joint_refpos_to_send[y],
-                        //              all_joint_angle_limit[y][0],all_joint_angle_limit[y][1]);
-//                        pthread_mutex_unlock( &(thread_data->mutex) );
+                        all_joint_refpos_to_send[y] -= DEG2RAD(0.5);
+                        all_joint_tau_tgt[y] -= 1;
                     }
-                    //}
             }
             break;
 
@@ -367,7 +457,8 @@ void *servo_ui(void *param)
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
 //                        pthread_mutex_lock( &(thread_data->mutex) );
-                        all_joint_freq_hz[y] = all_joint_freq_hz[y] + 0.01;
+                        //all_joint_freq_hz[y] = all_joint_freq_hz[y] + 0.01;
+                        all_joint_freq_hz[y] = all_joint_freq_hz[y] + 0.1;
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
                 }
@@ -380,7 +471,8 @@ void *servo_ui(void *param)
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
 //                        pthread_mutex_lock( &(thread_data->mutex) );
-                        all_joint_freq_hz[y] = (all_joint_freq_hz[y]>0.01) ? (all_joint_freq_hz[y]-0.01) : all_joint_freq_hz[y];
+                        //all_joint_freq_hz[y] = (all_joint_freq_hz[y]>0.01) ? (all_joint_freq_hz[y]-0.01) : all_joint_freq_hz[y];
+                        all_joint_freq_hz[y] = (all_joint_freq_hz[y]>0.1) ? (all_joint_freq_hz[y]-0.1) : all_joint_freq_hz[y];
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                     }
                 }
@@ -508,6 +600,23 @@ void *servo_ui(void *param)
             }
             break;
         }
+        case 'I':
+            if(view_mode==E_VIEW_CART){
+                for(int i=0;i<6;i++){
+                    eef_to_update[i]=eef_to_print[i];
+                }
+                for(int i=0;i<2;i++){
+                    arm_IK_switch[i] = true;
+                }
+            }
+            break;
+        case 'i':
+            if(view_mode==E_VIEW_CART){
+                for(int i=0;i<2;i++){
+                    arm_IK_switch[i] = false;
+                }
+            }
+            break;
         case KEY_DC:
             //turn_off_all_EHA( );
             turn_off_all_joint( );
@@ -546,20 +655,11 @@ void *servo_ui(void *param)
                              = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
                     all_joint_refpos_to_send[k]
                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
-                    //all_joint_pos_tgt[k] = all_joint_refpos_to_send[k];
-                    //all_joint_servo_switch[k] = all_joint_servo_switch[k];
+                    all_joint_tau_tgt[k] = 0;
                     hydra_data.GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
                     all_joint_resv_to_send[k] = false;
                 }
-                /*
-                for(j=0; j<joint_to_EHA_power[y][0]; j++) {
-                    k = joint_to_EHA_power[y][j+1];
-//                    pthread_mutex_lock( &(thread_data->mutex) );
-                    hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
-                            = (all_joint_servo_switch[y]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
-//                    pthread_mutex_unlock( &(thread_data->mutex) );
-                }
-                */
+
             }
         endcr:
             break;
@@ -579,6 +679,7 @@ void *servo_ui(void *param)
                             = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
                     all_joint_refpos_to_send[j]
                             = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
+                    all_joint_tau_tgt[j] = 0;
                     //all_joint_pos_tgt[j] = all_joint_refpos_to_send[j];
                     hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
                     all_joint_resv_to_send[j] = false;
@@ -687,10 +788,10 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
 //        pthread_mutex_lock( &(thread_data->mutex) );
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[1] + x_offset);
-        wprintw(pWnd, "%07.2f", RAD2DEG(hydra_data.GetJointStatePtr(0)[i].DATA.pos_act));
+        wprintw(pWnd, "%06.2f", RAD2DEG(hydra_data.GetJointStatePtr(0)[i].DATA.pos_act));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
-        wprintw(pWnd,"%07.2f", RAD2DEG(hydra_data.GetJointCmdPtr(0)[i].DATA.pos_ref));
+        wprintw(pWnd,"%06.2f", RAD2DEG(hydra_data.GetJointCmdPtr(0)[i].DATA.pos_ref));
 
 
 
@@ -698,10 +799,10 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetJointStatePtr(0)[i].DATA.tau_act);
+        wprintw(pWnd,"%06.2f", hydra_data.GetJointStatePtr(0)[i].DATA.tau_act);
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
-        wprintw(pWnd,"%07.2f", all_joint_tau_fk[i]);
+        wprintw(pWnd,"%06.2f", all_joint_tau_fk[i]);
 
 //        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[6] + x_offset);
 //        wprintw(pWnd,"%07.2f", all_joint_freq_hz[i]);
@@ -881,14 +982,14 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 //        wprintw(pWnd, "%08x", all_eha_rawpos[i] );
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
-        /*
+
         if(debug_mode)
         {
             wprintw(pWnd, "%08x", hydra_data.GetEHACmdPtr(0)[i].DATA.rawpos_ref);
         }else{
             wprintw(pWnd, "%07.2f", (hydra_data.GetEHACmdPtr(0)[i].DATA.pos_ref)*1000);
         }
-        */
+
 //  wprintw(pWnd,"%07.2f", RAD2DEG(all_eha_refpos[i]));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
@@ -896,7 +997,7 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
         //waddstr(pWnd, ( (all_eha_servo_switch[i]==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);
+        wprintw(pWnd,"%08.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
         wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau2_act);
@@ -935,20 +1036,23 @@ void print_labels_EHA(WINDOW *pLabelWnd)
     waddstr(pLabelWnd, "State");
 
     wmove(pLabelWnd, 0, label_x_pos[4]+x_offset);
-    wprintw(pLabelWnd, "Act Tau");
+    wprintw(pLabelWnd, "Tau");
+
+    wmove(pLabelWnd, 1, label_x_pos[4]+x_offset);
+    wprintw(pLabelWnd, "[N/Nm]");
 
     wmove(pLabelWnd, 0, label_x_pos[5]+x_offset);
-    wprintw(pLabelWnd, "Strain");
+    wprintw(pLabelWnd, "ref_cur_");
 
     wmove(pLabelWnd, 1, label_x_pos[5]+x_offset);
-    wprintw(pLabelWnd, "[bit]");
+    wprintw(pLabelWnd, " [A]");
 
 
     wmove(pLabelWnd, 0, label_x_pos[6]+x_offset);
-    wprintw(pLabelWnd, "Temp");
+    wprintw(pLabelWnd, "msr_cur");
 
     wmove(pLabelWnd, 1, label_x_pos[6]+x_offset);
-    wprintw(pLabelWnd, "C");
+    wprintw(pLabelWnd, " [A]");
 
     wattroff(pLabelWnd, A_BOLD);
 }
@@ -973,6 +1077,103 @@ void print_title_EHA(WINDOW *pTitleWnd)
     werase(pTitleWnd);
     wmove(pTitleWnd, 0, 2);
     waddstr(pTitleWnd, "[EHA Mode]    Hydra Joint Control");
+}
+
+void print_row_CART(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jnt_end)
+{
+    int i;
+    int height =1;
+    int x_offset = 1;
+    int y_offset = 0;
+    //int sel_mode=0;
+    wbkgd(pWnd, COLOR_PAIR(0));
+
+    for( i=jnt_start; i<jnt_end; i++ ) {
+
+        if(i==jnt_sel) {
+            wattrset(pWnd, COLOR_PAIR(1));
+        }
+            /*
+            if( hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
+                wattrset(pWnd, COLOR_PAIR(8));
+//                sel_mode = 5;
+            }
+            else {
+                wattrset(pWnd, COLOR_PAIR(1));
+//                sel_mode = 5;
+            }
+        }
+        else if(hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
+            wattrset(pWnd, COLOR_PAIR(7));
+//            sel_mode = 7;
+        }
+        */
+        else {
+            wattrset(pWnd, COLOR_PAIR(0));
+//            sel_mode = 0;
+        }
+
+
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[0] + x_offset);
+        waddstr(pWnd, eef_names[i]);
+
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[1] + x_offset);
+        wprintw(pWnd,"%07.2f",eef_to_print[i]*1000);
+
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
+        wprintw(pWnd,"%07.2f",eef_to_update[i]*1000);
+    }
+
+    wattrset(pWnd, COLOR_PAIR(0));
+}
+
+
+void print_labels_CART(WINDOW *pLabelWnd)
+{
+    int x_offset = 1;
+
+    wattron(pLabelWnd, A_BOLD);
+
+    wmove(pLabelWnd, 0, label_x_pos[0]+x_offset);
+    waddstr(pLabelWnd, "EEF Name");
+
+    wmove(pLabelWnd, 0, label_x_pos[1]+x_offset);
+    waddstr(pLabelWnd, "Pos");
+
+    wmove(pLabelWnd, 1, label_x_pos[1]+x_offset);
+    waddstr(pLabelWnd, "[mm/deg]");
+
+    wmove(pLabelWnd, 0, label_x_pos[2]+x_offset);
+    waddstr(pLabelWnd, "Ref Pos");
+
+    wmove(pLabelWnd, 1, label_x_pos[2]+x_offset);
+    waddstr(pLabelWnd, "[mm/deg]");
+
+    wmove(pLabelWnd, 0, label_x_pos[3]+x_offset);
+    waddstr(pLabelWnd, "State"); //IK on/off
+
+    wmove(pLabelWnd, 0, label_x_pos[4]+x_offset);
+    wprintw(pLabelWnd, "Tau");
+
+    wmove(pLabelWnd, 1, label_x_pos[4]+x_offset);
+    wprintw(pLabelWnd, "[N/Nm]");
+
+    /*
+    wmove(pLabelWnd, 0, label_x_pos[5]+x_offset);
+    wprintw(pLabelWnd, "ref_cur_");
+
+    wmove(pLabelWnd, 1, label_x_pos[5]+x_offset);
+    wprintw(pLabelWnd, " [A]");
+
+
+    wmove(pLabelWnd, 0, label_x_pos[6]+x_offset);
+    wprintw(pLabelWnd, "msr_cur");
+
+    wmove(pLabelWnd, 1, label_x_pos[6]+x_offset);
+    wprintw(pLabelWnd, " [A]");
+    */
+
+    wattroff(pLabelWnd, A_BOLD);
 }
 
 int show_quit_dialog(WINDOW *pWnd, int size_x, int scroll_panel_size_y)

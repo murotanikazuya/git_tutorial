@@ -132,7 +132,7 @@ static EC_T_DWORD RasNotifyWrapper(EC_T_DWORD dwCode, EC_T_NOTIFYPARMS* pParms);
 #endif
 static EC_T_VOID  tEcJobTask(EC_T_VOID* pvThreadParamDesc);
 static EC_T_VOID  tLogSaveTask(EC_T_VOID* pvThreadParamDesc);
-static EC_T_VOID  tLogSaveTask_jnt_tau_calib(EC_T_VOID* pvThreadParamDesc);
+//static EC_T_VOID  tLogSaveTask_jnt_tau_calib(EC_T_VOID* pvThreadParamDesc);
 static EC_T_VOID  tLogSaveTask_dbg(EC_T_VOID* pvThreadParamDesc);
 
 
@@ -834,7 +834,7 @@ static EC_T_DWORD atemDemoInit(
     S_pvtThread[THRD_IDX_CONSOLE] = OsCreateThread( (EC_T_CHAR*)"tConsoleTask", tConsoleTask,
                                                     CONSOLE_THREAD_PRIO, CONSOLE_THREAD_STACKSIZE,
                                                     (EC_T_VOID*)&S_ThreadParam[THRD_IDX_CONSOLE]);
-    S_pvtThread[THRD_IDX_LOGSAVE] = OsCreateThread( (EC_T_CHAR*)"tLogSaveTask", tLogSaveTask,
+    S_pvtThread[THRD_IDX_LOGSAVE] = OsCreateThread( (EC_T_CHAR*)"tLogSaveTask", tLogSaveTask_dbg,
                                                     LOGSAVE_THREAD_PRIO, LOG_THREAD_STACKSIZE,
                                                     (EC_T_VOID*)&S_ThreadParam[THRD_IDX_LOGSAVE]);
 
@@ -1355,6 +1355,8 @@ static EC_T_DWORD myAppSetup(
 					servo_dir |= 0x01;
 				if( eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]<0)
 					servo_dir |= 0x10;
+                if( eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0)
+                    servo_dir |= 0x20;
 
 				/*********** Reset ************************************************/
 				wReset = 0x8000;
@@ -1471,7 +1473,27 @@ static EC_T_DWORD myAppSetup(
 
 
 				/*********** Vel P Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                int jnt_num = joint_num_hydra_MD4KW_3M[loop][jnt];
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                }
+
+                //wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7021|(jnt<<8)), 0x00);
 
@@ -1493,8 +1515,25 @@ static EC_T_DWORD myAppSetup(
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel D Gain ************************************************/
-				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
-            	wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                }
+
+                //wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
 
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7023|(jnt<<8)), 0x00);
@@ -1517,7 +1556,26 @@ static EC_T_DWORD myAppSetup(
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel I Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    break;
+                }
+
+
+                //wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7022|(jnt<<8)), 0x00);
 				
@@ -1711,6 +1769,8 @@ static EC_T_DWORD myAppSetup(
 					servo_dir |= 0x01;
 				if( eha_pos_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0)
 					servo_dir |= 0x10;
+                if( eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0)
+                    servo_dir |= 0x20;
 				/*********** Reset ************************************************/
 				wReset = 0x8000;
 
@@ -1824,7 +1884,26 @@ static EC_T_DWORD myAppSetup(
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel P Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                int jnt_num = joint_num_hydra_MD4KW_2MFS[loop][jnt];
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                }
+
+                //wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_2MFS[loop][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7021|(jnt<<8)), 0x00);
 
@@ -1846,7 +1925,24 @@ static EC_T_DWORD myAppSetup(
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel D Gain ************************************************/
-            	wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                }
+                //wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_2MFS[loop][jnt]);
 
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7023|(jnt<<8)), 0x00);
@@ -1869,7 +1965,24 @@ static EC_T_DWORD myAppSetup(
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel I Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                switch(EHA_CtrlWd_ON[jnt_num]){
+                case EHA_CTRLWD_POS:
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_PRES:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_STRAIN:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                case EHA_CTRLWD_FORCE_COMPLE:
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                default:
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
+                    break;
+                }
+                //wGain = (EC_T_WORD)((eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]<0) ? -eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt] : eha_vel_i_gain_hydra_MD4KW_2MFS[loop][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 					   tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress, (0x7022|(jnt<<8)), 0x00);
 				
@@ -2348,18 +2461,18 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
     static EC_T_REAL all_joint_pos_prev[HYDRA_JNT_MAX];
     static EC_T_REAL all_EHA_pos_prev[EHA_MAX];
 
-    EC_T_REAL       all_EHA_pos[EHA_MAX];
+    double       all_EHA_pos[EHA_MAX];
     unsigned int	  all_EHA_rawpos[EHA_MAX];
-    EC_T_REAL       all_EHA_vel[EHA_MAX];
-    EC_T_REAL       all_EHA_tau[EHA_MAX];
-    EC_T_REAL       all_EHA_tau2[EHA_MAX];
-    EC_T_REAL       all_EHA_tau3[EHA_MAX];
+    double       all_EHA_vel[EHA_MAX];
+    double       all_EHA_tau[EHA_MAX];    //EC_T_REAL
+    double       all_EHA_tau2[EHA_MAX];
+    double       all_EHA_tau3[EHA_MAX];
 
-    EC_T_REAL       all_joint_pos[HYDRA_JNT_MAX];
-    EC_T_REAL       all_joint_vel[HYDRA_JNT_MAX];
-    EC_T_REAL       all_joint_tau[HYDRA_JNT_MAX];
-    EC_T_REAL       all_joint_tau2[HYDRA_JNT_MAX];
-    EC_T_REAL       all_joint_tau3[HYDRA_JNT_MAX];
+    double       all_joint_pos[HYDRA_JNT_MAX];
+    double       all_joint_vel[HYDRA_JNT_MAX];
+    double       all_joint_tau[HYDRA_JNT_MAX];
+    double       all_joint_tau2[HYDRA_JNT_MAX];
+    double       all_joint_tau3[HYDRA_JNT_MAX];
 
     EC_T_INT          ret;
     static EC_T_BYTE  cnt=0;
@@ -2402,11 +2515,13 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         if(pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn != 0) {
             eha_state[eha_num_hydra].DATA.rawpos_act
                     = (unsigned int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn;
+
             ClipEHAPos(&(eha_state[eha_num_hydra]),
                        enc_offset_MD4KW_3M[loop][ch_num],
                        EHA_llim_hydra_MD4KW_3M[loop][ch_num],
                        EHA_ulim_hydra_MD4KW_3M[loop][ch_num],
                        eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]);
+
         } else {
             if(err_reported==false)
                 LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 0 Read Failiure",
@@ -2415,15 +2530,13 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
-        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*1.0f;//*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*EHA_force_bit2phy[eha_num_hydra];
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*CURRENT_BIT2PHY;
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*CURRENT_BIT2PHY;
         //eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
         eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
-        all_EHA_tau[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau_act;
-        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act;
-        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act;
+
 
 
 
@@ -2447,9 +2560,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][1]/2e-4;
 
-        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*1.0f;//*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*EHA_force_bit2phy[eha_num_hydra];
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*CURRENT_BIT2PHY; //ref
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*CURRENT_BIT2PHY; //act
+
         /*
         eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][1];
         eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*1.0f;
@@ -2467,9 +2581,11 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
                 || (eha_num_hydra == EHA_lknee_tandem2)
                 || (eha_num_hydra == EHA_neck)
                 || (eha_num_hydra == EHA_relbow_tandem2)
-                || (eha_num_hydra == EHA_relbow_tandem2)) {
+                || (eha_num_hydra == EHA_relbow_tandem2)
+                ) {
 
             eha_state[eha_num_hydra].DATA.rawpos_act = (unsigned int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_PosActIn;
+
             ClipEHAPos(&(eha_state[eha_num_hydra]),
                        enc_offset_MD4KW_3M[loop][ch_num],
                        EHA_llim_hydra_MD4KW_3M[loop][ch_num],
@@ -2484,9 +2600,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         }
         eha_state[eha_num_hydra].DATA.vel_act  = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
 
-        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*1.0f*eha_phys_forcestrain_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*1.0f*eha_phys_forcecomple_hydra_MD4KW_3M[loop][ch_num];
+        all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*EHA_force_bit2phy[eha_num_hydra];
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*CURRENT_BIT2PHY;
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*CURRENT_BIT2PHY;
+
         /*
         eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
         eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*1.0f;
@@ -2522,7 +2639,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_VelActIn*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]/1e-4;
-        eha_state[eha_num_hydra].DATA.tau_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_Tau2ActIn*eha_phys_forcepres_hydra_MD4KW_2MFS[loop][ch_num];
+        all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_TauActIn*EHA_force_bit2phy[eha_num_hydra];
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_Tau2ActIn*CURRENT_BIT2PHY;
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_Tau3ActIn*CURRENT_BIT2PHY;
+
         eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
@@ -2544,7 +2664,9 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
             eha_status |= ENC_READ_ERR;
         }
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_VelActIn*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]/1e-4;
-        eha_state[eha_num_hydra].DATA.tau_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_Tau2ActIn*eha_phys_forcepres_hydra_MD4KW_2MFS[loop][ch_num];
+        all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_TauActIn*EHA_force_bit2phy[eha_num_hydra];
+        all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_Tau2ActIn*CURRENT_BIT2PHY;
+        all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_Tau3ActIn*CURRENT_BIT2PHY;
         eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
@@ -2810,7 +2932,12 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
         all_joint_tau_out[loop] = joint_cmd[loop].DATA.tau_ref;
     }
 
-    JointToCylinderAll(all_joint_pos_out, all_EHA_pos_out);
+    //JointToCylinderAll(all_joint_pos_out, all_EHA_pos_out); //moved to servo_ui
+#if 1
+    for(loop=0;loop<EHA_MAX;loop++){
+        all_EHA_pos_out[loop] = eha_cmd[loop].DATA.pos_ref;
+    }
+#endif
 #if 0
     if(cnt>=1000){
         LogMsg("J1 Joint Ref: %G EHA Ref %G\n", all_joint_pos_out[0], all_EHA_pos_out[0]);
@@ -2834,9 +2961,9 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
         // TmpRecv.Axis0_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][0]];
         // TmpRecv.Axis1_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][1]];
         // TmpRecv.Axis2_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][2]];
-        // TmpRecv.Axis0_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][0]];
-        // TmpRecv.Axis1_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][1]];
-        // TmpRecv.Axis2_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][2]];
+         TmpRecv.Axis0_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][0]];
+         TmpRecv.Axis1_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][1]];
+         TmpRecv.Axis2_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][2]];
 
         TmpRecv.Axis0_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop][0]].DATA.ctlword;
         TmpRecv.Axis1_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop][1]].DATA.ctlword;
@@ -3349,335 +3476,6 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
                     }
                 }
 
-
-#if 0
-                // MD4KW_3M
-                for(loop = 0; loop < pAllSlv->MD4KW_3MSlaves; loop++)
-                {
-                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
-                    if(Remain <= 1) break;
-
-                    if(flg_NewLabel == EC_TRUE)
-                    {
-                        int j0 = joint_num_hydra_MD4KW_3M[loop][0];
-                        int j1 = joint_num_hydra_MD4KW_3M[loop][1];
-                        int j2 = joint_num_hydra_MD4KW_3M[loop][2];
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel[%d],tau1[%d],vel2[%d],tau2[%d],tau3[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j0,j0,j0,j0,j0,j0,j0,j0,j0,j0);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel[%d],tau1[%d],vel2[%d],tau2[%d],tau3[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j1,j1,j1,j1,j1,j1,j1,j1,j1,j1);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel[%d],tau1[%d],vel2[%d],tau2[%d],tau3[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j2,j2,j2,j2,j2,j2,j2,j2,j2,j2);
-                        strcat(pTmpBufAll, pTmpBuf);
-                    }
-                    else
-                    {
-                        T_MD4KW_3M_TXPDO_BASIC	*pIn  = &pAccIn->SlvMD4KW_3M[loop].MD4KW_3M.tInpOrg;
-                        T_MD4KW_3M_RXPDO_BASIC	*pOut = &pAccOut->SlvMD4KW_3M[loop].MD4KW_3M.tOutOrg;
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,",
-                                 (unsigned int)pIn->Axis0_PosActIn,
-                                 (signed short)pIn->Axis0_VelActIn,
-                                 (signed short)pIn->Axis0_TauActIn,
-                                 (signed short)pIn->Axis0_Vel2ActIn,
-                                 (signed short)pIn->Axis0_Tau2ActIn,
-                                 (signed short)pIn->Axis0_Tau3ActIn,
-                                 (signed short)pOut->Axis0_CtrlWordOut,
-                                 (unsigned int)pOut->Axis0_PosRefOut,
-                                 (signed short)pOut->Axis0_VelRefOut,
-                                 (signed short)pOut->Axis0_TauRefOut);
-
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,",
-                                 (unsigned int)pIn->Axis1_PosActIn,
-                                 (signed short)pIn->Axis1_VelActIn,
-                                 (signed short)pIn->Axis1_TauActIn,
-                                 (signed short)pIn->Axis1_Vel2ActIn,
-                                 (signed short)pIn->Axis1_Tau2ActIn,
-                                 (signed short)pIn->Axis1_Tau3ActIn,
-                                 (signed short)pOut->Axis1_CtrlWordOut,
-                                 (unsigned int)pOut->Axis1_PosRefOut,
-                                 (signed short)pOut->Axis1_VelRefOut,
-                                 (signed short)pOut->Axis1_TauRefOut);
-
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,",
-                                 (unsigned int)pIn->Axis2_PosActIn,
-                                 (signed short)pIn->Axis2_VelActIn,
-                                 (signed short)pIn->Axis2_TauActIn,
-                                 (signed short)pIn->Axis2_Vel2ActIn,
-                                 (signed short)pIn->Axis2_Tau2ActIn,
-                                 (signed short)pIn->Axis2_Tau3ActIn,
-                                 (signed short)pOut->Axis2_CtrlWordOut,
-                                 (unsigned int)pOut->Axis2_PosRefOut,
-                                 (signed short)pOut->Axis2_VelRefOut,
-                                 (signed short)pOut->Axis2_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-                        //printf("%s\n", pTmpBufAll);
-                    }
-                }
-
-                // MD4KW_2MFS
-                for(loop = 0; loop < pAllSlv->MD4KW_2MFSSlaves; loop++)
-                {
-                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
-                    if(Remain <= 1) break;
-
-                    if(flg_NewLabel == EC_TRUE)
-                    {
-                        int j0 = joint_num_hydra_MD4KW_2MFS[loop][0];
-                        int j1 = joint_num_hydra_MD4KW_2MFS[loop][1];
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel[%d],tau1[%d],vel2[%d],tau2[%d],tau3[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j0,j0,j0,j0,j0,j0,j0,j0,j0,j0);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel[%d],tau1[%d],vel2[%d],tau2[%d],tau3[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j1,j1,j1,j1,j1,j1,j1,j1,j1,j1);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "FX[%d],FY[%d],FZ[%d],MX[%d],MY[%d],MZ[%d],",
-                                 loop,loop,loop,loop,loop,loop);
-                        strcat(pTmpBufAll, pTmpBuf);
-                    }
-                    else
-                    {
-                        T_MD4KW_2MFS_TXPDO_BASIC	*pIn  = &pAccIn->SlvMD4KW_2MFS[loop].MD4KW_2MFS.tInpOrg;
-                        T_MD4KW_2MFS_RXPDO_BASIC	*pOut = &pAccOut->SlvMD4KW_2MFS[loop].MD4KW_2MFS.tOutOrg;
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,",
-                                 (unsigned int)pIn->Axis0_PosActIn,
-                                 (signed short)pIn->Axis0_VelActIn,
-                                 (signed short)pIn->Axis0_TauActIn,
-                                 (signed short)pIn->Axis0_Vel2ActIn,
-                                 (signed short)pIn->Axis0_Tau2ActIn,
-                                 (signed short)pIn->Axis0_Tau3ActIn,
-                                 (signed short)pOut->Axis0_CtrlWordOut,
-                                 (unsigned int)pOut->Axis0_PosRefOut,
-                                 (signed short)pOut->Axis0_VelRefOut,
-                                 (signed short)pOut->Axis0_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,",
-                                 (unsigned int)pIn->Axis1_PosActIn,
-                                 (signed short)pIn->Axis1_VelActIn,
-                                 (signed short)pIn->Axis1_TauActIn,
-                                 (signed short)pIn->Axis1_Vel2ActIn,
-                                 (signed short)pIn->Axis1_Tau2ActIn,
-                                 (signed short)pIn->Axis1_Tau3ActIn,
-                                 (signed short)pOut->Axis1_CtrlWordOut,
-                                 (unsigned int)pOut->Axis1_PosRefOut,
-                                 (signed short)pOut->Axis1_VelRefOut,
-                                 (signed short)pOut->Axis1_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,%d,%d,",
-                                 (signed short)pIn->FS_Fx,
-                                 (signed short)pIn->FS_Fy,
-                                 (signed short)pIn->FS_Fz,
-                                 (signed short)pIn->FS_Mx,
-                                 (signed short)pIn->FS_My,
-                                 (signed short)pIn->FS_Mz);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-                    }
-                }
-
-                // MD4KW_HAND
-                for(loop = 0; loop < pAllSlv->MD4KW_HandSlaves; loop++)
-                {
-                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
-                    if(Remain <= 1) break;
-
-                    if(flg_NewLabel == EC_TRUE)
-                    {
-                        int j0 = joint_num_hydra_MD4KW_HAND[loop][0];
-                        int j1 = joint_num_hydra_MD4KW_HAND[loop][1];
-                        int j2 = joint_num_hydra_MD4KW_HAND[loop][2];
-                        int j3 = joint_num_hydra_MD4KW_HAND[loop][3];
-                        int j4 = joint_num_hydra_MD4KW_HAND[loop][4];
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel2[%d],tau[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j0,j0,j0,j0,j0,j0,j0);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel2[%d],tau[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j1,j1,j1,j1,j1,j1,j1);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],ve2l[%d],tau[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j2,j2,j2,j2,j2,j2,j2);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel2[%d],tau[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j3,j3,j3,j3,j3,j3,j3);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "pos[%d],vel2[%d],tau[%d],ctrlword[%d],refpos[%d],refvel[%d],reftau[%d],",
-                                 j4,j4,j4,j4,j4,j4,j4);
-                        strcat(pTmpBufAll, pTmpBuf);
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "thumb_aa[%d],thumb_fe[%d],thumb_ip[%d],thumb_dip[%d],idx_aa[%d],idx_fe[%d],idx_pip[%d],idx_dip[%d],mdl_aa[%d],mdl_fe[%d],mdl_pip[%d],mdl_dip[%d],rng_aa[%d],rng_fe[%d],rng_pip[%d],rng_dip[%d]",
-                                 j0,j1,j1,j1,
-                                 j2,j2,j2,j2,
-                                 j3,j3,j3,j3,
-                                 j4,j4,j4,j4
-                                 );
-                        strcat(pTmpBufAll, pTmpBuf);
-
-                    }
-                    else
-                    {
-                        T_MD4KW_HAND_TXPDO_BASIC	*pIn  = &pAccIn->SlvMD4KW_Hand[loop].MD4KW_HAND.tInpOrg;
-                        T_MD4KW_HAND_RXPDO_BASIC	*pOut = &pAccOut->SlvMD4KW_Hand[loop].MD4KW_HAND.tOutOrg;
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,",
-                                 (unsigned int)pIn->Axis0_PosActIn,
-                                 (signed short)pIn->Axis0_TauActIn,
-                                 (signed short)pIn->Axis0_Vel2ActIn,
-                                 (signed short)pOut->Axis0_CtrlWordOut,
-                                 (unsigned int)pOut->Axis0_PosRefOut,
-                                 (signed short)pOut->Axis0_VelRefOut,
-                                 (signed short)pOut->Axis0_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,",
-                                 (unsigned int)pIn->Axis1_PosActIn,
-                                 (signed short)pIn->Axis1_TauActIn,
-                                 (signed short)pIn->Axis1_Vel2ActIn,
-                                 (signed short)pOut->Axis1_CtrlWordOut,
-                                 (unsigned int)pOut->Axis1_PosRefOut,
-                                 (signed short)pOut->Axis1_VelRefOut,
-                                 (signed short)pOut->Axis1_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,",
-                                 (unsigned int)pIn->Axis2_PosActIn,
-                                 (signed short)pIn->Axis2_TauActIn,
-                                 (signed short)pIn->Axis2_Vel2ActIn,
-                                 (signed short)pOut->Axis2_CtrlWordOut,
-                                 (unsigned int)pOut->Axis2_PosRefOut,
-                                 (signed short)pOut->Axis2_VelRefOut,
-                                 (signed short)pOut->Axis2_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,",
-                                 (unsigned int)pIn->Axis3_PosActIn,
-                                 (signed short)pIn->Axis3_TauActIn,
-                                 (signed short)pIn->Axis3_Vel2ActIn,
-                                 (signed short)pOut->Axis3_CtrlWordOut,
-                                 (unsigned int)pOut->Axis3_PosRefOut,
-                                 (signed short)pOut->Axis3_VelRefOut,
-                                 (signed short)pOut->Axis3_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,",
-                                 (unsigned int)pIn->Axis4_PosActIn,
-                                 (signed short)pIn->Axis4_TauActIn,
-                                 (signed short)pIn->Axis4_Vel2ActIn,
-                                 (signed short)pOut->Axis4_CtrlWordOut,
-                                 (unsigned int)pOut->Axis4_PosRefOut,
-                                 (signed short)pOut->Axis4_VelRefOut,
-                                 (signed short)pOut->Axis4_TauRefOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                                 (signed short)pIn->ThumbMP_AAIn,
-                                 (signed short)pIn->ThumbMP_FEIn,
-                                 (signed short)pIn->ThumbIPIn,
-                                 (signed short)pIn->ThumbDIPIn,
-                                 (signed short)pIn->IndexMP_AAIn,
-                                 (signed short)pIn->IndexMP_FEIn,
-                                 (signed short)pIn->IndexPIPIn,
-                                 (signed short)pIn->IndexDIPIn,
-                                 (signed short)pIn->MiddleMP_AAIn,
-                                 (signed short)pIn->MiddleMP_FEIn,
-                                 (signed short)pIn->MiddlePIPIn,
-                                 (signed short)pIn->MiddleDIPIn,
-                                 (signed short)pIn->RingMP_AAIn,
-                                 (signed short)pIn->RingMP_FEIn,
-                                 (signed short)pIn->RingPIPIn,
-                                 (signed short)pIn->RingDIPIn);
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-
-                    }
-                }
-
-                // MD4KW_IMU
-                for(loop=0; loop<pAllSlv->MD4KW_IMUSlaves; loop++)
-                {
-                    Remain = DATA_BUF_ALLSIZE - OsStrlen(pTmpBufAll);
-                    if(Remain <= 1) break;
-
-                    if(flg_NewLabel == EC_TRUE)
-                    {
-                        snprintf(pTmpBuf, DATA_BUF_SIZE,
-                                 "GyroX[%d],GyroY[%d],GyroZ[%d],AccX[%d],AccY[%d],AccZ[%d],Qtn0[%d],Qtn1[%d],Qtn2[%d],Qtn3[%d],omega_c0[%d],omega_c1[%d],omega_c2[%d],acc_c0[%d],acc_c1[%d],acc_c2[%d],vel_w0[%d],vel_w1[%d],vel_w2[%d],ctrlword[%d]",
-                                 loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop,loop);
-                        strcat(pTmpBufAll, pTmpBuf);
-                    }
-                    else
-                    {
-                        T_MD4KW_IMU_TXPDO_BASIC	*pIn  = &pAccIn->SlvMD4KW_IMU[loop].MD4KW_IMU.tInpOrg;
-                        T_MD4KW_IMU_RXPDO_BASIC *pOut = &pAccOut->SlvMD4KW_IMU[loop].MD4KW_IMU.tOutOrg;
-
-                        snprintf(pTmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,%d,0x%04x,%d,%d,%d,%d,%d,%d,%d,%d",
-                                 (signed int)pIn->GyroXIn, (signed int)pIn->GyroXIn, (signed int)pIn->GyroZIn,
-                                 (signed short)pIn->AccXIn, (signed short)pIn->AccYIn, (signed short)pIn->AccZIn,
-                                 (signed int)pIn->Quarternion0In, (signed int)pIn->Quarternion1In,
-                                 (signed int)pIn->Quarternion2In, (signed int)pIn->Quarternion3In,
-                                 (signed int)pIn->Omega_c0In, (signed int)pIn->Omega_c1In, (signed int)pIn->Omega_c2In,
-                                 (signed int)pIn->Accel0In, (signed int)pIn->Accel1In, (signed int)pIn->Accel2In,
-                                 (signed int)pIn->VelWorld0In, (signed int)pIn->VelWorld1In, (signed int)pIn->VelWorld2In,
-                                 (signed short)pOut->CtrlWordOut);
-
-                        // ヌル文字を差し引いたサイズで文字列コピーを行う
-                        OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
-                                  ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
-                    }
-                }
-#endif //ko
-
                 // 改行 add
                 strcat(pTmpBufAll, "\n");
                 OsFwrite( pTmpBufAll, OsStrlen(pTmpBufAll), 1, fpPdo);
@@ -3719,6 +3517,7 @@ static EC_T_VOID tLogSaveTask( EC_T_VOID* pvThreadParamDesc )
     return;
 }
 
+/*
 static EC_T_VOID tLogSaveTask_jnt_tau_calib( EC_T_VOID* pvThreadParamDesc )
 {
     T_THREAD_PARAM* 		pThreadParam  		= (T_THREAD_PARAM*)pvThreadParamDesc;
@@ -3946,6 +3745,7 @@ static EC_T_VOID tLogSaveTask_jnt_tau_calib( EC_T_VOID* pvThreadParamDesc )
 
     return;
 }
+*/
 
 static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
 {
@@ -4085,13 +3885,23 @@ static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
                 pShmServer->ReadStatus(sPutIdx,jnt_state_log,eha_state_log,sensor_state_log);
                 pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
 
-                snprintf(pTmpBuf,DATA_BUF_SIZE,
-                         "%d,%d,%d,%d,",
-                         clock_kang,
-                         pShmServer->GetTimeInfo(sPutIdx),
-                         //pShmServer->GetTimeInfo(),
-                         sPutIdx,
-                         pShmServer->GetShmInIdx()
+                if(flg_NewLabel == EC_TRUE)
+                    snprintf(pTmpBuf,DATA_BUF_SIZE,"ctrl_wd,tau11,tau12,tau13,tau21,tau22,tau23,vel2,vel3,pos1,pos2,");
+                else
+                    snprintf(pTmpBuf,DATA_BUF_SIZE,
+                            "%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d,%d,",
+                            eha_state_log[32].DATA.stsword,
+                            eha_state_log[32].DATA.tau_act,
+                            eha_state_log[32].DATA.tau2_act,
+                            eha_state_log[32].DATA.tau3_act,
+                            eha_state_log[33].DATA.tau_act,
+                            eha_state_log[33].DATA.tau2_act,
+                            eha_state_log[33].DATA.tau3_act,
+                            eha_state_log[32].DATA.vel_act,
+                            eha_state_log[33].DATA.vel_act,
+                            eha_state_log[32].DATA.rawpos_act,
+                            //eha_cmd_log[32].DATA.rawpos_ref
+                            eha_state_log[33].DATA.rawpos_act
                          );
                 OsStrncpy((pTmpBufAll + OsStrlen(pTmpBufAll)), pTmpBuf,
                           ((DATA_BUF_ALLSIZE - 1) - OsStrlen(pTmpBufAll)));
@@ -4136,6 +3946,7 @@ static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
 
     return;
 }
+
 
 EC_T_VOID ClipEHAPos(eha_state_t *state, EC_T_DWORD offset, const unsigned int llim, const unsigned int ulim, const double phys_conv)
 {

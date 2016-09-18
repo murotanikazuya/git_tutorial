@@ -27,6 +27,8 @@
 #include "comm_common_def.h"
 
 #include "hydra.h"
+#include "CalcParallelJoint.h"
+#include "CalcForceTorque.h"
 #include "user_interface.h"
 #include "hydra_types.h"
 
@@ -91,6 +93,9 @@ eha_cmd_t      eha_cmd[EHA_MAX];
 //int            buffer_index = 0;
 double all_joint_tau_fk[HYDRA_JNT_MAX];
 double all_joint_pos_tgt[HYDRA_JNT_MAX];
+double all_joint_tau_tgt[HYDRA_JNT_MAX];
+
+double all_eha_pos_tgt[EHA_MAX];
 
 double all_joint_initpos[HYDRA_JNT_MAX];
 double all_joint_finalpos[HYDRA_JNT_MAX];
@@ -102,8 +107,16 @@ double all_joint_phase[HYDRA_JNT_MAX];
 
 double all_joint_refpos_to_send[HYDRA_JNT_MAX]; //[rad]で管理する
 bool   all_joint_servo_switch[HYDRA_JNT_MAX]; //booooooooolllllll!!!!!!!!
+bool   arm_IK_switch[2]={false,false};  //0:right, 1:left
 
 double FootFS[2][6];
+
+double JointAbsPos[31][3];
+double eef_to_print[6];
+double eef_to_update[6];
+double lhand_pos_err[6]={0,0,0,0,0,0};
+double larm_q_delta[8];
+#define IK_GAIN_LARM   0.01;
 
 
 #include "kinematics/chydrakinematics.h"
@@ -111,6 +124,9 @@ CHydraKinematics hydra_kinematics;
 
 #define INTERP_LEN 10000 // 1000[Hz] * 10[sec]
 #define SMOOTH_SLOW
+
+
+//#define LWRIST_FREE  /* free lwrist pitch joint */
 
 int interp_cnt;
 int interp_length;
@@ -420,6 +436,22 @@ int main(int argc,char *argv[])
         hydra_kinematics.SetJointPosition(q);
         hydra_kinematics.ForwardKinematics();
         hydra_kinematics.GetJointTorque(all_joint_tau_fk);
+        hydra_kinematics.GetJointAbsPos(JointAbsPos);
+
+        eef_to_print[0] = JointAbsPos[22][0]; // rwrist_pitch
+        eef_to_print[1] = JointAbsPos[22][1];
+        eef_to_print[2] = JointAbsPos[22][2];
+        eef_to_print[3] = JointAbsPos[30][0]; // lwrist_pitch
+        eef_to_print[4] = JointAbsPos[30][1];
+        eef_to_print[5] = JointAbsPos[30][2];
+
+        for(int i=0;i<3;i++){
+            lhand_pos_err[i]= (eef_to_update[i+3] - eef_to_print[i+3])*IK_GAIN_LARM;
+            larm_q_delta[i] = lhand_pos_err[i];
+        }
+
+
+        //larm_q_delta = J_inv*lhand_pos_err;//////////////////////////////////////
 
         if(gcomp==1)
         {
@@ -499,9 +531,9 @@ int main_func(void)
     process_end_flg = !OsTerminateAppRequest();/* check if demo shall terminate */
 
     cnt++;
-#if 1
     // 指令値の設定
     if(interp_run) {
+        motion_line=0;
         if(interp_cnt <= interp_length) {
             for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
                 /*
@@ -526,6 +558,25 @@ int main_func(void)
             interp_run    = false;
             interp_ready  = true;
             fprintf(fp_log, "Interpolation end\n");
+            //ofs<<"Interpolation end"<<std::endl;
+        }
+    }
+    else if(filemotion_run) {
+        if(motion_line < motion_length) {
+            for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                all_joint_refpos_to_send[loop]
+                        = motion_data[motion_line][loop+1];
+            }
+            if(interp_cnt%100==0)
+                fprintf(fp_log,
+                        "filemotion running [%6d/%6d]\n",
+                        motion_line, motion_length);
+            motion_line++;
+        } else {
+            motion_line    = 0;
+            filemotion_run    = false;
+            interp_ready  = false;
+            fprintf(fp_log, "filemotion end\n");
             //ofs<<"Interpolation end"<<std::endl;
         }
     }
@@ -554,7 +605,13 @@ int main_func(void)
         }
     }
 
-#endif
+    //for(loop=23;loop<31;loop++){
+    if(arm_IK_switch[1]==true){
+        for(loop=0;loop<8;loop++){
+         all_joint_refpos_to_send[loop+23] += larm_q_delta[loop];
+        }
+    }
+
     for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
         all_joint_pos_tgt[loop] = CHK_LIM(all_joint_refpos_to_send[loop]
                                           +(all_joint_ampl[loop]*sin(cnt/1000.0*all_joint_freq_hz[loop]*2*M_PI+all_joint_phase[loop]))
@@ -571,6 +628,16 @@ int main_func(void)
             hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref = all_joint_pos_tgt[loop];
             //hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref += (all_joint_ampl[loop]*
              //                          sin(cnt/1000.0*all_joint_freq_hz[loop]*2*M_PI+all_joint_phase[loop]));
+#ifdef LWRIST_FREE
+	hydra_data.GetJointCmdPtr(0)[JOINT_HYDRA_LWRIST_PITCH].DATA.pos_ref = hydra_data.GetJointStatePtr(0)[JOINT_HYDRA_LWRIST_PITCH].DATA.pos_act; 
+#endif
+        hydra_data.GetJointCmdPtr(1)[loop].DATA.tau_ref = all_joint_tau_tgt[loop];
+    }
+
+    JointToCylinderAll(all_joint_pos_tgt, all_eha_pos_tgt);
+
+    for(loop=0;loop<EHA_MAX;loop++){
+        hydra_data.GetEHACmdPtr(1)[loop].DATA.pos_ref = all_eha_pos_tgt[loop];
     }
 
     

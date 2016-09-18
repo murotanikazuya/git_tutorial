@@ -742,7 +742,8 @@ union U_SHM_OUTPUT_ACC_MD4KW_IMU_SLV {
 
 typedef struct _S_SHM_OUTPUT_ACC_EHA_STATE
 {
-    EC_T_DWORD EHA_pos;
+    //EC_T_DWORD EHA_pos;   //ko
+    EC_T_REAL EHA_pos;   //ko
     EC_T_WORD  EHA_vel;
     EC_T_WORD  EHA_tau;
     EC_T_WORD  EHA_tau_in;
