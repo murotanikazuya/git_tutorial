@@ -27,8 +27,8 @@ LOG_FILE=$LOG_PATH/ec-master	#出力するログファイルの指定
 ENI_PATH=../ENI
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20150625.xml
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20160108_SM.xml
-ENI_FILE=$ENI_PATH/hydra_wholebody_20160115_SM.xml
-#ENI_FILE=$ENI_PATH/hydra_upperbody_20161031_SM.xml
+#ENI_FILE=$ENI_PATH/hydra_wholebody_20160115_SM.xml
+ENI_FILE=$ENI_PATH/hydra_upperbody_20161031_SM.xml
 
 # 起動時のパラメータ設定ファイルの指定(選択式)
 #PARAM_PATH=$HOME/ethercat/param
@@ -87,12 +87,14 @@ OP_P=""
 OP_DCM="-nodcm"				# DCM無効化
 #OP_P=""
 
+OP_UPPERBODY="-upperbody"
+
 ##########################
 # プロセスがもし残っていたら停止させる
 echo "killall process..."
 sudo killall --wait --quiet --regexp "DCDemo" 
 
 echo "> ./HydraECAT ${OP_F} ${OP_S} ${OP_L} ${OP_T} ${OP_B} ${OP_A} ${OP_V} ${OP_P} ${OP_N} ${OP_DCM}"
-sudo -E ./HydraECAT ${OP_F} ${OP_S} ${OP_L} ${OP_T} ${OP_B} ${OP_A} ${OP_V} ${OP_P} ${OP_N} ${OP_DCM}
+sudo -E ./HydraECAT ${OP_F} ${OP_S} ${OP_L} ${OP_T} ${OP_B} ${OP_A} ${OP_V} ${OP_P} ${OP_N} ${OP_DCM} ${OP_UPPERBODY}
 
 exit 0

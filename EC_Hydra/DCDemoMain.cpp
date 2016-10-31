@@ -167,6 +167,7 @@ typedef struct _EC_T_TIMING_DESC
 
 /*-GLOBAL VARIABLES-----------------------------------------------------------*/
 volatile EC_T_BOOL bRun = EC_TRUE;
+EC_T_BOOL HydraOnlyUpperbody = EC_FALSE;
 
 /*-LOCAL FUNCTIONS-----------------------------------------------------------*/
 #if (defined WIN32) && !(defined UNDER_CE)
@@ -1150,6 +1151,10 @@ int main(int nArgc, char* ppArgv[])
         else if (OsStricmp( ptcWord, "-perf") == 0)
         {
             bEnaPerfJobs = EC_TRUE;
+        }
+        else if (OsStricmp( ptcWord, "-upperbody") == 0)
+        {
+            HydraOnlyUpperbody = EC_TRUE;
         }
 #if (defined ATEMRAS_SERVER)
         else if( OsStricmp(ptcWord, "-sp") == 0 )
