@@ -26,7 +26,8 @@ LOG_FILE=$LOG_PATH/ec-master	#出力するログファイルの指定
 ENI_PATH=$HOME/ethercat/ECwork_Hydra/ENI
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20150625.xml
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20160108_SM.xml
-ENI_FILE=$ENI_PATH/hydra_wholebody_20160115_SM.xml
+#ENI_FILE=$ENI_PATH/hydra_wholebody_20160115_SM.xml
+ENI_FILE=$ENI_PATH/hydra_lowerbody_20161031_SM.xml
 
 # 起動時のパラメータ設定ファイルの指定(選択式)
 #PARAM_PATH=$HOME/ethercat/param
