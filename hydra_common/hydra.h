@@ -127,7 +127,7 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_U_RHIP0  0xffffffff//0x025E1AF2
 #define LIM_U_RHIP1  0x00b3c075//0x00b3c4f2//0x00b2c12f//0x00AE84AF
 #define LIM_U_RHIP2  0x00ac29d1//0x00ac4825//0x00ad5470//0x00AE5E0C
-#define LIM_U_RKNEE0 0x00bbec12//0x00b86d17//0x00b9538a//0x00B9F780
+#define LIM_U_RKNEE0 0x00bbe8df//0x00b86d17//0x00b9538a//0x00B9F780
 #define LIM_U_RKNEE1 0x00ba43fe//0x00b6d91a//0x00b6b405//0x00B60CA9
 #define LIM_U_LHIP0  0xffffffff//0x035B0410//0x035b7930
 #define LIM_U_LHIP1  0x00b7cb00//0x00b76df0//0x00B5CF31
@@ -154,14 +154,14 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_U_LWRST1 0x00B83E59
 #define LIM_U_LWRST2 0x00B0EE93
 #define LIM_U_RANKL0 0x00ae4bd5//0x00ae32a8//0x00A95759
-#define LIM_U_RANKL1 0x00b9f6a7//0x00b9ee4e//0x00BA7F35
-#define LIM_U_LANKL0 0x00adadde//0x00adaa9e//0x00A9F53C
-#define LIM_U_LANKL1 0x00b6c49d//0x00b6c31f//0x00B6861E
+#define LIM_U_RANKL1 0x00b55f20//0x00b9ee4e//0x00BA7F35
+#define LIM_U_LANKL0 0x00ab4299//0x00adadde//0x00adaa9e//0x00A9F53C
+#define LIM_U_LANKL1 0x00b10dac//0x00b6c49d//0x00b6c31f//0x00B6861E
 
 #define LIM_L_RHIP0  0x00000000//0x00fe05d9
 #define LIM_L_RHIP1  0x001e3735//0x001e3bb2//0x001d37ef//0x001F1872
 #define LIM_L_RHIP2  0x001bb73e//<--20161005 //0x0016a091//0x0016bee5//0x0017cb30//0x0019A76C
-#define LIM_L_RKNEE0 0x0026fed3//0x0022e3d7//0x0023ca4a//0x00246E40
+#define LIM_L_RKNEE0 0x00270dd8//0x0022e3d7//0x0023ca4a//0x00246E40
 #define LIM_L_RKNEE1 0x002533b2//0x00214fda//0x00212ac5//0x00208369
 #define LIM_L_LHIP0  0x00000000//0x01FB09DA//0x01FEAE7E
 #define LIM_L_LHIP1  0x002241c0//0x0021e4b0//0x0020B94D
@@ -188,9 +188,9 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_L_LWRST1 0x0020A60C
 #define LIM_L_LWRST2 0x0022D131
 #define LIM_L_RANKL0 0x0018c295//0x0018a968//0x0018D2F6
-#define LIM_L_RANKL1 0x00246d67//0x0024650e//0x00256C45
-#define LIM_L_LANKL0 0x0018249e//0x0018215e//0x001940E4
-#define LIM_L_LANKL1 0x00213b5d//0x002139df//0x001F944B
+#define LIM_L_RANKL1 0x002492d7//0x0024650e//0x00256C45
+#define LIM_L_LANKL0 0x001aa9ed//0x0018215e//0x001940E4
+#define LIM_L_LANKL1 0x0022abfd//0x002139df//0x001F944B
 
 /****************** motor encoder offset ********************/
 
@@ -482,7 +482,7 @@ const unsigned int EHA_llim_hydra_MD4KW_2MFS[][2] = {
 const EC_T_DWORD enc_offset_MD4KW_3M [][3] = {
 	{0x02fddf38/*0x02fe0600*//*0x01A7DA7E*/, (LIM_U_RHIP1+LIM_L_RHIP1)>>1, (LIM_U_RHIP2+LIM_L_RHIP2)>>1},     //rhip
 	{(LIM_U_RKNEE0+LIM_L_RKNEE0)>>1, (LIM_U_RKNEE1+LIM_L_RKNEE1)>>1, 0x00000000}, //rknee
-	{0x02aa435a/*0x02AB25BB*//*0x02AB8E51*/, (LIM_U_LHIP1+LIM_L_LHIP1)>>1, (LIM_U_LHIP2+LIM_L_LHIP2)>>1},     //lhip
+	{0x01555555/*0x02AB25BB*//*0x02AB8E51*/, (LIM_U_LHIP1+LIM_L_LHIP1)>>1, (LIM_U_LHIP2+LIM_L_LHIP2)>>1},     //lhip
 	{(LIM_U_LKNEE0+LIM_L_LKNEE0)>>1, (LIM_U_LKNEE1+LIM_L_LKNEE1)>>1, 0x00000000}, //lknee
 	{(LIM_U_BODY0+LIM_L_BODY0)>>1,   (LIM_U_BODY1+LIM_L_BODY1)>>1, 0xffff1e11},   //body
 	{0x02587A0D, (LIM_U_RSHLD1+LIM_L_RSHLD1)>>1, (LIM_U_RSHLD2+LIM_L_RSHLD2)>>1}, //rshoulder
@@ -665,11 +665,11 @@ const double eha_phys_forcecomple_hydra_MD4KW_3M[][3] = {
 
 const int eha_pos_p_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
   //  { -50, 1, -1}, //rhip
-  {-20,100,-100},//{ -30, 120, -120}, //rhip
-  { 50,  60, -60},//{ 90,  90, -90}, //rknee with tandem encoder
-  { -20,  120, -120}, //lhip
+  /*{-20,100,-100},//*/{ -80, 180, -180}, //rhip
+  { -60,  -90, 90},//rknee with single encoder //{ 90,  90, -90}, //rknee with tandem encoder
+  { -80,  150, -150},//{ -20,  150, -150}, //lhip
   { -70,  -60, 60},//  { -30,  -30, 30}, //lknee with both single or tandem encoder
-  { -20,  20,  30}, //body
+  { -100,  100,  30}, //body
   { -30,  30, -30}, //rshoulder
   {  50, -50,  50}, //relbow
   {  50,  50, -50}, //rwrist
@@ -678,9 +678,9 @@ const int eha_pos_p_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
   {  50,  50, -50}//{  100,  150, -150}  //lwrist
 };
 const int eha_pos_d_gain_hydra_MD4KW_3M[][3] = {//10bitshifted
-        { 70,  70, 70}, //rhip
+        { 0,  70, 70}, //rhip
         { -20,  20, 20},//{ -20,  30, 30}, //rknee with tandem encoder
-        { 70,  70, 70}, //lhip
+        { 0,  70, 70}, //lhip
         { 20,  20, 20},//{ 50,  50, 50}, //lkneeQ
 	{ 20,  20, 1}, //body
         { 1,  1, 1}, //rshoulder
@@ -789,8 +789,8 @@ const int eha_tau_i_gain_hydra_MD4KW_3M[][3] = {
   {300,300,300}  //lwrist
 };
 
-#define CUR_PGAIN_MAXON_4P_200W  0x300 //0x40//0x0600 20? 2a0
-#define CUR_IGAIN_MAXON_4P_200W  0x100  //0x800//0xf00
+#define CUR_PGAIN_MAXON_4P_200W  0x1c00//0x300 //0x40//0x0600 20? 2a0
+#define CUR_IGAIN_MAXON_4P_200W  0x1400//0x100  //0x800//0xf00
 //#define CUR_PGAIN_MAXON_4P_200W  0x0600
 //#define CUR_IGAIN_MAXON_4P_200W  0xf00
 
@@ -854,12 +854,12 @@ const double eha_phys_forcepres_hydra_MD4KW_2MFS[][2] = {
 //	{ 100,  100}, //left
 //};
 const int eha_pos_p_gain_hydra_MD4KW_2MFS[][2] = {
-        { -70,  80}, //right
+        { 70,  70}, //right
 
-	{ 20,  20},//{0,0}, //{ -80,  80},//{ -80,  80}, //left
+	{-60,  50},//{-40,  40},//{0,0}, //{ -80,  80},//{ -80,  80}, //left
 };
 const int eha_pos_d_gain_hydra_MD4KW_2MFS[][2] = {
-        { 15,  4}, //right
+        { 1,  1}, //right
         {0,0}, //{ 10,  10},//{ 10,  10}, //left
 };
 const int eha_pos_i_gain_hydra_MD4KW_2MFS[][2] = {
