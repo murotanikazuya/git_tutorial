@@ -371,7 +371,7 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y] += DEG2RAD(0.01);
+                        all_joint_refpos_to_send[y] += DEG2RAD(0.1);
                         all_joint_tau_tgt[y] += 0.1;
                     }
                 }
@@ -404,7 +404,7 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
-                        all_joint_refpos_to_send[y] -= DEG2RAD(0.01);
+                        all_joint_refpos_to_send[y] -= DEG2RAD(0.1);
                         all_joint_tau_tgt[y] -= 0.1;
                     }
                 }
@@ -798,18 +798,25 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
         waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
 
-        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
+        /*wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
         wprintw(pWnd,"%06.2f", hydra_data.GetJointStatePtr(0)[i].DATA.tau_act);
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
         wprintw(pWnd,"%06.2f", all_joint_tau_fk[i]);
+	*/
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
+        wprintw(pWnd,"%05.1f", all_joint_freq_hz[i]);
+	//ampl
 
-//        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[6] + x_offset);
-//        wprintw(pWnd,"%07.2f", all_joint_freq_hz[i]);
-
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
+        wprintw(pWnd,"%05.1f", all_joint_ampl[i]*180/M_PI);
         
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[6] + x_offset);
-        wprintw(pWnd,"%07.2f", RAD2DEG(all_joint_finalpos[i]));
+        wprintw(pWnd,"%06.2f", RAD2DEG(all_joint_finalpos[i]));
+
+        wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[7] + x_offset);
+        wprintw(pWnd,"%05.1f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau3_act);
+
 
 //        pthread_mutex_unlock( &(thread_data->mutex) );
 
@@ -855,7 +862,7 @@ void print_labels_joint(WINDOW *pLabelWnd)
     wmove(pLabelWnd, 0, label_x_pos[3]+x_offset);
     waddstr(pLabelWnd, "Pwr");
 
-    wmove(pLabelWnd, 0, label_x_pos[4]+x_offset);
+    /*    wmove(pLabelWnd, 0, label_x_pos[4]+x_offset);
     wprintw(pLabelWnd, "Act Tau");
 
     wmove(pLabelWnd, 1, label_x_pos[4]+x_offset);
@@ -866,18 +873,30 @@ void print_labels_joint(WINDOW *pLabelWnd)
 
     wmove(pLabelWnd, 1, label_x_pos[5]+x_offset);
     wprintw(pLabelWnd, "  [Nm]");
+    */
+    wmove(pLabelWnd, 0, label_x_pos[4]+x_offset);
+    wprintw(pLabelWnd, "Freq");
 
-//    wmove(pLabelWnd, 0, label_x_pos[6]+x_offset);
-//    wprintw(pLabelWnd, "Freq");
+    wmove(pLabelWnd, 1, label_x_pos[4]+x_offset);
+    wprintw(pLabelWnd, " [Hz]");
 
-//    wmove(pLabelWnd, 1, label_x_pos[6]+x_offset);
-//    wprintw(pLabelWnd, "   [Hz]");
+    wmove(pLabelWnd, 0, label_x_pos[5]+x_offset);
+    wprintw(pLabelWnd, "Ampl");
+
+    wmove(pLabelWnd, 1, label_x_pos[5]+x_offset);
+    wprintw(pLabelWnd, " [deg]");
+
 
     wmove(pLabelWnd, 0, label_x_pos[6]+x_offset);
-    wprintw(pLabelWnd, "Final Pos");
+    wprintw(pLabelWnd, "Fin Pos");
     wmove(pLabelWnd, 1, label_x_pos[6]+x_offset);
     wprintw(pLabelWnd, "  [deg]");
 
+    wmove(pLabelWnd, 0, label_x_pos[7]+x_offset);
+    wprintw(pLabelWnd, "m_cur");
+
+    wmove(pLabelWnd, 1, label_x_pos[7]+x_offset);
+    wprintw(pLabelWnd, " [A]");
 
 
     wattroff(pLabelWnd, A_BOLD);
@@ -1042,7 +1061,7 @@ void print_labels_EHA(WINDOW *pLabelWnd)
     wprintw(pLabelWnd, "[N/Nm]");
 
     wmove(pLabelWnd, 0, label_x_pos[5]+x_offset);
-    wprintw(pLabelWnd, "ref_cur_");
+    wprintw(pLabelWnd, "ref_cur");
 
     wmove(pLabelWnd, 1, label_x_pos[5]+x_offset);
     wprintw(pLabelWnd, " [A]");
