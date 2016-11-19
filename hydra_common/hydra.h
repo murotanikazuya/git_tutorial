@@ -127,7 +127,7 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_U_RHIP0  0xffffffff//0x025E1AF2
 #define LIM_U_RHIP1  0x00b3c075//0x00b3c4f2//0x00b2c12f//0x00AE84AF
 #define LIM_U_RHIP2  0x00ac29d1//0x00ac4825//0x00ad5470//0x00AE5E0C
-#define LIM_U_RKNEE0 0x00bbe8df//0x00b86d17//0x00b9538a//0x00B9F780
+#define LIM_U_RKNEE0 0x00bbf53c//0x00b86d17//0x00b9538a//0x00B9F780
 #define LIM_U_RKNEE1 0x00ba43fe//0x00b6d91a//0x00b6b405//0x00B60CA9
 #define LIM_U_LHIP0  0xffffffff//0x035B0410//0x035b7930
 #define LIM_U_LHIP1  0x00b7cb00//0x00b76df0//0x00B5CF31
@@ -153,16 +153,16 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_U_LWRST0 0xffffffff//0x02DC93DD
 #define LIM_U_LWRST1 0x00B83E59
 #define LIM_U_LWRST2 0x00B0EE93
-#define LIM_U_RANKL0 0x00ae4bd5//0x00ae32a8//0x00A95759
-#define LIM_U_RANKL1 0x00b55f20//0x00b9ee4e//0x00BA7F35
+#define LIM_U_RANKL0 0x00accade//0x00ae4bd5//0x00ae32a8//0x00A95759
+#define LIM_U_RANKL1 0x00b5976d//0x00b9ee4e//0x00BA7F35
 #define LIM_U_LANKL0 0x00ab4299//0x00adadde//0x00adaa9e//0x00A9F53C
-#define LIM_U_LANKL1 0x00b10dac//0x00b6c49d//0x00b6c31f//0x00B6861E
+#define LIM_U_LANKL1 0x00b1281e//0x00b6c49d//0x00b6c31f//0x00B6861E
 
 #define LIM_L_RHIP0  0x00000000//0x00fe05d9
 #define LIM_L_RHIP1  0x001e3735//0x001e3bb2//0x001d37ef//0x001F1872
 #define LIM_L_RHIP2  0x001bb73e//<--20161005 //0x0016a091//0x0016bee5//0x0017cb30//0x0019A76C
-#define LIM_L_RKNEE0 0x00270dd8//0x0022e3d7//0x0023ca4a//0x00246E40
-#define LIM_L_RKNEE1 0x002533b2//0x00214fda//0x00212ac5//0x00208369
+#define LIM_L_RKNEE0 0x00270eb3//0x0022e3d7//0x0023ca4a//0x00246E40
+#define LIM_L_RKNEE1 0x00248dd6//0x00214fda//0x00212ac5//0x00208369
 #define LIM_L_LHIP0  0x00000000//0x01FB09DA//0x01FEAE7E
 #define LIM_L_LHIP1  0x002241c0//0x0021e4b0//0x0020B94D
 #define LIM_L_LHIP2  0x001aafbf//0x001b2cc1//0x00213E47
@@ -187,10 +187,10 @@ const unsigned char joint_rev_num_hydra[][3] = {
 #define LIM_L_LWRST0 0x00000000//0x017C8966
 #define LIM_L_LWRST1 0x0020A60C
 #define LIM_L_LWRST2 0x0022D131
-#define LIM_L_RANKL0 0x0018c295//0x0018a968//0x0018D2F6
+#define LIM_L_RANKL0 0x001e25ed//0x0018a968//0x0018D2F6
 #define LIM_L_RANKL1 0x002492d7//0x0024650e//0x00256C45
 #define LIM_L_LANKL0 0x001aa9ed//0x0018215e//0x001940E4
-#define LIM_L_LANKL1 0x0022abfd//0x002139df//0x001F944B
+#define LIM_L_LANKL1 0x0023802f//0x002139df//0x001F944B
 
 /****************** motor encoder offset ********************/
 
@@ -480,9 +480,9 @@ const unsigned int EHA_llim_hydra_MD4KW_2MFS[][2] = {
 };
 
 const EC_T_DWORD enc_offset_MD4KW_3M [][3] = {
-	{0x02fddf38/*0x02fe0600*//*0x01A7DA7E*/, (LIM_U_RHIP1+LIM_L_RHIP1)>>1, (LIM_U_RHIP2+LIM_L_RHIP2)>>1},     //rhip
+	{0x02fc5cb9/*0x02fe0600*//*0x01A7DA7E*/, (LIM_U_RHIP1+LIM_L_RHIP1)>>1, (LIM_U_RHIP2+LIM_L_RHIP2)>>1},     //rhip
 	{(LIM_U_RKNEE0+LIM_L_RKNEE0)>>1, (LIM_U_RKNEE1+LIM_L_RKNEE1)>>1, 0x00000000}, //rknee
-	{0x01555555/*0x02AB25BB*//*0x02AB8E51*/, (LIM_U_LHIP1+LIM_L_LHIP1)>>1, (LIM_U_LHIP2+LIM_L_LHIP2)>>1},     //lhip
+	{0x01547c4d/*0x02AB25BB*//*0x02AB8E51*/, (LIM_U_LHIP1+LIM_L_LHIP1)>>1, (LIM_U_LHIP2+LIM_L_LHIP2)>>1},     //lhip
 	{(LIM_U_LKNEE0+LIM_L_LKNEE0)>>1, (LIM_U_LKNEE1+LIM_L_LKNEE1)>>1, 0x00000000}, //lknee
 	{(LIM_U_BODY0+LIM_L_BODY0)>>1,   (LIM_U_BODY1+LIM_L_BODY1)>>1, 0xffff1e11},   //body
 	{0x02587A0D, (LIM_U_RSHLD1+LIM_L_RSHLD1)>>1, (LIM_U_RSHLD2+LIM_L_RSHLD2)>>1}, //rshoulder
