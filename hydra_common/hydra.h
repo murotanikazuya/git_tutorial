@@ -665,11 +665,11 @@ const double eha_phys_forcecomple_hydra_MD4KW_3M[][3] = {
 
 const int eha_pos_p_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
   //  { -50, 1, -1}, //rhip
-  /*{-20,100,-100},//*/{ -80, 180, -180}, //rhip
-  { -60,  -90, 90},//rknee with single encoder //{ 90,  90, -90}, //rknee with tandem encoder
-  { -80,  150, -150},//{ -20,  150, -150}, //lhip
-  { -70,  -60, 60},//  { -30,  -30, 30}, //lknee with both single or tandem encoder
-  { -140,  140,  30}, //body
+  {-50,90,-100},//*/{ -110, 180, -180}, //rhip
+  { -80,  -60, 60},//rknee with single encoder //{ 90,  90, -90}, //rknee with tandem encoder
+  /*{ -110,  150, -150},//*/{ -50,  100, -100}, //lhip
+  { -80,  -60, 60},/*{ -80,  -80, 80},*///  { -30,  -30, 30}, //lknee with both single or tandem encoder
+  {-50,50,30},//*/{ -140,  140,  30}, //body
   { -30,  30, -30}, //rshoulder
   {  50, -50,  50}, //relbow
   {  50,  50, -50}, //rwrist
@@ -678,11 +678,11 @@ const int eha_pos_p_gain_hydra_MD4KW_3M[][3] = {//16bitshifted
   {  50,  50, -50}//{  100,  150, -150}  //lwrist
 };
 const int eha_pos_d_gain_hydra_MD4KW_3M[][3] = {//10bitshifted
-        { 0,  70, 70}, //rhip
-        { -20,  20, 20},//{ -20,  30, 30}, //rknee with tandem encoder
-        { 0,  70, 70}, //lhip
-        { 20,  20, 20},//{ 50,  50, 50}, //lkneeQ
-	{ 40,  20, 1}, //body
+        { 20,  60, 60}, //rhip
+        { 40,  35, 35},//{ -20,  30, 30}, //rknee with tandem encoder
+        { 20,  50, 50}, //lhip
+        { 45,  35, 35},/*{ 45,  45, 45},*///{ 50,  50, 50}, //lkneeQ
+	{30,30,1},//*/{ 40,  20, 1}, //body
         { 1,  1, 1}, //rshoulder
         { 1,  1, 1}, //relbow
         { 1,  1, 1}, //rwrist
@@ -692,11 +692,11 @@ const int eha_pos_d_gain_hydra_MD4KW_3M[][3] = {//10bitshifted
 };
 
 const int eha_pos_i_gain_hydra_MD4KW_3M[][3] = {
-  {10,30,30},//{10,300,300},  //rhip
+  {0,30,30},//{10,300,300},  //rhip
   {10,10,10},//{20,20,20},  //rknee
-  {50,25,25},//{50,250,250}, //lhip
+  {0,25,25},//{50,250,250}, //lhip
   {10,10,10},  //lknee
-  {90,70,1},  //body
+  {20,20,1},//*/{90,70,1},  //body
   {10,10,10},  //rshoulder
   {10,10,10},  //relbow
   {10,10,10},  //rwrist
@@ -854,17 +854,17 @@ const double eha_phys_forcepres_hydra_MD4KW_2MFS[][2] = {
 //	{ 100,  100}, //left
 //};
 const int eha_pos_p_gain_hydra_MD4KW_2MFS[][2] = {
-        { 70,  70}, //right
+        { 60,  50}, //right
 
 	{-60,  50},//{-40,  40},//{0,0}, //{ -80,  80},//{ -80,  80}, //left
 };
 const int eha_pos_d_gain_hydra_MD4KW_2MFS[][2] = {
-        { 1,  1}, //right
-        {0,0}, //{ 10,  10},//{ 10,  10}, //left
+        { 10,  30}, //right
+        {10,30}, //{ 10,  10},//{ 10,  10}, //left
 };
 const int eha_pos_i_gain_hydra_MD4KW_2MFS[][2] = {
         { 10,  10}, //right
-        {0,0}, //{ 1,  1},//{ 1,  1}, //left
+        {20,20}, //{ 1,  1},//{ 1,  1}, //left
 };
 
 const int eha_vel_p_gain_hydra_MD4KW_2MFS[][2] = {

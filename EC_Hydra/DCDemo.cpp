@@ -3963,7 +3963,7 @@ static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
 		  		  		  ///*
 //body
 		                      snprintf(pTmpBuf,DATA_BUF_SIZE,
-					       "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"/*%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,*/,
+					       "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"/*%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,"*/,
                             eha_state_log[0].DATA.pos_act,
                             eha_cmd_log[0].DATA.pos_ref,
                             eha_state_log[1].DATA.pos_act,
@@ -3999,7 +3999,7 @@ static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
                             eha_state_log[16].DATA.pos_act,
 			    eha_cmd_log[16].DATA.pos_ref,
                             eha_state_log[17].DATA.pos_act,
-                            eha_cmd_log[17].DATA.pos_ref/*,
+			    eha_cmd_log[17].DATA.pos_ref/*,
 					       eha_state_log[0].DATA.rawpos_act,
 					       eha_state_log[1].DATA.rawpos_act,
 					       eha_state_log[2].DATA.rawpos_act,
