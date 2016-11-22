@@ -159,7 +159,8 @@ int CylinderToKnee(const double z_cmd1,const double z_cmd2, double *q_ans, p_1jo
 		z2_cmd_offset = z_cmd2*1000 + p_joint.z1_0;
 		q1 = asin((p_joint.a*p_joint.a + z1_cmd_offset*z1_cmd_offset + p_joint.r*p_joint.r - p_joint.l*p_joint.l)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z1_cmd_offset*z1_cmd_offset))) - atan(p_joint.a/z1_cmd_offset) + 55*M_PI/180;
 		q2 = asin((p_joint.l*p_joint.l - p_joint.a*p_joint.a - z2_cmd_offset*z2_cmd_offset - p_joint.r*p_joint.r)/(2*p_joint.r*sqrt(p_joint.a*p_joint.a + z2_cmd_offset*z2_cmd_offset))) - atan(-p_joint.a/z2_cmd_offset) + 55*M_PI/180;	
-        *q_ans = q1;
+		*q_ans = q1;//use single encoder only
+	//		*q_ans = q2;//use tandem encoder only
 	}else if(!strcmp(p_joint.name,"rknee")){
 		z1_cmd_offset = z_cmd1*1000 + p_joint.z1_0;
 		z2_cmd_offset = z_cmd2*1000 + p_joint.z2_0;
@@ -170,7 +171,7 @@ int CylinderToKnee(const double z_cmd1,const double z_cmd2, double *q_ans, p_1jo
 	}else{
 		return -1;
 	}
-	//*q_ans = (q1 + q2) / 2.0;
+	//*q_ans = (q1 + q2) / 2.0;//use both encoders
 
 
 	return 0;

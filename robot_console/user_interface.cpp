@@ -1016,13 +1016,13 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
         //waddstr(pWnd, ( (all_eha_servo_switch[i]==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
-        wprintw(pWnd,"%08.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);
+        wprintw(pWnd,"%08.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);//Tau
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau2_act);
+        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau2_act);//ref_cur
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[6] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau3_act);
+        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau3_act);//msr_cur
 
 //        pthread_mutex_unlock( &(thread_data->mutex) );
     }

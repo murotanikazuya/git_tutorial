@@ -29,7 +29,8 @@ ENI_PATH=../ENI
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20160108_SM.xml
 #ENI_FILE=$ENI_PATH/hydra_wholebody_20160115_SM.xml
 #ENI_FILE=$ENI_PATH/hydra_upperbody_20161031_SM.xml
-ENI_FILE=$ENI_PATH/hydra_lowerbody_20161031_SM.xml
+#ENI_FILE=$ENI_PATH/hydra_lowerbody_20161031_SM.xml
+ENI_FILE=$ENI_PATH/hydra_lowerbodywithoutIMU_20161122_SM.xml
 
 
 # 起動時のパラメータ設定ファイルの指定(選択式)
