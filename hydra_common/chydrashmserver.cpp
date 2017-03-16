@@ -168,6 +168,29 @@ int CHydraShmServer::ReadCommand(int idx, joint_cmd_t jnt_cmd[], eha_cmd_t eha_c
     return 0;
 }
 
+int CHydraShmServer::ReadCommandAsLog(int idx, joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sensor_cmd_t sensor_cmd[])
+{
+    int Idx = idx % SHM_ACCNUM_MAX;
+    for(int i=0; i<HYDRA_JNT_MAX; i++){
+        jnt_cmd[i].DATA.pos_ref = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_pos;
+        jnt_cmd[i].DATA.tau_ref = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_tau;
+        jnt_cmd[i].DATA.vel_ref = pShmIn_MD4KW->Acc[Idx].Joints[i].joint_vel;
+        jnt_cmd[i].DATA.enable  = pShmIn_MD4KW->Acc[Idx].Joints[i].ctrl_mode;
+    }
+
+    for(int i=0; i<EHA_MAX; i++) {
+        eha_cmd[i].DATA.ctlword = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_ctrlword;
+        eha_cmd[i].DATA.pos_ref = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_pos;
+        eha_cmd[i].DATA.vel_ref = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_vel;
+        eha_cmd[i].DATA.tau_ref = pShmIn_MD4KW->Acc[Idx].Actuators[i].EHA_tau;
+    }
+    sensor_cmd[0].DATA.ft_sensor[0].ctlword = pShmIn_MD4KW->Acc[Idx].FS[0].ctrlword;
+    sensor_cmd[0].DATA.ft_sensor[1].ctlword = pShmIn_MD4KW->Acc[Idx].FS[1].ctrlword;
+    sensor_cmd[0].DATA.imu[0].ctlword       = pShmIn_MD4KW->Acc[Idx].IMU.ctrlword[0];
+    return 0;
+}
+
+
 int CHydraShmServer::ReadCommand(joint_cmd_t jnt_cmd[], eha_cmd_t eha_cmd[], sensor_cmd_t sensor_cmd[])
 {
     for(int i=0; i<HYDRA_JNT_MAX; i++){
@@ -269,6 +292,28 @@ int CHydraShmServer::ReadStatus(joint_state_t jnt_state[], eha_state_t eha_state
     return 0;
 }
 
+int CHydraShmServer::WriteCommandAsLog(const joint_cmd_t jnt_cmd[], const eha_cmd_t eha_cmd[], const sensor_cmd_t sensor_cmd[])
+{
+    int loop;
+    for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+        SHM_HYDRA_JOINT_REFPOS_IN(1, loop)   = jnt_cmd[loop].DATA.pos_ref; // 目標位置指令[rad]
+        SHM_HYDRA_JOINT_REFVEL_IN(1, loop)   = jnt_cmd[loop].DATA.vel_ref;  // 目標速度指令[rad/sec]
+        SHM_HYDRA_JOINT_REFTAU_IN(1, loop)   = jnt_cmd[loop].DATA.tau_ref;  // 目標電流指令値[0.01A]
+//        SHM_HYDRA_JOINT_CTRLMODE_IN(1, loop) = all_joint_servo_switch[loop];
+    }
+
+    for(loop=0; loop<EHA_MAX; loop++) {
+        SHM_HYDRA_EHA_CTRLWORD_IN(1, loop) = (unsigned short)((eha_cmd[loop].DATA.ctlword)&0xffff);
+        //SHM_HYDRA_EHA_REFPOS_IN(1,loop)    = eha_cmd[loop].DATA.rawpos_ref;
+        SHM_HYDRA_EHA_REFPOS_IN(1,loop)    = eha_cmd[loop].DATA.pos_ref;
+    }
+
+    SHM_HYDRA_FS_CTRLWORD_IN(1,0)  = sensor_cmd[0].DATA.ft_sensor[0].ctlword;
+    SHM_HYDRA_FS_CTRLWORD_IN(1,1)  = sensor_cmd[0].DATA.ft_sensor[1].ctlword;
+    SHM_HYDRA_IMU_CTRLWORD_IN(1,0) = sensor_cmd[0].DATA.imu[0].ctlword;
+    return 0;
+}
+
 int CHydraShmServer::Sync(void)
 {
     int ret;
@@ -332,6 +377,23 @@ int CHydraShmServer::Sync(void)
 #endif // okamoto
 }
 
+int CHydraShmServer::GetSyncStatus(void)
+{
+    int ret;
+    int semCount = 0;
+
+    if(pShmIn_MD4KW == NULL) {
+        return E_SHM_NOT_EXIST;
+    }
+
+    ret = sem_getvalue(semSync, &semCount);
+    if (ret == -1)
+    {
+        perror("sem_getvalue NG!!");
+    }
+    return semCount;
+
+}
 
 int CHydraShmServer::PostSemaphore(void)
 {

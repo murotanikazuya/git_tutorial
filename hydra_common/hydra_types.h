@@ -132,7 +132,14 @@ typedef union
 
 #define EHA_MAX             47
 #define HYDRA_JNT_MAX       41
-#define HYDRA_HAND_JNT_MAX  26
+#define HYDRA_HAND_JNT_MAX  26   // hand joint number in ths simulator
+#define HYDRA_JNT_MAX_SIM   57   // joints number in the simulator
+
+#define RAD2DEG(x) ((x)*180.0/M_PI)
+#define DEG2RAD(x) ((x)*M_PI/180.0)
+#define MAX(a,b) ((a)>(b))?(a):(b)
+#define MIN(a,b) ((a)>(b))?(b):(a)
+#define CHK_LIM(x,l,u) MAX((l),MIN((u),(x)))
 
 // 共有メモリを経由したSDO送受信マクロ関数群
 #define	SDOREQ(ReqNo)						pShmOut_MD4KW->SdoReq[ReqNo]
@@ -261,6 +268,19 @@ typedef union
 #define SHM_HYDRA_JOINT_REFTAU_OUT(AccIdx, JntIdx)   ACCOUT_MD4KW(AccIdx).Joints[(JntIdx)].joint_tau
 #define SHM_HYDRA_FS_CTRLWORD_OUT(AccIdx, SlvIdx)   ACCOUT_MD4KW(AccIdx).FS[(SlvIdx)].ctrlword
 #define SHM_HYDRA_IMU_CTRLWORD_OUT(AccIdx, SlvIdx)   ACCOUT_MD4KW(AccIdx).IMU[(SlvIdx)].ctrlword
+
+//ko
+#define SHM_HYDRA_EHA_CTRLWORD_IN(AccIdx, JntIdx)   ACCIN_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_ctrlword
+#define SHM_HYDRA_EHA_REFPOS_IN(AccIdx, JntIdx)     ACCIN_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_refpos
+#define SHM_HYDRA_EHA_REFVEL_IN(AccIdx, JntIdx)     ACCIN_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_refvel
+#define SHM_HYDRA_EHA_REFTAU_IN(AccIdx, JntIdx)     ACCIN_MD4KW(AccIdx).Actuators[(JntIdx)].EHA_reftau
+#define SHM_HYDRA_ENABLE_IN(AccIdx)                 ACCIN_MD4KW(AccIdx).EnableAll
+#define SHM_HYDRA_JOINT_CTRLMODE_IN(AccIdx, JntIdx)   ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].ctrl_mode
+#define SHM_HYDRA_JOINT_REFPOS_IN(AccIdx, JntIdx)   ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_refpos
+#define SHM_HYDRA_JOINT_REFVEL_IN(AccIdx, JntIdx)   ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_refvel
+#define SHM_HYDRA_JOINT_REFTAU_IN(AccIdx, JntIdx)   ACCIN_MD4KW(AccIdx).Joints[(JntIdx)].joint_reftau
+#define SHM_HYDRA_FS_CTRLWORD_IN(AccIdx, SlvIdx)   ACCIN_MD4KW(AccIdx).FS[(SlvIdx)].ctrlword
+#define SHM_HYDRA_IMU_CTRLWORD_IN(AccIdx, SlvIdx)   ACCIN_MD4KW(AccIdx).IMU.ctrlword[(SlvIdx)]
 
 /*-PACK SETTINGS-------------------------------------------------------------*/
 #if defined  __GNUC__   /* GNU */
@@ -601,6 +621,12 @@ typedef struct _S_SHM_INPUT_ACC_EHA_STATE
   EC_T_REAL  EHA_tau2;
   EC_T_REAL  EHA_tau3;
   EC_T_BYTE  EHA_status;
+
+  EC_T_REAL  EHA_refpos;   //ko
+  EC_T_WORD  EHA_refvel;   //ko
+  EC_T_WORD  EHA_reftau;   //ko
+  EC_T_WORD  EHA_reftau_motor;   //ko
+  EC_T_WORD  EHA_ctrlword;   //ko
 } S_SHM_INPUT_ACC_EHA_STATE;
 
 typedef struct _S_SHM_INPUT_ACC_JOINT_STATE
@@ -611,6 +637,12 @@ typedef struct _S_SHM_INPUT_ACC_JOINT_STATE
     EC_T_REAL  joint_tau2;
     EC_T_REAL  joint_tau3;
     EC_T_BYTE  joint_status;
+
+    int     ctrl_mode; //ko
+    double  joint_refpos; //ko
+    double  joint_refvel; //ko
+    double  joint_reftau; //ko
+
 } S_SHM_INPUT_ACC_JOINT_STATE;
 
 typedef struct _S_SHM_INPUT_ACC_HAND_STATE
@@ -627,10 +659,11 @@ typedef struct _S_SHM_INPUT_ACC_IMU_STATE
     double  acc_X;
     double  acc_Y;
     double  acc_Z;
-	double  Quarternion[4];
-	double  Omega_c[3];
-	double  Accel[3];
-	double  VelWorld[3];
+    double  Quarternion[4];
+    double  Omega_c[3];
+    double  Accel[3];
+    double  VelWorld[3];
+    EC_T_WORD  ctrlword[1]; //ko
 } S_SHM_INPUT_ACC_IMU_STATE;
 
 typedef struct _S_SHM_INPUT_ACC_FS_STATE
@@ -647,6 +680,7 @@ typedef struct _S_SHM_INPUT_ACC_FS_STATE
     EC_T_WORD M_X_raw;
     EC_T_WORD M_Y_raw;
     EC_T_WORD M_Z_raw;
+    EC_T_WORD ctrlword; //ko
 } S_SHM_INPUT_ACC_FS_STATE;
 
 union U_SHM_INPUT_ACC_MD4KW_2MFS_SLV 

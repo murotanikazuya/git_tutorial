@@ -1,5 +1,6 @@
 #include "chydrakinematics.h"
 #include "hydra_kinematics.h"
+#include "hydra_types.h"
 
 CHydraKinematics::CHydraKinematics()
 {
@@ -42,7 +43,8 @@ CHydraKinematics::~CHydraKinematics()
 
 void CHydraKinematics::SetJointPosition(double q[])
 {
-    for(int i=0; i<58; i++)
+//    for(int i=0; i<58; i++)  ///  <- this access jnt[58], which DO NOT EXIST!
+    for(int i=0; i<HYDRA_JNT_MAX; i++)
     {
         jnt[i+1].q_ij = q[i];
     }

@@ -2925,6 +2925,7 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
     memset(all_EHA_pos_out, 0, sizeof(double)*EHA_MAX);
 
     pIPC->ReadCommand(joint_cmd, eha_cmd, sensor_cmd);
+    pIPC->WriteCommandAsLog(joint_cmd, eha_cmd, sensor_cmd);
 
     for(loop = 0; loop<HYDRA_JNT_MAX; loop++) {
         all_joint_pos_out[loop] = joint_cmd[loop].DATA.pos_ref;
@@ -3883,7 +3884,8 @@ static EC_T_VOID tLogSaveTask_dbg( EC_T_VOID* pvThreadParamDesc )
 
 
                 pShmServer->ReadStatus(sPutIdx,jnt_state_log,eha_state_log,sensor_state_log);
-                pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
+                //pShmServer->ReadCommand(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
+                pShmServer->ReadCommandAsLog(sPutIdx,jnt_cmd_log,eha_cmd_log,sensor_cmd_log);
 
                 if(flg_NewLabel == EC_TRUE)
 		  //                    snprintf(pTmpBuf,DATA_BUF_SIZE,"sts_wd0,sts_wd1,rawpos_act0,rawpos_act1,rawpos_ref0,rawpos_ref1,pos_act0,pos_act1,pos_ref0,pos_ref1,");

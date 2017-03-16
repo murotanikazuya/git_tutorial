@@ -4,17 +4,21 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include <iostream>
+#include <fstream>
 
 #include "user_interface.h"
 #include "servo_ui.h"
 #include "hydra.h"
 #include "robot_hydra_id.h"
 #include "chydradatamanager.h"
+#include "cthreaddata.h"
 
 //#define EHA_ON 0x0101
 //#define EHA_OFF 0x0100
 
-extern CHydraDataManager hydra_data;
+//extern CHydraDataManager hydra_data;
+extern CHydraDataManager* hydraData;
 
 //extern joint_state_t  jnt_state[HYDRA_JNT_MAX];
 //extern joint_cmd_t    jnt_cmd[HYDRA_JNT_MAX];
@@ -46,12 +50,12 @@ extern double  eef_to_update[6];
 
 extern int thread_end_flg;
 
-extern bool interp_run;
-extern bool grasp_run;
-extern int  interp_cnt;
-extern int  interp_length;
-extern bool interp_ready;
-extern bool filemotion_run;
+//extern bool interp_run;
+//extern bool grasp_run;
+//extern int  interp_cnt;
+//extern int  interp_length;
+//extern bool interp_ready;
+//extern bool filemotion_run;
 extern bool debug_mode;
 
 extern double **motion_data;
@@ -64,7 +68,8 @@ extern FILE* fp_log;
 extern double all_joint_refpos_to_send[HYDRA_JNT_MAX];
 bool all_joint_resv_to_send[HYDRA_JNT_MAX];
 
-static thread_data_t *thread_data;
+//static thread_data_t *thread_data;
+static CthreadData* thread_data;
 
 static void init_curses(void);
 static void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jnt_end);
@@ -119,7 +124,10 @@ void *servo_ui(void *param)
     int jnt_end;
     int loop;
 
-    thread_data = (thread_data_t*)param;
+    //thread_data = (thread_data_t*)param;
+    thread_data = (CthreadData*)param;
+
+    std::ofstream ofs("log_ui");
 
     init_curses( );
     getmaxyx(stdscr, size_y, size_x);
@@ -344,7 +352,7 @@ void *servo_ui(void *param)
                 int j, k;
                 bool new_state;
                 if(all_joint_servo_switch[y]==false) {
-                    if(interp_run==true)
+                    if(thread_data->interp_run==true)
                         goto endo;
                 }
 
@@ -352,8 +360,8 @@ void *servo_ui(void *param)
                 for(j=0; j<joint_to_joint_power[y][0]; j++) {
                     k = joint_to_joint_power[y][j+1];
 //                    pthread_mutex_lock( &(thread_data->mutex) );
-                    hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
-                            = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+//                    hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
+//                            = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
 //                    pthread_mutex_unlock( &(thread_data->mutex) );
                     all_joint_servo_switch[k] = new_state;
                     all_joint_resv_to_send[k] =  true;
@@ -365,9 +373,9 @@ void *servo_ui(void *param)
 
         case 'u':
         case '+':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 goto endu;
-            interp_ready = false;
+            thread_data->interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
@@ -380,9 +388,9 @@ void *servo_ui(void *param)
             break;
 
         case 'U':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
-            interp_ready = false;
+            thread_data->interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
                 if(!all_joint_resv_to_send[y]) {
                     all_joint_refpos_to_send[y] += DEG2RAD(0.5);
@@ -398,9 +406,9 @@ void *servo_ui(void *param)
 
         case 'd':
         case '-':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
-            interp_ready = false;
+            thread_data->interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
                     if(!all_joint_resv_to_send[y]) {
@@ -412,9 +420,9 @@ void *servo_ui(void *param)
             break;
 
         case 'D':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
-            interp_ready = false;
+            thread_data->interp_ready = false;
             if(view_mode==E_VIEW_JOINT) {
                     if(!all_joint_resv_to_send[y]) {
                         all_joint_refpos_to_send[y] -= DEG2RAD(0.5);
@@ -424,7 +432,7 @@ void *servo_ui(void *param)
             break;
 
         case 'A':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
@@ -437,7 +445,7 @@ void *servo_ui(void *param)
             }
             break;
         case 'a':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
@@ -451,7 +459,7 @@ void *servo_ui(void *param)
             break;
 
         case 'F':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
@@ -465,7 +473,7 @@ void *servo_ui(void *param)
             }
             break;
         case 'f':
-            if( (interp_run!=false)||(filemotion_run!=false) )
+            if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                 break;
             if(view_mode==E_VIEW_JOINT) {
                 if(all_joint_servo_switch[y]) {
@@ -485,7 +493,7 @@ void *servo_ui(void *param)
                     int j, k;
                     bool new_state;
                     if(all_joint_servo_switch[y]==false) {
-                        if(interp_run==true)
+                        if(thread_data->interp_run==true)
                             goto endsp;
                     }
 
@@ -493,10 +501,10 @@ void *servo_ui(void *param)
                     for(j=0; j<joint_to_joint_power[y][0]; j++) {
                         k = joint_to_joint_power[y][j+1];
 //                        pthread_mutex_lock( &(thread_data->mutex) );
-                        hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
-                                 = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+//                        hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
+//                                 = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
                         all_joint_refpos_to_send[k]
-                                = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+                                = hydraData->GetJointStatePtr(0)[k].DATA.pos_act;
 //                        pthread_mutex_unlock( &(thread_data->mutex) );
                         all_joint_servo_switch[k] = new_state;
                         all_joint_resv_to_send[k] =  true;
@@ -509,38 +517,40 @@ void *servo_ui(void *param)
         case '=':
             if(view_mode==E_VIEW_JOINT) {
 //                pthread_mutex_lock( &(thread_data->mutex) );
-                hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
-                        = hydra_data.GetJointStatePtr(0)[y].DATA.pos_act;
+//                hydra_data.GetJointCmdPtr(1)[y].DATA.pos_ref
+//                        = hydra_data.GetJointStatePtr(0)[y].DATA.pos_act;
                 all_joint_refpos_to_send[y]
-                        = hydra_data.GetJointStatePtr(0)[y].DATA.pos_act;
+                        = hydraData->GetJointStatePtr(0)[y].DATA.pos_act;
 //                pthread_mutex_unlock( &(thread_data->mutex) );
                 all_joint_resv_to_send[y] = true;
             }
             break;
 
         case 'x':
-            //interp_run = (interp_run==1) ? 0 : 1;
-            if(interp_run==true) {
-                interp_run = false;
+            //thread_data->interp_run = (thread_data->interp_run==1) ? 0 : 1;
+            if(thread_data->interp_run==true) {
+                thread_data->interp_run = false;
+                ofs << "interporation disabled" << std::endl;
             } else {
-                interp_cnt = 0;
+                thread_data->interp_cnt = 0;
                 for (loop=0; loop<HYDRA_JNT_MAX; loop++){
-                    all_joint_initpos[loop]  = hydra_data.GetJointStatePtr(0)[loop].DATA.pos_act;
+                    all_joint_initpos[loop]  = hydraData->GetJointStatePtr(0)[loop].DATA.pos_act;
                     //all_joint_finalpos[loop] = motion_data[motion_line][loop+1];
                 }
-                interp_run = true;
+                thread_data->interp_run = true;
+                ofs << "interporation enabled" << std::endl;
             }
             break;
 
         case 'g':
-            //interp_run = (interp_run==1) ? 0 : 1;
-            if(grasp_run==true) {
-                grasp_run = false;
+            //thread_data->interp_run = (thread_data->interp_run==1) ? 0 : 1;
+            if(thread_data->grasp_run==true) {
+                thread_data->grasp_run = false;
             } else {
-                interp_cnt = 0;
+                thread_data->interp_cnt = 0;
                 for (loop=0; loop<HYDRA_JNT_MAX; loop++){
-                    all_joint_initpos[loop]  = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref;
-                    all_joint_finalpos[loop] = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref;
+                    all_joint_initpos[loop]  = hydraData->GetJointCmdPtr(0)[loop].DATA.pos_ref;
+                    all_joint_finalpos[loop] = hydraData->GetJointCmdPtr(0)[loop].DATA.pos_ref;
                 }
                 all_joint_finalpos[JOINT_HYDRA_RHAND_THB_FE] = 0;
                 all_joint_finalpos[JOINT_HYDRA_RHAND_IDX] = 0;
@@ -552,19 +562,19 @@ void *servo_ui(void *param)
                 all_joint_finalpos[JOINT_HYDRA_LHAND_MID] = 0;
                 all_joint_finalpos[JOINT_HYDRA_LHAND_RNG] = 0;
 
-                interp_run = true;
+                //thread_data->interp_run = true;
             }
             break;
 
         case 'G':
-            //interp_run = (interp_run==1) ? 0 : 1;
-            if(grasp_run==true) {
-                grasp_run = false;
+            //thread_data->interp_run = (thread_data->interp_run==1) ? 0 : 1;
+            if(thread_data->grasp_run==true) {
+                thread_data->grasp_run = false;
             } else {
-                interp_cnt = 0;
+                thread_data->interp_cnt = 0;
                 for (loop=0; loop<HYDRA_JNT_MAX; loop++){
-                    all_joint_initpos[loop]  = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref;
-                    all_joint_finalpos[loop] = hydra_data.GetJointCmdPtr(0)[loop].DATA.pos_ref;
+                    all_joint_initpos[loop]  = hydraData->GetJointCmdPtr(0)[loop].DATA.pos_ref;
+                    all_joint_finalpos[loop] = hydraData->GetJointCmdPtr(0)[loop].DATA.pos_ref;
                 }
                 all_joint_finalpos[JOINT_HYDRA_RHAND_THB_FE] = 3 * M_PI / 3.0;
                 all_joint_finalpos[JOINT_HYDRA_RHAND_IDX] = -3 * M_PI / 2.0;
@@ -576,15 +586,17 @@ void *servo_ui(void *param)
                 all_joint_finalpos[JOINT_HYDRA_LHAND_MID] = -3 * M_PI / 2.0;
                 all_joint_finalpos[JOINT_HYDRA_LHAND_RNG] = -3 * M_PI / 2.0;
 
-                grasp_run = true;
+                thread_data->grasp_run = true;
             }
             break;
 
         case 'r':
-            if( (interp_ready==true)&&(filemotion_run==false) ) {
-                filemotion_run = true;
+            if( (thread_data->interp_ready==true)&&(thread_data->filemotion_run==false) ) {
+                thread_data->filemotion_run = true;
+                ofs << "file motion run enabled" << std::cout;
             } else {
-                filemotion_run = false;
+                thread_data->filemotion_run = false;
+                ofs << "file motion run disabled" << std::cout;
             }
             break;
         case 'l':
@@ -596,7 +608,7 @@ void *servo_ui(void *param)
                 fflush(fp_log);
                 reload_motion_file(filename);
                 strcpy(motion_name, filename);
-                interp_ready = false;
+                thread_data->interp_ready = false;
             }
             break;
         }
@@ -646,17 +658,17 @@ void *servo_ui(void *param)
         case '\n': //Enterの押された時の処理
             if(view_mode==E_VIEW_JOINT) {
                 int j, k;
-                if( (interp_run!=false)||(filemotion_run!=false) )
+                if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                     goto endcr;
-                interp_ready = false;
+                thread_data->interp_ready = false;
                 for(j=0; j<joint_to_joint_power[y][0]; j++) {
                     k = joint_to_joint_power[y][j+1];
-                    hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
-                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+//                    hydra_data.GetJointCmdPtr(1)[k].DATA.pos_ref
+//                             = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
                     all_joint_refpos_to_send[k]
-                            = hydra_data.GetJointStatePtr(0)[k].DATA.pos_act;
+                            = hydraData->GetJointStatePtr(0)[k].DATA.pos_act;
                     all_joint_tau_tgt[k] = 0;
-                    hydra_data.GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
+                    hydraData->GetJointCmdPtr(1)[k].DATA.enable = (all_joint_servo_switch[k]==true)?1:0;
                     all_joint_resv_to_send[k] = false;
                 }
 
@@ -669,19 +681,19 @@ void *servo_ui(void *param)
             if(view_mode==E_VIEW_JOINT) {
                 int j, k, l;
 
-                if( (interp_run!=false)||(filemotion_run!=false) )
+                if( (thread_data->interp_run!=false)||(thread_data->filemotion_run!=false) )
                     goto endf12;
 
-                interp_ready = false;
+                thread_data->interp_ready = false;
 
                 for(j=0; j<HYDRA_JNT_MAX; j++) {
-                    hydra_data.GetJointCmdPtr(1)[j].DATA.pos_ref
-                            = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
+                    //hydra_data.GetJointCmdPtr(1)[j].DATA.pos_ref
+                    //        = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
                     all_joint_refpos_to_send[j]
-                            = hydra_data.GetJointStatePtr(0)[j].DATA.pos_act;
+                            = hydraData->GetJointStatePtr(0)[j].DATA.pos_act;
                     all_joint_tau_tgt[j] = 0;
                     //all_joint_pos_tgt[j] = all_joint_refpos_to_send[j];
-                    hydra_data.GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
+                    hydraData->GetJointCmdPtr(1)[j].DATA.enable = (all_joint_servo_switch[j]==true)?1:0;
                     all_joint_resv_to_send[j] = false;
                     /*
                     for(l=0; l<joint_to_EHA_power[j][0]; l++) {
@@ -707,7 +719,7 @@ void *servo_ui(void *param)
             }
             for(loop=0; loop<EHA_MAX; loop++) {
                 fprintf(fp, "%d, %08x\n", loop,
-                        hydra_data.GetEHAStatePtr(0)[loop].DATA.rawpos_act);
+                        hydraData->GetEHAStatePtr(0)[loop].DATA.rawpos_act);
             }
             fclose(fp);
             break;
@@ -788,10 +800,10 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
 //        pthread_mutex_lock( &(thread_data->mutex) );
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[1] + x_offset);
-        wprintw(pWnd, "%06.2f", RAD2DEG(hydra_data.GetJointStatePtr(0)[i].DATA.pos_act));
+        wprintw(pWnd, "%06.2f", RAD2DEG(hydraData->GetJointStatePtr(0)[i].DATA.pos_act));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
-        wprintw(pWnd,"%06.2f", RAD2DEG(hydra_data.GetJointCmdPtr(0)[i].DATA.pos_ref));
+        wprintw(pWnd,"%06.2f", RAD2DEG(hydraData->GetJointCmdPtr(0)[i].DATA.pos_ref));
 
 
 
@@ -799,7 +811,7 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
 
         /*wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
-        wprintw(pWnd,"%06.2f", hydra_data.GetJointStatePtr(0)[i].DATA.tau_act);
+        wprintw(pWnd,"%06.2f", hydraData->GetJointStatePtr(0)[i].DATA.tau_act);
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
         wprintw(pWnd,"%06.2f", all_joint_tau_fk[i]);
@@ -815,7 +827,7 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         wprintw(pWnd,"%06.2f", RAD2DEG(all_joint_finalpos[i]));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[7] + x_offset);
-        wprintw(pWnd,"%05.1f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau3_act);
+        wprintw(pWnd,"%05.1f", hydraData->GetEHAStatePtr(0)[i].DATA.tau3_act);
 
 
 //        pthread_mutex_unlock( &(thread_data->mutex) );
@@ -824,7 +836,7 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         switch(col_sel) {
         case 0:
             wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
-            wprintw(pWnd, "%07.2f",RAD2DEG(hydra_data.GetJointCmdPtr(0)[i].DATA.pos_ref));
+            wprintw(pWnd, "%07.2f",RAD2DEG(hydraData->GetJointCmdPtr(0)[i].DATA.pos_ref));
             break;
         case 1:
             wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
@@ -907,7 +919,8 @@ void print_menu_joint(WINDOW *pMenuWnd)
     int menu_width = 15;
     int x_offset = 1;
     wattrset(pMenuWnd, COLOR_PAIR(3));
-    if(interp_run || filemotion_run ) wattrset(pMenuWnd, COLOR_PAIR(8));
+    if(thread_data->interp_run || thread_data->filemotion_run)
+        wattrset(pMenuWnd, COLOR_PAIR(8));
     wmove(pMenuWnd, 0, 0+x_offset);
     waddstr(pMenuWnd, "SPC:Tgl En");
 
@@ -937,7 +950,7 @@ void print_title_joint(WINDOW *pTitleWnd)
 
     wmove(pTitleWnd, 1, 2);
 
-    if(interp_ready) {
+    if(thread_data->interp_ready) {
 //        sprintf(str, " [R]");
         waddstr(pTitleWnd, "[R]  ");
     } else {
@@ -947,11 +960,11 @@ void print_title_joint(WINDOW *pTitleWnd)
 
     getmaxyx(pTitleWnd, size_y, size_x);
 
-    if(interp_run) {
-        sprintf(str, "     [Interpolating %5d/%5d]", interp_cnt, interp_length);
+    if(thread_data->interp_run) {
+        sprintf(str, "     [Interpolating %5d/%5d]", thread_data->interp_cnt, thread_data->interp_length);
         wmove(pTitleWnd, 1, size_x-strlen(str)-2);
         waddstr(pTitleWnd, str);
-    } else if(filemotion_run) {
+    } else if(thread_data->filemotion_run) {
         sprintf(str, "     [Motion Running %5d/%5d]", motion_line, motion_length);
         wmove(pTitleWnd, 1, size_x-strlen(str)-2);
         waddstr(pTitleWnd, str);
@@ -968,7 +981,7 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
     wbkgd(pWnd, COLOR_PAIR(0));
     for( i=jnt_start; i<jnt_end; i++ ) {
         if(i==jnt_sel) {
-            if( hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
+            if( hydraData->GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
                 wattrset(pWnd, COLOR_PAIR(8));
 //                sel_mode = 5;
             }
@@ -977,7 +990,7 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 //                sel_mode = 5;
             }
         }
-        else if(hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
+        else if(hydraData->GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
             wattrset(pWnd, COLOR_PAIR(7));
 //            sel_mode = 7;
         }
@@ -994,9 +1007,9 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[1] + x_offset);
         if(debug_mode)
         {
-            wprintw(pWnd, "%08x", hydra_data.GetEHAStatePtr(0)[i].DATA.rawpos_act);
+            wprintw(pWnd, "%08x", hydraData->GetEHAStatePtr(0)[i].DATA.rawpos_act);
         }else{
-            wprintw(pWnd, "%07.2f", (hydra_data.GetEHAStatePtr(0)[i].DATA.pos_act)*1000);
+            wprintw(pWnd, "%07.2f", (hydraData->GetEHAStatePtr(0)[i].DATA.pos_act)*1000);
         }
 //        wprintw(pWnd, "%08x", all_eha_rawpos[i] );
 
@@ -1004,25 +1017,25 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 
         if(debug_mode)
         {
-            wprintw(pWnd, "%08x", hydra_data.GetEHACmdPtr(0)[i].DATA.rawpos_ref);
+            wprintw(pWnd, "%08x", hydraData->GetEHACmdPtr(0)[i].DATA.rawpos_ref);
         }else{
-            wprintw(pWnd, "%07.2f", (hydra_data.GetEHACmdPtr(0)[i].DATA.pos_ref)*1000);
+            wprintw(pWnd, "%07.2f", (hydraData->GetEHACmdPtr(0)[i].DATA.pos_ref)*1000);
         }
 
 //  wprintw(pWnd,"%07.2f", RAD2DEG(all_eha_refpos[i]));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
-        waddstr(pWnd, ( (hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
+        waddstr(pWnd, ( (hydraData->GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
         //waddstr(pWnd, ( (all_eha_servo_switch[i]==EHA_CtrlWd_ON[i]) ? "ON" : "OFF"));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
-        wprintw(pWnd,"%08.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau_act);//Tau
+        wprintw(pWnd,"%08.2f", hydraData->GetEHAStatePtr(0)[i].DATA.tau_act);//Tau
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[5] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau2_act);//ref_cur
+        wprintw(pWnd,"%07.2f", hydraData->GetEHAStatePtr(0)[i].DATA.tau2_act);//ref_cur
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[6] + x_offset);
-        wprintw(pWnd,"%07.2f", hydra_data.GetEHAStatePtr(0)[i].DATA.tau3_act);//msr_cur
+        wprintw(pWnd,"%07.2f", hydraData->GetEHAStatePtr(0)[i].DATA.tau3_act);//msr_cur
 
 //        pthread_mutex_unlock( &(thread_data->mutex) );
     }
@@ -1113,7 +1126,7 @@ void print_row_CART(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int j
             wattrset(pWnd, COLOR_PAIR(1));
         }
             /*
-            if( hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
+            if( hydraData->GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i] ) {
                 wattrset(pWnd, COLOR_PAIR(8));
 //                sel_mode = 5;
             }
@@ -1122,7 +1135,7 @@ void print_row_CART(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int j
 //                sel_mode = 5;
             }
         }
-        else if(hydra_data.GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
+        else if(hydraData->GetEHACmdPtr(0)[i].DATA.ctlword==EHA_CtrlWd_ON[i]) {
             wattrset(pWnd, COLOR_PAIR(7));
 //            sel_mode = 7;
         }
@@ -1277,7 +1290,7 @@ void turn_off_all_EHA(void)  // this function does not work!!!
         for(l=0; l<joint_to_EHA_power[j][0]; l++) {
             k = joint_to_EHA_power[j][l+1];
 //            pthread_mutex_lock( pmutex );
-            hydra_data.GetEHACmdPtr(1)[k].DATA.ctlword
+            hydraData->GetEHACmdPtr(1)[k].DATA.ctlword
                     = (all_joint_servo_switch[j]==true)?EHA_CtrlWd_ON[k]:EHA_CtrlWd_OFF[k];
 //            pthread_mutex_unlock( pmutex );
         }
@@ -1289,7 +1302,7 @@ void turn_off_all_joint(void)  // this function does not work!!!
     for(int j=0; j<HYDRA_JNT_MAX; j++) {
         all_joint_servo_switch[j] = false;
         all_joint_resv_to_send[j] = false;
-        hydra_data.GetJointCmdPtr(1)[j].DATA.enable = 0;
+        hydraData->GetJointCmdPtr(1)[j].DATA.enable = 0;
 
     }
 }

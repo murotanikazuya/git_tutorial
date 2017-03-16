@@ -115,7 +115,7 @@ int CHydraConfigLoader::decode_jointnum(const char jointname[])
 {
     for(int i=0; i<JOINT_HYDRA_MAX; i++)
     {
-        if(!strcmp(jointname, joint_names[i]))
+        if(!strcmp(jointname, joint_hydra_names[i]))
             return i;
     }
     return -1;

@@ -310,9 +310,19 @@ bool HydraPosControl::control()
     pIPC->WriteStatus(&(joint_state[0]), &(eha_state[0]), &(sensor_state[0]));
 
 	cnt = pIPC->Sync();
+    cnt = pIPC->GetSyncStatus();
+    usleep(2000);//ko
     if (cnt > 1 )
+    //while(cnt > 1)
 	{
-        os() << "sem get_value [?? > 1] " << cnt << std::endl;
+        os() << "sem get_value [? > 1] " << cnt << std::endl;
+        usleep(2000);//ko
+        /*cnt = pIPC->GetSyncStatus(); //ko
+        if(cnt>1000)
+        {
+            os() << "sem_wait_timeout" << std::endl;
+            break;
+        }*/
 	}
 #if 0 // Wait待ちに関わらず、セマフォを解放するように修正　20160413 okamoto
     int wdt = 0;
@@ -360,12 +370,13 @@ bool HydraPosControl::control()
 
     // decode power state
     for(int i=0; i<HYDRA_JNT_MAX; i++) {
-        enable = 1;
+        enable = 0;
         for(int j=0; j<joint_to_EHA_power[i][0]; j++) {
-            if(eha_cmd[joint_to_EHA_power[i][j+1]].DATA.ctlword!=0x0101)
-                enable = 0;
+            if(eha_cmd[joint_to_EHA_power[i][j+1]].DATA.ctlword&0x1)
+                enable = 1;
         }
         joint_cmd[i].DATA.enable = enable;
+        //joint_cmd[i].DATA.enable = eha_cmd[joint_to_EHA_power[i][1]].DATA.ctlword&0x01;
     }
 
     // control

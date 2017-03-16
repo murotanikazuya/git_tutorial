@@ -57,7 +57,6 @@ enum joint_hydra_id   {
     JOINT_HYDRA_MAX
 }; 
 
-#if 1 // user_interface.hから移動 okamoto
 const char joint_hydra_names[][25] = {
   "joint_rhip_yaw",
   "joint_rhip_pitch",
@@ -100,6 +99,143 @@ const char joint_hydra_names[][25] = {
   "joint_lhand_idx",       
   "joint_lhand_mid", 
   "joint_lhand_rng"};
-#endif
+
+const char eha_names[][25] = {
+    "EHA_rhip_vane",
+    "EHA_rhip_cyl1",
+    "EHA_rhip_cyl2",
+    "EHA_rknee_single",
+    "EHA_rknee_tandem1",
+    "EHA_rknee_tandem2",
+    "EHA_rankle_cyl1",
+    "EHA_rankle_cyl2",
+    "EHA_lhip_vane",
+    "EHA_lhip_cyl1",
+    "EHA_lhip_cyl2",
+    "EHA_lknee_single",
+    "EHA_lknee_tandem1",
+    "EHA_lknee_tandem2",
+    "EHA_lankle_cyl1",
+    "EHA_lankle_cyl2",
+    "EHA_waist1_cyl1",
+    "EHA_waist1_cyl2",
+    "EHA_neck",
+    "EHA_rshoulder_vane",
+    "EHA_rshoulder_cyl1",
+    "EHA_rshoulder_cyl2",
+    "EHA_relbow_vane",
+    "EHA_relbow_tandem1",
+    "EHA_relbow_tandem2",
+    "EHA_rwrist_vane",
+    "EHA_rwrist_cyl1",
+    "EHA_rwrist_cyl2",
+    "EHA_lshoulder_vane",
+    "EHA_lshoulder_cyl1",
+    "EHA_lshoulder_cyl2",
+    "EHA_lelbow_vane",
+    "EHA_lelbow_tandem1",
+    "EHA_lelbow_tandem2",
+    "EHA_lwrist_vane",
+    "EHA_lwrist_cyl1",
+    "EHA_lwrist_cyl2",
+    "EHA_rhand_thb_AA",
+    "EHA_rhand_thb_FE",
+    "EHA_rhand_idx",
+    "EHA_rhand_mid",
+    "EHA_rhand_rng",
+    "EHA_lhand_thb_AA",
+    "EHA_lhand_thb_FE",
+    "EHA_lhand_idx",
+    "EHA_lhand_mid",
+    "EHA_lhand_rng"
+};
+
+const int joint_to_joint_power[][6] = {
+        {1, 0, -1,-1,-1,-1},
+        {2, 1,  2,-1,-1,-1},
+        {2, 1,  2,-1,-1,-1},
+        {1, 3, -1,-1,-1,-1},
+        {2, 4,  5,-1,-1,-1},
+        {2, 4,  5,-1,-1,-1},
+        {1, 6, -1,-1,-1,-1},
+        {2, 7,  8,-1,-1,-1},
+        {2, 7,  8,-1,-1,-1},
+        {1, 9, -1,-1,-1,-1},
+        {2, 10,11,-1,-1,-1},
+        {2, 10,11,-1,-1,-1},
+        {2, 12,13,-1,-1,-1},
+        {2, 12,13,-1,-1,-1},
+        {1, 14,-1,-1,-1,-1},
+        {1, 15,-1,-1,-1,-1},
+        {2, 16,17,-1,-1,-1},
+        {2, 16,17,-1,-1,-1},
+        {1, 18,-1,-1,-1,-1},
+        {1, 19,-1,-1,-1,-1},
+        {1, 20,-1,-1,-1,-1},
+        {2, 21,22,-1,-1,-1},
+        {2, 21,22,-1,-1,-1},
+        {1, 23,-1,-1,-1,-1},
+        {2, 24,25,-1,-1,-1},
+        {2, 24,25,-1,-1,-1},
+        {1, 26,-1,-1,-1,-1},
+        {1, 27,-1,-1,-1,-1},
+        {1, 28,-1,-1,-1,-1},
+        {2, 29,30,-1,-1,-1},
+        {2, 29,30,-1,-1,-1},
+        {1, 31,-1,-1,-1,-1},
+        {1, 32,-1,-1,-1,-1},
+        {1, 33,-1,-1,-1,-1},
+        {1, 34,-1,-1,-1,-1},
+        {1, 35,-1,-1,-1,-1},
+        {1, 36,-1,-1,-1,-1},
+        {1, 37,-1,-1,-1,-1},
+        {1, 38,-1,-1,-1,-1},
+        {1, 39,-1,-1,-1,-1},
+        {1, 40,-1,-1,-1,-1}
+};
+
+const int joint_to_EHA_power[][6] = {
+        {1, 0, -1,-1,-1,-1},//rhip_yaw
+        {2, 1,  2,-1,-1,-1},//rhip_pitch
+        {2, 1,  2,-1,-1,-1},//rhip_roll
+        {3, 3,  4, 5,-1,-1},//rknee
+        {2, 6,  7,-1,-1,-1},//rankle_roll
+        {2, 6,  7,-1,-1,-1},//rankle_pitch
+        {1, 8, -1,-1,-1,-1},//lhip_yaw
+        {2, 9, 10,-1,-1,-1},//lhip_pitch
+        {2, 9, 10,-1,-1,-1},//lhip_roll
+        {3, 11,12,13,-1,-1},//lknee
+        {2, 14,15,-1,-1,-1},//lankle_roll
+        {2, 14,15,-1,-1,-1},//lankle_pitch
+        {2, 16,17,-1,-1,-1},//waist_pitch
+        {2, 16,17,-1,-1,-1},//waist_roll
+        {1, 18,-1,-1,-1,-1},//neck_pitch
+        {1, 19,-1,-1,-1,-1},//rscaplae_yaw
+        {2, 20,21,-1,-1,-1},//rshoulder_pitch
+        {2, 20,21,-1,-1,-1},//rshoulder_roll
+        {1, 22,-1,-1,-1,-1},//rshoulder_yaw
+        {2, 23,24,-1,-1,-1},//relbow
+        {1, 25,-1,-1,-1,-1},//rwrist_yaw
+        {2, 26,27,-1,-1,-1},//rwrist_roll
+        {2, 26,27,-1,-1,-1},//rwrist_pitch
+        {1, 28,-1,-1,-1,-1},//lscaplae_yaw
+        {2, 29,30,-1,-1,-1},//lshoulder_pitch
+        {2, 29,30,-1,-1,-1},//lshoulder_roll
+        {1, 31,-1,-1,-1,-1},//lshoulder_yaw
+        {2, 32,33,-1,-1,-1},
+        {1, 34,-1,-1,-1,-1},
+        {2, 35,36,-1,-1,-1},
+        {2, 35,36,-1,-1,-1},
+        {1, 37,-1,-1,-1,-1},
+        {1, 38,-1,-1,-1,-1},
+        {1, 39,-1,-1,-1,-1},
+        {1, 40,-1,-1,-1,-1},
+        {1, 41,-1,-1,-1,-1},
+        {1, 42,-1,-1,-1,-1},
+        {1, 43,-1,-1,-1,-1},
+        {1, 44,-1,-1,-1,-1},
+        {1, 45,-1,-1,-1,-1},
+        {1, 46,-1,-1,-1,-1}
+};
 
 #endif   /* #ifndef __ROBOT_HYDRA_ID_H__ */
