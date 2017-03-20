@@ -135,6 +135,8 @@ typedef union
 #define HYDRA_HAND_JNT_MAX  26   // hand joint number in ths simulator
 #define HYDRA_JNT_MAX_SIM   57   // joints number in the simulator
 
+#define M_PI (3.141592654)
+
 #define RAD2DEG(x) ((x)*180.0/M_PI)
 #define DEG2RAD(x) ((x)*M_PI/180.0)
 #define MAX(a,b) ((a)>(b))?(a):(b)

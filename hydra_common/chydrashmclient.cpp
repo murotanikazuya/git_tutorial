@@ -1,5 +1,6 @@
 #include "chydrashmclient.h"
 #include "chydradatamanager.h"
+#include "chydradata.h"
 
 #include <string.h>
 
@@ -116,6 +117,58 @@ int CHydraShmClient::ReadStatus(CHydraDataManager* hydraData)
     return 0;
 }
 
+int CHydraShmClient::ReadStatus(CHydraData* hydraData)
+{
+    int loop;
+
+    // read shm and store data
+    for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+        hydraData->jnt.act.pos[loop] = SHM_HYDRA_JOINT_POS_IN(0, loop);
+        hydraData->jnt.act.vel[loop]  = SHM_HYDRA_JOINT_VEL_IN(0, loop);
+        hydraData->jnt.act.tau[loop]  = SHM_HYDRA_JOINT_TAU_IN(0, loop);
+        //hydraData->GetJointStatePtr()[loop].DATA.tau2_act = SHM_HYDRA_JOINT_TAU2_IN(0, loop);
+        //hydraData->GetJointStatePtr()[loop].DATA.tau3_act = SHM_HYDRA_JOINT_TAU3_IN(0, loop);
+        hydraData->jnt.act.enabled[loop]  = SHM_HYDRA_JOINT_STATUS_IN(0, loop);
+    }
+    for(loop = 0; loop < HYDRA_HAND_JNT_MAX; loop++) {
+        hydraData->jnt.act.pos[loop+HYDRA_JNT_MAX] = SHM_HYDRA_HAND_POS_IN(0, loop);
+        hydraData->jnt.act.vel[loop+HYDRA_JNT_MAX] = SHM_HYDRA_HAND_VEL_IN(0, loop);
+    }
+
+    for(loop = 0; loop < EHA_MAX; loop++) {
+        hydraData->eha.act.pos[loop]    = SHM_HYDRA_EHA_POS_IN(0, loop);
+        hydraData->eha.act.enc_raw[loop] = SHM_HYDRA_EHA_RAWPOS_IN(0, loop);
+        hydraData->eha.act.vel[loop]    = SHM_HYDRA_EHA_VEL_IN(0, loop);
+        hydraData->eha.act.tau[loop]    = SHM_HYDRA_EHA_TAU_IN(0, loop);// - all_eha_tau_offset[loop];
+        hydraData->eha.act.tau2[loop]   = SHM_HYDRA_EHA_TAU2_IN(0,loop);
+        hydraData->eha.act.tau3[loop]   = SHM_HYDRA_EHA_TAU3_IN(0,loop);//temperature c
+        hydraData->eha.act.status[loop]    = SHM_HYDRA_EHA_STATUS_IN(0, loop);
+    }
+
+    hydraData->fs.right.wrench[0] = SHM_HYDRA_FS_FX_IN(0, 0);
+    hydraData->fs.right.wrench[1] = SHM_HYDRA_FS_FY_IN(0, 0);
+    hydraData->fs.right.wrench[2] = SHM_HYDRA_FS_FZ_IN(0, 0);
+    hydraData->fs.right.wrench[3] = SHM_HYDRA_FS_MX_IN(0, 0);
+    hydraData->fs.right.wrench[4] = SHM_HYDRA_FS_MY_IN(0, 0);
+    hydraData->fs.right.wrench[5] = SHM_HYDRA_FS_MZ_IN(0, 0);
+
+    hydraData->fs.left.wrench[0] = SHM_HYDRA_FS_FX_IN(0, 0);
+    hydraData->fs.left.wrench[1] = SHM_HYDRA_FS_FY_IN(0, 0);
+    hydraData->fs.left.wrench[2] = SHM_HYDRA_FS_FZ_IN(0, 0);
+    hydraData->fs.left.wrench[3] = SHM_HYDRA_FS_MX_IN(0, 0);
+    hydraData->fs.left.wrench[4] = SHM_HYDRA_FS_MY_IN(0, 0);
+    hydraData->fs.left.wrench[5] = SHM_HYDRA_FS_MZ_IN(0, 0);
+
+    hydraData->imu.gyro[0] = SHM_HYDRA_IMU_GYROX_IN(0);
+    hydraData->imu.gyro[1] = SHM_HYDRA_IMU_GYROY_IN(0);
+    hydraData->imu.gyro[2] = SHM_HYDRA_IMU_GYROZ_IN(0);
+    hydraData->imu.acc[0]  = SHM_HYDRA_IMU_ACCX_IN(0);
+    hydraData->imu.acc[1]  = SHM_HYDRA_IMU_ACCY_IN(0);
+    hydraData->imu.acc[2]  = SHM_HYDRA_IMU_ACCZ_IN(0);
+
+    return 0;
+}
+
 int CHydraShmClient::WriteCommand(const joint_cmd_t jnt_cmd[], const eha_cmd_t eha_cmd[], const sensor_cmd_t sensor_cmd[])
 {
     int loop;
@@ -157,6 +210,28 @@ int CHydraShmClient::WriteCommand(CHydraDataManager* hydraData)
     SHM_HYDRA_FS_CTRLWORD_OUT(1,0)  = hydraData->GetSensorCmdPtr()[0].DATA.ft_sensor[0].ctlword;
     SHM_HYDRA_FS_CTRLWORD_OUT(1,1)  = hydraData->GetSensorCmdPtr()[0].DATA.ft_sensor[1].ctlword;
     SHM_HYDRA_IMU_CTRLWORD_OUT(1,0) = hydraData->GetSensorCmdPtr()[0].DATA.imu[0].ctlword;
+    return 0;
+}
+
+int CHydraShmClient::WriteCommand(CHydraData* hydraData)
+{
+    int loop;
+    for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+        SHM_HYDRA_JOINT_REFPOS_OUT(1, loop)   = hydraData->jnt.ref_checked.pos[loop]; // 目標位置指令[rad]
+        SHM_HYDRA_JOINT_REFVEL_OUT(1, loop)   = hydraData->jnt.ref_checked.vel[loop];  // 目標速度指令[rad/sec]
+        SHM_HYDRA_JOINT_REFTAU_OUT(1, loop)   = hydraData->jnt.ref_checked.tau[loop];  // 目標電流指令値[0.01A]
+//        SHM_HYDRA_JOINT_CTRLMODE_OUT(1, loop) = all_joint_servo_switch[loop];
+    }
+
+    for(loop=0; loop<EHA_MAX; loop++) {
+        //SHM_HYDRA_EHA_CTRLWORD_OUT(1, loop) = (unsigned short)((hydraData->GetEHACmdPtr()[loop].DATA.ctlword)&0xffff);
+        //SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = hydraData->GetEHACmdPtr()[loop].DATA.rawpos_ref;
+        SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = hydraData->eha.ref.pos[loop];
+    }
+
+//    SHM_HYDRA_FS_CTRLWORD_OUT(1,0)  = hydraData->GetSensorCmdPtr()[0].DATA.ft_sensor[0].ctlword;
+//    SHM_HYDRA_FS_CTRLWORD_OUT(1,1)  = hydraData->GetSensorCmdPtr()[0].DATA.ft_sensor[1].ctlword;
+//    SHM_HYDRA_IMU_CTRLWORD_OUT(1,0) = hydraData->GetSensorCmdPtr()[0].DATA.imu[0].ctlword;
     return 0;
 }
 /*

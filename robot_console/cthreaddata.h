@@ -3,24 +3,27 @@
 
 #include <pthread.h>
 
+#include "chydradata.h"
 
-class CthreadData
+
+class CthreadData: public CHydraData
 {
 public:
     CthreadData();
 
     pthread_mutex_t mutex;
+
     int interp_cnt;
     //const int interp_length = 10000; //10sec
     const int interp_length = 1000; //10sec
 
-    bool interp_run;
-    bool grasp_run;
-    bool interp_ready;
-    bool filemotion_en = false;
-    bool filemotion_run;
-    bool sot_en = false;
-    bool sot_run = false;
+//    bool interp_run;
+//    bool grasp_run;
+//    bool interp_ready;
+//    bool filemotion_en = false;
+//    bool filemotion_run;
+//    bool sot_en = false;
+//    bool sot_run = false;
 
     int argc;
     char** argv;

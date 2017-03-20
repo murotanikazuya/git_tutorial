@@ -36,7 +36,8 @@
 #include "hydra_types.h"
 
 #include "chydrashmclient.h"
-#include "chydradatamanager.h"
+//#include "chydradatamanager.h"
+#include "chydradata.h"
 #include "cthreaddata.h"
 #include "roshydra.h"
 
@@ -91,37 +92,39 @@ CUDPComm *p_udp_comm = NULL;
 CHydraShmClient *p_hydra_shm = NULL;
 
 //CHydraDataManager hydra_data;
-CHydraDataManager* hydraData;
-joint_state_t  jnt_state[58];
-joint_cmd_t    jnt_cmd[HYDRA_JNT_MAX];
-eha_state_t    eha_state[EHA_MAX];
-eha_cmd_t      eha_cmd[EHA_MAX];
+//CHydraDataManager* hydraData;
+//CHydraData* hydraData;
+static CthreadData* hydraData;
+//joint_state_t  jnt_state[58];
+//joint_cmd_t    jnt_cmd[HYDRA_JNT_MAX];
+//eha_state_t    eha_state[EHA_MAX];
+//eha_cmd_t      eha_cmd[EHA_MAX];
 //int            buffer_index = 0;
 double all_joint_tau_fk[HYDRA_JNT_MAX];
-double all_joint_pos_tgt[HYDRA_JNT_MAX];
-double all_joint_tau_tgt[HYDRA_JNT_MAX];
+//double all_joint_pos_tgt[HYDRA_JNT_MAX];
+//double all_joint_tau_tgt[HYDRA_JNT_MAX];
 
-double all_eha_pos_tgt[EHA_MAX];
+//double all_eha_pos_tgt[EHA_MAX];
 
 double all_joint_initpos[HYDRA_JNT_MAX];
 double all_joint_finalpos[HYDRA_JNT_MAX];
-double all_joint_finalpos_deg[HYDRA_JNT_MAX];
+//double all_joint_finalpos_deg[HYDRA_JNT_MAX];
 
-double all_joint_ampl[HYDRA_JNT_MAX];
-double all_joint_freq_hz[HYDRA_JNT_MAX];
-double all_joint_phase[HYDRA_JNT_MAX];
+//double all_joint_ampl[HYDRA_JNT_MAX];
+//double all_joint_freq_hz[HYDRA_JNT_MAX];
+//double all_joint_phase[HYDRA_JNT_MAX];
 
-double all_joint_refpos_to_send[HYDRA_JNT_MAX]; //[rad]で管理する
+//double all_joint_refpos_to_send[HYDRA_JNT_MAX]; //[rad]で管理する
 bool   all_joint_servo_switch[HYDRA_JNT_MAX]; //booooooooolllllll!!!!!!!!
-bool   arm_IK_switch[2]={false,false};  //0:right, 1:left
+//bool   arm_IK_switch[2]={false,false};  //0:right, 1:left
 
-double FootFS[2][6];
+//double FootFS[2][6];
 
 double JointAbsPos[31][3];
-double eef_to_print[6];
-double eef_to_update[6];
-double lhand_pos_err[6]={0,0,0,0,0,0};
-double larm_q_delta[8];
+//double eef_to_print[6];
+//double eef_to_update[6];
+//double lhand_pos_err[6]={0,0,0,0,0,0};
+//double larm_q_delta[8];
 #define IK_GAIN_LARM   0.01;
 
 
@@ -169,9 +172,7 @@ FILE *fp_debug=NULL;
 
 bool debug_mode = false;
 
-//static int  initialize(void);
 static int  initialize(CthreadData* thread_data);
-//static int  main_func(void);
 static int  main_func(CthreadData* thread_data);
 static void destroy(void);
 static void sig_handler(int sig);
@@ -247,7 +248,7 @@ int LoadMotionFile(FILE *fp, double** data, int num_joints, int length)
 
     return i;
 }
-
+/*
 void get_q_from_status(joint_state_t  jnt_state[], double q[])
 {
     for(int i=0; i<32; i++)
@@ -259,8 +260,9 @@ void get_q_from_status(joint_state_t  jnt_state[], double q[])
         q[i+32] = jnt_state[i+HYDRA_JNT_MAX].DATA.pos_act;
     }
 }
+*/
 
-double q[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
+//double q[HYDRA_JNT_MAX+HYDRA_HAND_JNT_MAX];
 
 int main(int argc,char *argv[])
 {
@@ -283,13 +285,15 @@ int main(int argc,char *argv[])
 
     char sotNameIn[256];
 
-    hydraData = new CHydraDataManager();
+    //hydraData = new CHydraData();
+    hydraData = new CthreadData();
     //CSotHydraBridge* sotHydraBridge;
 
-    CthreadData* thread_data = new CthreadData();
+//    CthreadData* thread_data = new CthreadData(hydraData);
 
-    thread_data->mutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_init( &(thread_data->mutex), 0);
+    //thread_data->mutex = PTHREAD_MUTEX_INITIALIZER;
+    hydraData->mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_init( &(hydraData->mutex), 0);
 
 #if 0
     if (signal(SIGINT, sig_handler) == SIG_ERR)
@@ -297,16 +301,16 @@ int main(int argc,char *argv[])
 #endif
 
     process_end_flg = 1;
-    thread_data->interp_cnt      = 0;
+    hydraData->interp_cnt      = 0;
     //interp_length   = INTERP_LEN;
-    thread_data->interp_run      = false;
-    thread_data->interp_ready    = false;
-    thread_data->filemotion_run  = false;
+    hydraData->flags["interp_run"]      = false;
+    hydraData->flags["interp_ready"]    = false;
+    hydraData->flags["filemotion_run"]  = false;
     motion_line     = 0;
 
-    all_joint_phase[33] = 0;
-    all_joint_phase[34] = M_PI/3.0;
-    all_joint_phase[35] = 2*M_PI/3.0;
+//    all_joint_phase[33] = 0;
+//    all_joint_phase[34] = M_PI/3.0;
+//    all_joint_phase[35] = 2*M_PI/3.0;
 
     /* defalt file names */
     strcpy(logfilename, "./log");
@@ -322,7 +326,7 @@ int main(int argc,char *argv[])
         switch(getopt_result) {
         case 'f':
             strcpy(motionfilename, optarg);
-            thread_data->filemotion_en = true;
+            hydraData->flags["filemotion_en"] = true;
             break;
         case 'r':
             port_base = atoi(optarg);
@@ -343,10 +347,10 @@ int main(int argc,char *argv[])
 //            strcpy(slowmotion, optarg);
 //            slowmotion_rate = atof(slowmotion);
 //            break;
-        case 's':
-            strcpy(sotNameIn,optarg);
-            thread_data->sot_en = true;
-            break;
+//        case 's':
+//            strcpy(sotNameIn,optarg);
+//            hydraData->sot_en = true;
+//            break;
         case 'd':
             //debug mode
             debug_mode = true;
@@ -368,7 +372,7 @@ int main(int argc,char *argv[])
     printf("Communication Parameter ADDR:%s Port base:%d Target Port:%d\n", tgt_addr, port_base, tgt_port);
     printf("Log file:%s\n", logfilename);
 
-    if(initialize(thread_data)<0)
+    if(initialize(hydraData)<0)
         return -1;
 
     if( (fp_log = fopen(logfilename,"w"))==NULL ) {
@@ -383,7 +387,7 @@ int main(int argc,char *argv[])
         return -1;
     }
 
-    if(thread_data->filemotion_en){
+    if(hydraData->flags["filemotion_en"]){
         int ret;
         num_joints=HYDRA_JNT_MAX;
         if( (fp_motion = fopen(motionfilename,"r"))==NULL ) {
@@ -431,20 +435,17 @@ int main(int argc,char *argv[])
     hydraData->SetAllJointServoSwitch(false);
 
 
-    if(pthread_create(&thread_ros, NULL, rosHydra_main, thread_data) != 0) {
+    if(pthread_create(&thread_ros, NULL, rosHydra_main, hydraData) != 0) {
         perror("pthread_create failed");
-        //pthread_mutex_destroy( &(thread_data->mutex) );
-        //fclose(fp_log);
-        //fclose(fp_debug);
         destroy();
         return -1;
     }
 
     std::cout << "ros_init done" << std::endl;
 
-    if(pthread_create(&thread_ui, NULL, servo_ui, thread_data) != 0) {
+    if(pthread_create(&thread_ui, NULL, servo_ui, hydraData) != 0) {
         perror("pthread_create failed");
-        pthread_mutex_destroy( &(thread_data->mutex) );
+        pthread_mutex_destroy( &(hydraData->mutex) );
         fclose(fp_log);
         fclose(fp_debug);
         destroy();
@@ -467,49 +468,45 @@ int main(int argc,char *argv[])
         p_hydra_shm->ReadStatus(hydraData);
 
 
-        get_q_from_status(hydraData->GetJointStatePtr(0), q);
+        //eef_to_print[0] = JointAbsPos[22][0]; // rwrist_pitch
+        //eef_to_print[1] = JointAbsPos[22][1];
+        //eef_to_print[2] = JointAbsPos[22][2];
+        //eef_to_print[3] = JointAbsPos[30][0]; // lwrist_pitch
+        //eef_to_print[4] = JointAbsPos[30][1];
+        //eef_to_print[5] = JointAbsPos[30][2];
 
-        hydra_kinematics.SetJointPosition(q);
-        hydra_kinematics.ForwardKinematics();
-        hydra_kinematics.GetJointTorque(all_joint_tau_fk);
-        hydra_kinematics.GetJointAbsPos(JointAbsPos);
-
-        eef_to_print[0] = JointAbsPos[22][0]; // rwrist_pitch
-        eef_to_print[1] = JointAbsPos[22][1];
-        eef_to_print[2] = JointAbsPos[22][2];
-        eef_to_print[3] = JointAbsPos[30][0]; // lwrist_pitch
-        eef_to_print[4] = JointAbsPos[30][1];
-        eef_to_print[5] = JointAbsPos[30][2];
-
-        for(int i=0;i<3;i++){
-            lhand_pos_err[i]= (eef_to_update[i+3] - eef_to_print[i+3])*IK_GAIN_LARM;
-            larm_q_delta[i] = lhand_pos_err[i];
-        }
+//        for(int i=0;i<3;i++){
+//            lhand_pos_err[i]= (eef_to_update[i+3] - eef_to_print[i+3])*IK_GAIN_LARM;
+//            larm_q_delta[i] = lhand_pos_err[i];
+//        }
 
 
         //larm_q_delta = J_inv*lhand_pos_err;//////////////////////////////////////
 
-        if(gcomp==1)
-        {
-            for(int j=0; j<HYDRA_JNT_MAX; j++) {
-                hydraData->GetJointStatePtr(0)[j].DATA.tau_act -= all_joint_tau_fk[j];
-            }
-        }
+//        if(gcomp==1)
+//        {
+//            for(int j=0; j<HYDRA_JNT_MAX; j++) {
+//                hydraData->GetJointStatePtr(0)[j].DATA.tau_act -= all_joint_tau_fk[j];
+//            }
+//        }
 
         // ko //p_comm->WriteStatus(hydra_data.GetJointStatePtr(0), hydra_data.GetEHAStatePtr(0), hydra_data.GetSensorStatePtr(0));
         //p_comm->ReadCommand(hydra_data.GetJointCmdPtr(1), hydra_data.GetEHACmdPtr(1));
         // ko //extseq = p_comm->ReadCommand(hydra_data.GetJointCmdPtr(1), hydra_data.GetEHACmdPtr(1), hydra_data.GetSensorCmdPtr(1));
 
-        rtn_main_func = main_func(thread_data);
+        rtn_main_func = main_func(hydraData);
+
+        hydraData->flags["joint_check_limit_en"] = true;
+        hydraData->CheckJntRef();
 
         hydraData->UpdateEHAcmdFromJnt();
 
-        p_hydra_shm->WriteCommand(hydraData);
+        p_hydra_shm->WriteCommand((CHydraData*) hydraData);
 
         // OUTPUTの共有メモリを反映させ、Indexを更新する
         p_hydra_shm->Sync();
 
-        hydraData->IncrementIndex();
+        //hydraData->IncrementIndex();
 
 
 #ifdef USE_RTP
@@ -521,7 +518,7 @@ int main(int argc,char *argv[])
     pthread_join(thread_ui,NULL);
 
     destroy();
-    pthread_mutex_destroy( &(thread_data->mutex) );
+    pthread_mutex_destroy( &(hydraData->mutex) );
 
     fclose(fp_debug);
     fclose(fp_log);
@@ -535,7 +532,7 @@ int main(int argc,char *argv[])
    @return 1:Process continuation 0:Process end
 */
 //int main_func(void)
-int main_func(CthreadData* thread_data)
+int main_func(CthreadData* hydraData)
 {
     int loop;
     static int cnt = 0;
@@ -546,46 +543,54 @@ int main_func(CthreadData* thread_data)
     process_end_flg = !OsTerminateAppRequest();/* check if demo shall terminate */
 
     cnt++;
+
+    hydra_kinematics.SetJointPosition(hydraData->jnt.act.pos.data());
+    hydra_kinematics.ForwardKinematics();
+    hydra_kinematics.GetJointTorque(all_joint_tau_fk);
+    hydra_kinematics.GetJointAbsPos(JointAbsPos);
+
+
+
+
     // 指令値の設定
-    if(thread_data->interp_run) {
+    if(hydraData->flags["interp_run"]) {
         motion_line=0;
-        if(thread_data->interp_cnt <= thread_data->interp_length) {
+        if(hydraData->interp_cnt <= hydraData->interp_length) {
             for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                hydraData->jnt.ref_raw.pos[loop]
+                        = all_joint_initpos[loop]
+                        + (all_joint_finalpos[loop] - all_joint_initpos[loop])
+                        *((double)hydraData->interp_cnt)/((double)hydraData->interp_length);
+
                 /*
-                hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref
-                    = all_joint_initpos[loop] 
-                    + (all_joint_finalpos[loop] - all_joint_initpos[loop])
-                    *((double)thread_data->interp_cnt)/((double)thread_data->interp_length);
-                all_joint_pos_tgt[loop] = hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref;
-                */
                 all_joint_refpos_to_send[loop]
                     = all_joint_initpos[loop]
                     + (all_joint_finalpos[loop] - all_joint_initpos[loop])
-                    *((double)thread_data->interp_cnt)/((double)thread_data->interp_length);
+                    *((double)hydraData->interp_cnt)/((double)hydraData->interp_length);
+                    * */
             }
-            if(thread_data->interp_cnt%100==0){
+            if(hydraData->interp_cnt%100==0){
                 fprintf(fp_log, 
                         "Interpolation running [%6d/%6d]\n", 
-                        thread_data->interp_cnt, thread_data->interp_length);
+                        hydraData->interp_cnt, hydraData->interp_length);
             }
 
 
-            thread_data->interp_cnt++;
+            hydraData->interp_cnt++;
         } else {
-            thread_data->interp_cnt    = 0;
-            thread_data->interp_run    = false;
-            thread_data->interp_ready  = true;
+            hydraData->interp_cnt    = 0;
+            hydraData->flags["interp_run"]    = false;
+            hydraData->flags["interp_ready"]  = true;
             fprintf(fp_log, "Interpolation end\n");
-            //ofs<<"Interpolation end"<<std::endl;
         }
     }
-    else if(thread_data->filemotion_run) {
+    else if(hydraData->flags["filemotion_run"]) {
         if(motion_line < motion_length) {
             for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
-                all_joint_refpos_to_send[loop]
+                hydraData->jnt.ref_raw.pos[loop]
                         = motion_data[motion_line][loop+1];
             }
-            //if(thread_data->interp_cnt%100==0)
+            //if(hydraData->interp_cnt%100==0)
             if(motion_line%100==0)
                 fprintf(fp_log,
                         "filemotion running [%6d/%6d]\n",
@@ -593,43 +598,40 @@ int main_func(CthreadData* thread_data)
             motion_line++;
         } else {
             motion_line    = 0;
-            thread_data->filemotion_run    = false;
-            thread_data->interp_ready  = false;
+            hydraData->flags["filemotion_run"]    = false;
+            hydraData->flags["interp_ready"]  = false;
             fprintf(fp_log, "filemotion end\n");
             //ofs<<"Interpolation end"<<std::endl;
         }
     }
-    else if(thread_data->grasp_run) {
-        if(thread_data->interp_cnt <= thread_data->interp_length) {
+    /*
+    else if(hydraData->grasp_run) {
+        if(hydraData->interp_cnt <= hydraData->interp_length) {
             for(loop = 31; loop < HYDRA_JNT_MAX; loop++) {
-                /*
-                hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref
-                    = all_joint_initpos[loop]
-                    + (all_joint_finalpos[loop] - all_joint_initpos[loop])
-                    *((double)thread_data->interp_cnt)/((double)thread_data->interp_length);
-                all_joint_pos_tgt[loop] = hydra_data.GetJointCmdPtr(1)[loop].DATA.pos_ref;
-                */
                 all_joint_refpos_to_send[loop]
                     = all_joint_initpos[loop]
                     + (all_joint_finalpos[loop] - all_joint_initpos[loop])
-                    *((double)thread_data->interp_cnt)/((double)thread_data->interp_length);
+                    *((double)hydraData->interp_cnt)/((double)hydraData->interp_length);
             }
-            thread_data->interp_cnt++;
+            hydraData->interp_cnt++;
         } else {
-            thread_data->interp_cnt    = 0;
-            thread_data->grasp_run     = false;
-            thread_data->interp_ready  = true;
+            hydraData->interp_cnt    = 0;
+            hydraData->grasp_run     = false;
+            hydraData->interp_ready  = true;
             fprintf(fp_log, "Interpolation end\n");
             //ofs<<"Interpolation end"<<std::endl;
         }
     }
+    */
 
     //for(loop=23;loop<31;loop++){
+    /*
     if(arm_IK_switch[1]==true){
         for(loop=0;loop<8;loop++){
          all_joint_refpos_to_send[loop+23] += larm_q_delta[loop];
         }
     }
+    */
 /*
     for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
         all_joint_pos_tgt[loop] = CHK_LIM(all_joint_refpos_to_send[loop]
@@ -657,9 +659,8 @@ int main_func(CthreadData* thread_data)
 
 //    hydraData->setJointPosCmd(all_joint_pos_tgt);
 
-    hydraData->joint_check_limit_en = false;  // for debug
-    hydraData->setJointPosCmd(all_joint_refpos_to_send);
-    hydraData->setJointTauCmd(all_joint_tau_tgt);
+
+    //hydraData->setJointTauCmd(all_joint_tau_tgt); //////////////////
 
 
    // JointToCylinderAll(all_joint_pos_tgt, all_eha_pos_tgt);
@@ -675,7 +676,7 @@ int main_func(CthreadData* thread_data)
 }
 
 //int initialize(void)
-int initialize(CthreadData* thread_data)
+int initialize(CthreadData* hydraData)
 {
     // pointer factory
     p_hydra_shm = new CHydraShmClient();
@@ -708,34 +709,34 @@ int initialize(CthreadData* thread_data)
         */
 
     //all_eha_switchの初期化
+    /*
     for(int i=0;i<EHA_MAX;i++){
         hydraData->GetEHACmdPtr(0)[i].DATA.ctlword = EHA_CtrlWd_OFF[i];
     }
+    */
 
     //initialize all_joint_servo_switch
+    /*
     for(int i=0; i<HYDRA_JNT_MAX; i++){
         all_joint_servo_switch[i] = false;
     }
+    */
+    /*
     //initialize sine wave parameter
     for(int i=0; i<HYDRA_JNT_MAX; i++){
         all_joint_ampl[i] = 0.0;
         all_joint_freq_hz[i] = 0.1;
         all_joint_phase[i] = 0;
     }
+    */
 
-    all_joint_phase[JOINT_HYDRA_RWRIST_ROLL] = M_PI/2.0;
+//    all_joint_phase[JOINT_HYDRA_RWRIST_ROLL] = M_PI/2.0;
 
     for(int i=0; i<HYDRA_JNT_MAX; i++){
         all_joint_finalpos[i] = 0;
     }
     all_joint_finalpos[JOINT_HYDRA_RWRIST_YAW] = M_PI / 2.0;
     all_joint_finalpos[JOINT_HYDRA_LWRIST_YAW] = -M_PI / 2.0;
-
-    //初期化2回目？
-    thread_data->interp_run     = false;
-    thread_data->grasp_run      = false;
-    thread_data->interp_ready   = false;
-    thread_data->filemotion_run = false;
 
     return 0;
 }

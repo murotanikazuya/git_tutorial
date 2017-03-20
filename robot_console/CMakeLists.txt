@@ -12,6 +12,7 @@ set(SRC_LIST ${SRC_LIST}
     ../hydra_common/CalcForceTorque.cpp
     ../hydra_common/CalcParallelJoint.cpp
     ../hydra_common/chydradatamanager.cpp
+    ../hydra_common/chydradata.cpp
     ../hydra_common/chydrajrtpcomm.cpp
     ../hydra_common/chydrashmclient.cpp
     ../hydra_common/kinematics/chydrakinematics.cpp)
