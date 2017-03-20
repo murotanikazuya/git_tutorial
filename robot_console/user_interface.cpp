@@ -35,7 +35,8 @@ extern double all_joint_finalpos[HYDRA_JNT_MAX];
 //extern double all_joint_freq_hz[HYDRA_JNT_MAX];
 //extern double all_joint_phase[HYDRA_JNT_MAX];
 
-extern bool   all_joint_servo_switch[HYDRA_JNT_MAX];
+//extern bool   all_joint_servo_switch[HYDRA_JNT_MAX];
+bool   all_joint_servo_switch[HYDRA_JNT_MAX];
 //bool   all_joint_servo_switch[HYDRA_JNT_MAX];
 extern bool   arm_IK_switch[2];
 //extern unsigned short all_eha_switch[EHA_MAX];//
@@ -496,7 +497,8 @@ void *servo_ui(void *param)
                             goto endsp;
                     }
 
-                    new_state = !hydraData->jnt.ref_raw.enabled[y];
+                    //new_state = !hydraData->jnt.ref_raw.enabled[y];
+                    new_state = !all_joint_servo_switch[y];
                     for(j=0; j<joint_to_joint_power[y][0]; j++) {
                         k = joint_to_joint_power[y][j+1];
 
@@ -670,7 +672,7 @@ void *servo_ui(void *param)
 
 
                     //all_joint_tau_tgt[k] = 0;
-                    hydraData->jnt.ref_raw.enabled[k] = (all_joint_servo_switch[k]==true)?1:0;
+                    hydraData->jnt.ref_raw.enabled[k] = (all_joint_servo_switch[k]==true)?true:false;
                     all_joint_resv_to_send[k] = false;
                 }
 
@@ -693,7 +695,7 @@ void *servo_ui(void *param)
                 for(j=0; j<HYDRA_JNT_MAX; j++) {
                     //all_joint_tau_tgt[j] = 0;
                     //all_joint_pos_tgt[j] = all_joint_refpos_to_send[j];
-                    hydraData->jnt.ref_raw.enabled[j] = (all_joint_servo_switch[j]==true)?1:0;
+                    hydraData->jnt.ref_raw.enabled[j] = (all_joint_servo_switch[j]==true)?true:false;
                     all_joint_resv_to_send[j] = false;
                 }
             }
@@ -798,8 +800,7 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
         wprintw(pWnd,"%06.2f", RAD2DEG(hydraData->jnt.ref_checked.pos[i]));
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
-        waddstr(pWnd, (hydraData->jnt.ref_checked.enabled[i] ? "ON" : "OFF"));
-        //waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
+        waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
 
         /*wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[4] + x_offset);
         wprintw(pWnd,"%06.2f", hydraData->GetJointStatePtr(0)[i].DATA.tau_act);
@@ -832,8 +833,7 @@ void print_row_joint(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int 
             break;
         case 1:
             wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[3] + x_offset);
-            waddstr(pWnd, (hydraData->jnt.ref_checked.enabled[i] ? "ON" : "OFF"));
-            //waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
+            waddstr(pWnd, (all_joint_servo_switch[i] ? "ON" : "OFF"));
             break;
         default:
             break;

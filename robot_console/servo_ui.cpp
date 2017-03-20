@@ -115,7 +115,7 @@ double all_joint_finalpos[HYDRA_JNT_MAX];
 //double all_joint_phase[HYDRA_JNT_MAX];
 
 //double all_joint_refpos_to_send[HYDRA_JNT_MAX]; //[rad]で管理する
-bool   all_joint_servo_switch[HYDRA_JNT_MAX]; //booooooooolllllll!!!!!!!!
+//bool   all_joint_servo_switch[HYDRA_JNT_MAX]; //booooooooolllllll!!!!!!!!
 //bool   arm_IK_switch[2]={false,false};  //0:right, 1:left
 
 //double FootFS[2][6];
@@ -432,7 +432,7 @@ int main(int argc,char *argv[])
 
     int ret;
 
-    hydraData->SetAllJointServoSwitch(false);
+//    hydraData->SetAllJointServoSwitch(false);
 
 
     if(pthread_create(&thread_ros, NULL, rosHydra_main, hydraData) != 0) {
@@ -496,7 +496,7 @@ int main(int argc,char *argv[])
 
         rtn_main_func = main_func(hydraData);
 
-        hydraData->flags["joint_check_limit_en"] = true;
+        //hydraData->flags["joint_check_limit_en"] = true;
         hydraData->CheckJntRef();
 
         hydraData->UpdateEHAcmdFromJnt();

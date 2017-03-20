@@ -31,7 +31,7 @@ class CHydraData
         std::vector<double> tau3;
 
         std::vector<int>    enc_raw;
-        std::vector<char>   status;
+        std::vector<int>   status;
     } eha_state;
 
     typedef struct {
@@ -68,7 +68,7 @@ public:
 
     std::map<std::string,bool> flags;
 
-    double jnt_pos_step_max = DEG2RAD(0.1);
+    const double jnt_pos_step_max = DEG2RAD(0.1);
 
 };
 

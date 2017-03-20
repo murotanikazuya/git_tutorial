@@ -225,6 +225,7 @@ int CHydraShmClient::WriteCommand(CHydraData* hydraData)
 
     for(loop=0; loop<EHA_MAX; loop++) {
         //SHM_HYDRA_EHA_CTRLWORD_OUT(1, loop) = (unsigned short)((hydraData->GetEHACmdPtr()[loop].DATA.ctlword)&0xffff);
+        SHM_HYDRA_EHA_CTRLWORD_OUT(1, loop) = (unsigned short)((hydraData->eha.ref.status[loop])&0xffff);
         //SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = hydraData->GetEHACmdPtr()[loop].DATA.rawpos_ref;
         SHM_HYDRA_EHA_REFPOS_OUT(1,loop)    = hydraData->eha.ref.pos[loop];
     }

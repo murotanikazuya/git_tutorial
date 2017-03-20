@@ -75,7 +75,7 @@ void CHydraData::CheckJntRef(void)
         for (int i=0;i<HYDRA_JNT_MAX;i++){
             if((jnt.ref_raw.pos[i]-jnt.ref_checked.pos[i])>jnt_pos_step_max)
                 jnt.ref_checked.pos[i] += jnt_pos_step_max;
-            else if ((jnt.ref_raw.pos[i]-jnt.ref_checked.pos[i])<jnt_pos_step_max)
+            else if ((jnt.ref_raw.pos[i]-jnt.ref_checked.pos[i])<-jnt_pos_step_max)
                 jnt.ref_checked.pos[i] -= jnt_pos_step_max;
             else
                 jnt.ref_checked.pos[i] = jnt.ref_raw.pos[i];
