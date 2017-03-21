@@ -348,6 +348,21 @@ void *servo_ui(void *param)
             }
         }
         break;
+        case KEY_F(1):
+        {
+            if(!hydraData->flags["logging_en"]){
+                hydraData->flags["logging_newfile"]=true;
+                while(hydraData->flags["logging_newfile"]) {};  //wait for the new file to be opened
+                hydraData->flags["logging_en"] =true;
+                hydraData->dbgMsg("logger_enabled\n");
+            }else{
+                hydraData->flags["logging_en"]=false;
+                hydraData->dbgMsg("logger_disabled\n");
+            }
+
+
+        }
+        break;
         case 'o':
         {
             if(view_mode==E_VIEW_JOINT) {

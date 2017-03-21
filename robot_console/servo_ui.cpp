@@ -40,6 +40,7 @@
 #include "chydradata.h"
 #include "cthreaddata.h"
 #include "roshydra.h"
+#include "chydradatalogger.h"
 
 #include "cipcomm.h"
 CIPComm   *p_comm = NULL;
@@ -266,13 +267,14 @@ void get_q_from_status(joint_state_t  jnt_state[], double q[])
 
 int main(int argc,char *argv[])
 {
-	int	extseq;
+//	int	extseq;
 #ifdef USE_EFD
     eventfd_t tmp;
 #endif
     int       rtn_main_func = 1;
     pthread_t thread_ui;
     pthread_t thread_ros;
+    pthread_t thread_log;
 
     int getopt_result;
     struct timeval t;
@@ -283,10 +285,12 @@ int main(int argc,char *argv[])
 
     int gcomp = 0;
 
-    char sotNameIn[256];
+    //char sotNameIn[256];
 
     //hydraData = new CHydraData();
     hydraData = new CthreadData();
+
+    CHydraDataLogger* logger = new CHydraDataLogger(hydraData);
     //CSotHydraBridge* sotHydraBridge;
 
 //    CthreadData* thread_data = new CthreadData(hydraData);
@@ -443,6 +447,13 @@ int main(int argc,char *argv[])
 
     std::cout << "ros_init done" << std::endl;
 
+    if(pthread_create(&thread_log, NULL, loggingTask_servoui, logger) != 0) {
+        perror("pthread_create failed");
+        destroy();
+        return -1;
+    }
+
+
     if(pthread_create(&thread_ui, NULL, servo_ui, hydraData) != 0) {
         perror("pthread_create failed");
         pthread_mutex_destroy( &(hydraData->mutex) );
@@ -506,6 +517,9 @@ int main(int argc,char *argv[])
         // OUTPUTの共有メモリを反映させ、Indexを更新する
         p_hydra_shm->Sync();
 
+        if(hydraData->flags["logging_en"])
+            logger->pushToBuffer(hydraData);
+
         //hydraData->IncrementIndex();
 
 
@@ -516,6 +530,8 @@ int main(int argc,char *argv[])
     }
 
     pthread_join(thread_ui,NULL);
+    pthread_join(thread_ros,NULL);
+    pthread_join(thread_log,NULL);
 
     destroy();
     pthread_mutex_destroy( &(hydraData->mutex) );

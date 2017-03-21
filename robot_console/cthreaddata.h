@@ -5,11 +5,16 @@
 
 #include "chydradata.h"
 
+#include <stdio.h>
+#include <stdarg.h>
+
 
 class CthreadData: public CHydraData
 {
 public:
     CthreadData();
+
+    void dbgMsg(const char* format, ...);
 
     pthread_mutex_t mutex;
 
@@ -17,17 +22,12 @@ public:
     //const int interp_length = 10000; //10sec
     const int interp_length = 1000; //10sec
 
-//    bool interp_run;
-//    bool grasp_run;
-//    bool interp_ready;
-//    bool filemotion_en = false;
-//    bool filemotion_run;
-//    bool sot_en = false;
-//    bool sot_run = false;
+
 
     int argc;
     char** argv;
 
+    FILE* fp_msg;
 
 };
 
