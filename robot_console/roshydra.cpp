@@ -18,9 +18,9 @@ rosHydra::rosHydra()
 
 void* rosHydra_main(void* param)
 {
-    CthreadData* thread_data = (CthreadData*)param;
+    CthreadData* hydraData = (CthreadData*)param;
 
-    ros::init(thread_data->argc,thread_data->argv,"hydraStatePublisher"); // argc,argv not set yet in servo_ui
+    ros::init(hydraData->argc,hydraData->argv,"hydraStatePublisher"); // argc,argv not set yet in servo_ui
 
     ros::NodeHandle nodeHandle;
 
@@ -35,18 +35,15 @@ void* rosHydra_main(void* param)
         rosmsgHydraJointState.position.push_back(0);
     }
 
-    //double dummy[]={0.1, 0.2, 0.3};
-
     while(ros::ok()){
 
-        //std_msgs::Float64MultiArray msg;
-
-
-//        rosmsgHydraJointState.position.push_back(0.1);
-//        rosmsgHydraJointState.position.push_back(0.2);
-//        rosmsgHydraJointState.position.push_back(0.3);
-
         rosmsgHydraJointState.header.stamp = ros::Time::now();
+
+//        rosmsgHydraJointState.position =hydraData->jnt.act.pos;
+
+        for(int loop=0; loop<31; loop++){
+            rosmsgHydraJointState.position[loop] = hydraData->jnt.act.pos[loop];
+        }
 
         rosHydraPublisher.publish(rosmsgHydraJointState);
         ros::spinOnce();

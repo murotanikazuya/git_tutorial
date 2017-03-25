@@ -45,7 +45,6 @@ void CHydraDataLogger::takeLog(void)
         //CthreadData* hydraData = buffer.begin();
 
         for(int i=0;i<HYDRA_JNT_MAX;i++){
-            //fprintf("%lf,", hydraData->jnt.act.pos[i]);
             fprintf(fp,"%lf,", buffer.begin()->jnt.act.pos[i]);
         }
 
@@ -59,7 +58,6 @@ void CHydraDataLogger::takeLog(void)
 void CHydraDataLogger::loggingTask()
 {
 
-    //while(hydraData->flags["logging_en"]){
     while(1){
         if(hydraData->flags["logging_newfile"]){
             this->openNewFile();
