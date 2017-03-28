@@ -2512,24 +2512,11 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         eha_status = EHA_NO_ERR;
         ch_num = 0;
         eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
-        if(pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn != 0) {
-            eha_state[eha_num_hydra].DATA.rawpos_act
-                    = (unsigned int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn;
+        eha_state[eha_num_hydra].DATA.rawpos_act =
+                (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn;
 
-            ClipEHAPos(&(eha_state[eha_num_hydra]),
-                       enc_offset_MD4KW_3M[loop][ch_num],
-                       EHA_llim_hydra_MD4KW_3M[loop][ch_num],
-                       EHA_ulim_hydra_MD4KW_3M[loop][ch_num],
-                       eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]);
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
 
-        } else {
-            if(err_reported==false)
-                LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 0 Read Failiure",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress);
-            err_reported = true;
-            eha_status |= ENC_READ_ERR;
-        }
-        eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*CURRENT_BIT2PHY;
         all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau3ActIn*CURRENT_BIT2PHY;
@@ -2543,73 +2530,30 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         eha_status = EHA_NO_ERR;
         ch_num = 1;
         eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
-        if(pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_PosActIn != 0) {
-            eha_state[eha_num_hydra].DATA.rawpos_act =
-                    (unsigned int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_PosActIn;
-            ClipEHAPos(&(eha_state[eha_num_hydra]),
-                       enc_offset_MD4KW_3M[loop][ch_num],
-                       EHA_llim_hydra_MD4KW_3M[loop][ch_num],
-                       EHA_ulim_hydra_MD4KW_3M[loop][ch_num],
-                       eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]);
-        } else {
-            if(err_reported==false)
-                LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 1 Read Failiure",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress);
-            err_reported = true;
-            eha_status |= ENC_READ_ERR;
-        }
-        eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][1]/2e-4;
+        eha_state[eha_num_hydra].DATA.rawpos_act =
+                (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_PosActIn;
+
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
 
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*CURRENT_BIT2PHY; //ref
         all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*CURRENT_BIT2PHY; //act
 
-        /*
-        eha_state[eha_num_hydra].DATA.tau_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][1];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*1.0f;
-        eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
-        */
-        eha_state[eha_num_hydra].DATA.stsword = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
         eha_status = EHA_NO_ERR;
         ch_num = 2;
         eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
 
-        if((pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_PosActIn != 0)
-                || (eha_num_hydra == EHA_rknee_tandem2)
-                || (eha_num_hydra == EHA_lknee_tandem2)
-                || (eha_num_hydra == EHA_neck)
-                || (eha_num_hydra == EHA_relbow_tandem2)
-                || (eha_num_hydra == EHA_relbow_tandem2)
-                ) {
+        eha_state[eha_num_hydra].DATA.rawpos_act = (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_PosActIn;
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
 
-            eha_state[eha_num_hydra].DATA.rawpos_act = (unsigned int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_PosActIn;
-
-            ClipEHAPos(&(eha_state[eha_num_hydra]),
-                       enc_offset_MD4KW_3M[loop][ch_num],
-                       EHA_llim_hydra_MD4KW_3M[loop][ch_num],
-                       EHA_ulim_hydra_MD4KW_3M[loop][ch_num],
-                       eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]);
-        } else {
-            if(err_reported==false)
-                LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 2 Read Failiure",
-                       tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress);
-            err_reported = true;
-            eha_status |= ENC_READ_ERR;
-        }
         eha_state[eha_num_hydra].DATA.vel_act  = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
 
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*CURRENT_BIT2PHY;
         all_EHA_tau3[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau3_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*CURRENT_BIT2PHY;
 
-        /*
-        eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*1.0f*eha_phys_forcepres_hydra_MD4KW_3M[loop][ch_num];
-        eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*1.0f;
-        eha_state[eha_num_hydra].DATA.tau3_act = ((short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau3ActIn*1.0f*ADC_BIT_TO_V - TEMP_V_OFFSET)*V_TO_TEMP;
-        */
-        eha_state[eha_num_hydra].DATA.stsword  = eha_status;
         all_EHA_pos[eha_num_hydra] = eha_state[eha_num_hydra].DATA.pos_act;
 
     }
@@ -2624,20 +2568,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         eha_status = EHA_NO_ERR;
         ch_num = 0;
         eha_num_hydra = joint_num_hydra_MD4KW_2MFS[loop][ch_num];
-        if(pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_PosActIn != 0) {
-            eha_state[eha_num_hydra].DATA.rawpos_act = (unsigned int)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_PosActIn;
-            ClipEHAPos(&(eha_state[eha_num_hydra]),
-                       enc_offset_MD4KW_2MFS[loop][ch_num],
-                       EHA_llim_hydra_MD4KW_2MFS[loop][ch_num],
-                       EHA_ulim_hydra_MD4KW_2MFS[loop][ch_num],
-                       eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]);
-        } else {
-            if(err_reported==false)
-                LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 0 Read Failiure",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress);
-            err_reported = true;
-            eha_status |= ENC_READ_ERR;
-        }
+
+        eha_state[eha_num_hydra].DATA.rawpos_act = (int)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_PosActIn;
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num];
+
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_VelActIn*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]/1e-4;
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis0_Tau2ActIn*CURRENT_BIT2PHY;
@@ -2649,20 +2583,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         eha_status = EHA_NO_ERR;
         ch_num = 1;
         eha_num_hydra = joint_num_hydra_MD4KW_2MFS[loop][ch_num];
-        if(pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_PosActIn != 0) {
-            eha_state[eha_num_hydra].DATA.rawpos_act = (unsigned int)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_PosActIn;
-            ClipEHAPos(&(eha_state[eha_num_hydra]),
-                       enc_offset_MD4KW_2MFS[loop][ch_num],
-                       EHA_llim_hydra_MD4KW_2MFS[loop][ch_num],
-                       EHA_ulim_hydra_MD4KW_2MFS[loop][ch_num],
-                       eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]);
-        } else {
-            if(err_reported==false)
-                LogMsg("<PDO> Slave:%s(cfg-addr:%d) Encoder Axis 1 Read Failiure",
-                       tAllSlv.MD4KW_2MFS[loop].Info.abyDeviceName, tAllSlv.MD4KW_2MFS[loop].Info.wPhysAddress);
-            err_reported = true;
-            eha_status |= ENC_READ_ERR;
-        }
+
+        eha_state[eha_num_hydra].DATA.rawpos_act = (int)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_PosActIn;
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num];
+
         eha_state[eha_num_hydra].DATA.vel_act = pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_VelActIn*eha_phys_pos_hydra_MD4KW_2MFS[loop][ch_num]/1e-4;
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_2MFS[loop].Pdo.tInp.Axis1_Tau2ActIn*CURRENT_BIT2PHY;

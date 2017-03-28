@@ -555,6 +555,7 @@ const double CONV_neck = 2.0*M_PI/200000;
 const double CONV_hand   = 2.0*M_PI/16384.0;
 const double CONV_finger = 2.0*M_PI/16384.0;
 
+/*
 const double eha_phys_pos_hydra_MD4KW_3M[][3] = {
 	{   CONV_RESA,    CONV_RTLA, -1*CONV_RTLA}, //rhip
 	{-1*CONV_RTLA, -1*CONV_RTLA,    1},         //rknee
@@ -569,6 +570,21 @@ const double eha_phys_pos_hydra_MD4KW_3M[][3] = {
 	{   CONV_RESA, -1*CONV_RTLA,    1},         //lelbow
 	{   CONV_RESA, -1*CONV_RTLA,    CONV_RTLA}  //lwrist
 };
+*/
+const double eha_phys_pos_hydra_MD4KW_3M[][3] = {
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}, //rhip
+        {   CONV_RTLA,    CONV_RTLA,    1},         //rknee
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}, //lhip
+        {   CONV_RTLA,    CONV_RTLA,    1},         //lknee
+        {   CONV_RTLA,    CONV_RTLA,    CONV_neck}, //body
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}, //rshoulder
+        {   CONV_RESA,    CONV_RTLA,    1},         //relbow
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}, //rwrist
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}, //lshoulder
+        {   CONV_RESA,    CONV_RTLA,    1},         //lelbow
+        {   CONV_RESA,    CONV_RTLA,    CONV_RTLA}  //lwrist
+};
+
 
 #define PRES7MPA_V_TO_Pa  3227000
 #define PRES21MPA_V_TO_Pa (PRES7MPA_V_TO_Pa*3)
@@ -835,10 +851,15 @@ const int eha_cur_i_gain_hydra_MD4KW_3M[][3] = {//26+4bitshifted
   {CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W,CUR_IGAIN_MAXON_4P_200W}   //lwrist
 };
 
-
+/*
 const double eha_phys_pos_hydra_MD4KW_2MFS[][2] = {
 	{CONV_RTLA, -1*CONV_RTLA},
 	{CONV_RTLA, -1*CONV_RTLA}
+};
+*/
+const double eha_phys_pos_hydra_MD4KW_2MFS[][2] = {
+        {CONV_RTLA, CONV_RTLA},
+        {CONV_RTLA, CONV_RTLA}
 };
 
 const double eha_phys_forcepres_hydra_MD4KW_2MFS[][2] = {
