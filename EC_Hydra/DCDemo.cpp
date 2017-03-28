@@ -1920,7 +1920,7 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_2MFS, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
