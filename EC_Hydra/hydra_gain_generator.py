@@ -1,6 +1,110 @@
 ''' This is to generate .csv gain file to be read from ec_master
     author Tianyi Ko kang@ynl.t.u-tokyo.ac.jp '''
 
+
+# EHA linear encoder reading with the piston is in the middle
+EHA_LENC_OFFSET_WHOLEBODY = (
+    0x02fc5cb9,      #rhip
+    6880213,      #rhip
+    6549639,      #rhip
+    7438839,      #rknee
+    7301354,      #rknee
+    0,      #rknee
+    6649957,      #rankle
+    7148834,      #rankle
+    0x01547c4d,      #lhip
+    7145056,      #lhip
+    6774503,      #lhip
+    7408253,      #lknee
+    6302172,      #lknee
+    0,      #lknee
+    6485571,      #lankle
+    6968358,      #lankle
+    7081466,      #body
+    6761922,      #body
+    0,      #body
+    0x02587A0D,      #rshoulder
+    7094460,      #rshoulder
+    7012733,      #rshoulder
+    0x0287C905,      #relbow
+    7105844,      #relbow
+    0,      #relbow
+    0x01160239,      #rwrist
+    6954306,      #rwrist
+    6596830,      #rwrist
+    0x00ad9e99,      #lshoulder
+    6669299,      #lshoulder
+    7112456,      #lshoulder
+    0x017c0d8b,      #lelbow
+    7041344,      #lelbow
+    0,      #lelbow
+    0x02B15C6E,      #lwrist
+    7107122,      #lwrist
+    6938594,      #lwrist
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+)
+
+# motor encoder reading with magnetic field origin
+EHA_MENC_OFFSET_WHOLEBODY = (
+    264,      #rhip
+    608,      #rhip
+    601,      #rhip
+    974,      #rknee
+    773,      #rknee
+    411,      #rknee
+    1018,      #rankle
+    710,      #rankle
+    540,      #lhip
+    313,      #lhip
+    93,      #lhip
+    344,      #lknee
+    712,      #lknee
+    844,      #lknee
+    721,      #lankle
+    924,      #lankle
+    13,      #body
+    241,      #body
+    0,      #body
+    7,      #rshoulder
+    544,      #rshoulder
+    476,      #rshoulder
+    849,      #relbow
+    585,      #relbow
+    562,      #relbow
+    867,      #rwrist
+    308,      #rwrist
+    810,      #rwrist
+    873,      #lshoulder
+    6,      #lshoulder
+    721,      #lshoulder
+    998,      #lelbow
+    719,      #lelbow
+    921,      #lelbow
+    465,      #lwrist
+    409,      #lwrist
+    71,      #lwrist
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+)
+
+
 # first send reset signal to "ctrl_wd"
 EHA_RESET = ( # 32768 = 0x8000
     32768,      #rhip
@@ -50,6 +154,57 @@ EHA_RESET = ( # 32768 = 0x8000
     32768,      #lhand
     32768,      #lhand
     32768,      #lhand
+)
+
+# unreset the driver in the end
+EHA_UNRESET = (
+    512,      #rhip
+    512,      #rhip
+    512,      #rhip
+    512,      #rknee
+    512,      #rknee
+    512,      #rknee
+    512,      #rankle
+    512,      #rankle
+    512,      #lhip
+    512,      #lhip
+    512,      #lhip
+    512,      #lknee
+    512,      #lknee
+    512,      #lknee
+    512,      #lankle
+    512,      #lankle
+    512,      #body
+    512,      #body
+    512,      #body
+    512,      #rshoulder
+    512,      #rshoulder
+    512,      #rshoulder
+    512,      #relbow
+    512,      #relbow
+    512,      #relbow
+    512,      #rwrist
+    512,      #rwrist
+    512,      #rwrist
+    512,      #lshoulder
+    512,      #lshoulder
+    512,      #lshoulder
+    512,      #lelbow
+    512,      #lelbow
+    512,      #lelbow
+    512,      #lwrist
+    512,      #lwrist
+    512,      #lwrist
+    512,      #rhand
+    512,      #rhand
+    512,      #rhand
+    512,      #rhand
+    512,      #rhand
+    512,      #lhand
+    512,      #lhand
+    512,      #lhand
+    512,      #lhand
+    512,      #lhand
 )
 
 ''' whether linear encoder direction and
@@ -722,6 +877,15 @@ GAINS = (
     GainWholebody("PosPGain", 7011, 2, EHA_POS_GAIN_P_WHOLEBODY),
     GainWholebody("PosIGain", 7012, 2, EHA_POS_GAIN_I_WHOLEBODY),
     GainWholebody("PosDGain", 7013, 2, EHA_POS_GAIN_D_WHOLEBODY),
+    GainWholebody("VelPGain", 7021, 2, EHA_VEL_GAIN_P_WHOLEBODY),
+    GainWholebody("VelIGain", 7022, 2, EHA_VEL_GAIN_I_WHOLEBODY),
+    GainWholebody("VelDGain", 7023, 2, EHA_VEL_GAIN_D_WHOLEBODY),
+    GainWholebody("CurPGain", 7031, 2, EHA_CUR_GAIN_P_WHOLEBODY),
+    GainWholebody("CurIGain", 7032, 2, EHA_CUR_GAIN_I_WHOLEBODY),
+    GainWholebody("CurDGain", 7033, 2, EHA_CUR_GAIN_D_WHOLEBODY),
+    GainWholebody("LencOffset", 7050, 4, EHA_LENC_OFFSET_WHOLEBODY),
+    GainWholebody("MencOffset", 7051, 4, EHA_MENC_OFFSET_WHOLEBODY),
+    GainWholebody("UnReset", 7000, 2, EHA_UNRESET),
 )
 
 
