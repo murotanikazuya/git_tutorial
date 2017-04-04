@@ -83,7 +83,7 @@ GAINS = (
     GainWholebody("UnReset", 0x7000, 2, EHA_UNRESET),
 )
 
-F_WHOLEBODY = open('../hydra_gains_wholebody.csv', 'w')
+F_WHOLEBODY = open('./hydra_gains_wholebody.csv', 'w')
 
 for GAIN in GAINS:
     BUF = ''
@@ -120,10 +120,12 @@ GAINS = (
     GainSingleAxis("PresPGain", 0x7037, 2, EHA_PRES_GAIN_P_SINGLEAXIS),
     GainSingleAxis("PresIGain", 0x7038, 2, EHA_PRES_GAIN_I_SINGLEAXIS),
     GainSingleAxis("PresDGain", 0x7039, 2, EHA_PRES_GAIN_D_SINGLEAXIS),
+    GainSingleAxis("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB),
+    GainSingleAxis("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF),
     GainSingleAxis("UnReset", 0x7000, 2, EHA_UNRESET),
 )
 
-F_SINGLEAXIS = open('../hydra_gains_singleaxis.csv', 'w')
+F_SINGLEAXIS = open('./hydra_gains_singleaxis.csv', 'w')
 
 for GAIN in GAINS:
     BUF = ''

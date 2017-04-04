@@ -2734,10 +2734,12 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         initial = false;
     }
 
-    if(	CylinderToJointAll(all_EHA_pos, all_joint_pos, all_joint_pos_prev) < 0)
-        printf("Parallel Joint IK Failed");
-    else {
-        if(cnt==0) {
+    //if( pAllSlv->MD4KW_3MSlaves>1){
+    if( 0 ){
+        if(	CylinderToJointAll(all_EHA_pos, all_joint_pos, all_joint_pos_prev) < 0)
+            printf("Parallel Joint IK Failed");
+        else {
+            if(cnt==0) {
 
 #ifdef DBG_KNEE
             LogMsg("RKnee: %08x, %08x, %f, %f, %f",
@@ -2791,12 +2793,21 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
                     all_joint_pos[10],
                     all_joint_pos[11]);
 #endif
+            }
         }
+    }else{
+         all_joint_pos[0] = all_EHA_pos[0];
     }
+
     cnt++;
-    ActForceToTorqueAll(all_joint_pos, all_EHA_tau, all_joint_tau);
+
+    if( pAllSlv->MD4KW_3MSlaves>1){
+        ActForceToTorqueAll(all_joint_pos, all_EHA_tau, all_joint_tau);
     //ActForceToTorqueAll(all_joint_pos, all_EHA_tau2, all_joint_tau2);
     //ActForceToTorqueAll(all_joint_pos, all_EHA_tau3, all_joint_tau3);
+    }else{
+        all_joint_tau[0] = all_EHA_tau[0];
+    }
 
     for(loop = 0; loop<HYDRA_JNT_MAX; loop++) {
         joint_state[loop].DATA.pos_act = all_joint_pos[loop];
@@ -2880,9 +2891,12 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
 
         memset(&TmpRecv, 0, sizeof(TmpRecv));
         // OUTPUT用の共有メモリから指令値等を書き込む場合
-        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][0]]/eha_phys_pos_hydra_MD4KW_3M[loop][0]) + enc_offset_MD4KW_3M[loop][0];
-        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][1]]/eha_phys_pos_hydra_MD4KW_3M[loop][1]) + enc_offset_MD4KW_3M[loop][1];
-        TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][2]]/eha_phys_pos_hydra_MD4KW_3M[loop][2]) + enc_offset_MD4KW_3M[loop][2];
+        //TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][0]]/eha_phys_pos_hydra_MD4KW_3M[loop][0]) + enc_offset_MD4KW_3M[loop][0];
+        //TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][1]]/eha_phys_pos_hydra_MD4KW_3M[loop][1]) + enc_offset_MD4KW_3M[loop][1];
+        //TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][2]]/eha_phys_pos_hydra_MD4KW_3M[loop][2]) + enc_offset_MD4KW_3M[loop][2];
+        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][0]]/eha_phys_pos_hydra_MD4KW_3M[loop][0]);
+        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][1]]/eha_phys_pos_hydra_MD4KW_3M[loop][1]);
+        TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][2]]/eha_phys_pos_hydra_MD4KW_3M[loop][2]);
         // TmpRecv.Axis0_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][0]];
         // TmpRecv.Axis1_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][1]];
         // TmpRecv.Axis2_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][2]];
@@ -2915,8 +2929,10 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
         memset(&TmpRecv, 0, sizeof(TmpRecv));
 
         // OUTPUT用の共有メモリから指令値等を書き込む場合
-        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][0]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][0]) + enc_offset_MD4KW_2MFS[loop][0];
-        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][1]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][1]) + enc_offset_MD4KW_2MFS[loop][1];
+        //TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][0]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][0]) + enc_offset_MD4KW_2MFS[loop][0];
+        //TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][1]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][1]) + enc_offset_MD4KW_2MFS[loop][1];
+        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][0]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][0]);
+        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_2MFS[loop][1]]/eha_phys_pos_hydra_MD4KW_2MFS[loop][1]);
 
         // TmpRecv.Axis0_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_2MFS[loop][0]];
         // TmpRecv.Axis1_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_2MFS[loop][1]];

@@ -40,7 +40,8 @@ typedef union
     struct {
         unsigned int   stsword;
         double         pos_act;
-        unsigned int   rawpos_act;
+        //unsigned int   rawpos_act;
+        int            rawpos_act;
         double         vel_act;
         double         tau_act;
         double         tau2_act;
@@ -384,7 +385,8 @@ typedef struct _T_MD4KW_IMU_RXPDO_BASIC {
 
 typedef struct _T_MD4KW_3M_TXPDO_BASIC {
     EC_T_WORD  Axis0_StsWrdActIn;// 0x6000
-    EC_T_DWORD Axis0_PosActIn;  // 0x6001
+    //EC_T_DWORD Axis0_PosActIn;  // 0x6001
+    EC_T_SDWORD Axis0_PosActIn;  // 0x6001
     EC_T_WORD  Axis0_VelActIn;  // 0x6002
     EC_T_WORD  Axis0_TauActIn;  // 0x6003
     EC_T_WORD  Axis0_Vel2ActIn; // 0x6005

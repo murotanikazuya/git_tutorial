@@ -1031,14 +1031,14 @@ void print_row_EHA(WINDOW *pWnd, int jnt_sel, int col_sel, int jnt_start, int jn
 
         wmove(pWnd, height*(i-jnt_start) + y_offset, label_x_pos[2] + x_offset);
 
-        if(debug_mode)
-        {
+        //if(debug_mode)
+        //{
             //wprintw(pWnd, "%08x", hydraData->GetEHACmdPtr(0)[i].DATA.rawpos_ref);
-            wprintw(pWnd, "%08x", hydraData->eha.ref.enc_raw[i]);
-        }else{
+        //    wprintw(pWnd, "%08x", hydraData->eha.ref.enc_raw[i]);
+        //}else{
             //wprintw(pWnd, "%07.2f", (hydraData->GetEHACmdPtr(0)[i].DATA.pos_ref)*1000);
             wprintw(pWnd, "%07.2f", (hydraData->eha.ref.pos[i])*1000);
-        }
+        //}
 
 //  wprintw(pWnd,"%07.2f", RAD2DEG(all_eha_refpos[i]));
 

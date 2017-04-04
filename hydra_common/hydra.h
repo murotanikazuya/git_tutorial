@@ -26,7 +26,8 @@ typedef enum _T_eSetupParam {
 #define EHA_POS_MIN         -0.025
 
 #define EHA_CTRLWD_RECT         0x0101
-#define EHA_CTRLWD_POS          0x0201
+//#define EHA_CTRLWD_POS          0x0201
+#define EHA_CTRLWD_POS          0x0281
 #define EHA_CTRLWD_FORCE_PRES   0x0211
 #define EHA_CTRLWD_FORCE_STRAIN 0x0221
 #define EHA_CTRLWD_FORCE_COMPLE 0x0231
