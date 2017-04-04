@@ -1,6 +1,6 @@
-''' This is to generate .csv gain file to be read from ec_master
-    author Tianyi Ko kang@ynl.t.u-tokyo.ac.jp '''
+''' gain definition for the whole body hydra '''
 
+from hydra_gain_common import *
 
 # EHA linear encoder reading with the piston is in the middle
 EHA_LENC_OFFSET_WHOLEBODY = (
@@ -51,10 +51,6 @@ EHA_LENC_OFFSET_WHOLEBODY = (
     0,      #lhand
     0,      #lhand
     0,      #lhand
-)
-
-EHA_LENC_OFFSET_SINGLEAXIS = (
-    7103446,
 )
 
 # motor encoder reading with magnetic field origin
@@ -108,110 +104,106 @@ EHA_MENC_OFFSET_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_MENC_OFFSET_SINGLEAXIS = (
-    719,
-)
-
 # first send reset signal to "ctrl_wd"
-EHA_RESET = ( # 32768 = 0x8000
-    32768,      #rhip
-    32768,      #rhip
-    32768,      #rhip
-    32768,      #rknee
-    32768,      #rknee
-    32768,      #rknee
-    32768,      #rankle
-    32768,      #rankle
-    32768,      #lhip
-    32768,      #lhip
-    32768,      #lhip
-    32768,      #lknee
-    32768,      #lknee
-    32768,      #lknee
-    32768,      #lankle
-    32768,      #lankle
-    32768,      #body
-    32768,      #body
-    32768,      #body
-    32768,      #rshoulder
-    32768,      #rshoulder
-    32768,      #rshoulder
-    32768,      #relbow
-    32768,      #relbow
-    32768,      #relbow
-    32768,      #rwrist
-    32768,      #rwrist
-    32768,      #rwrist
-    32768,      #lshoulder
-    32768,      #lshoulder
-    32768,      #lshoulder
-    32768,      #lelbow
-    32768,      #lelbow
-    32768,      #lelbow
-    32768,      #lwrist
-    32768,      #lwrist
-    32768,      #lwrist
-    32768,      #rhand
-    32768,      #rhand
-    32768,      #rhand
-    32768,      #rhand
-    32768,      #rhand
-    32768,      #lhand
-    32768,      #lhand
-    32768,      #lhand
-    32768,      #lhand
-    32768,      #lhand
+EHA_RESET = (
+    CTRLWD_RESET,      #rhip
+    CTRLWD_RESET,      #rhip
+    CTRLWD_RESET,      #rhip
+    CTRLWD_RESET,      #rknee
+    CTRLWD_RESET,      #rknee
+    CTRLWD_RESET,      #rknee
+    CTRLWD_RESET,      #rankle
+    CTRLWD_RESET,      #rankle
+    CTRLWD_RESET,      #lhip
+    CTRLWD_RESET,      #lhip
+    CTRLWD_RESET,      #lhip
+    CTRLWD_RESET,      #lknee
+    CTRLWD_RESET,      #lknee
+    CTRLWD_RESET,      #lknee
+    CTRLWD_RESET,      #lankle
+    CTRLWD_RESET,      #lankle
+    CTRLWD_RESET,      #body
+    CTRLWD_RESET,      #body
+    CTRLWD_RESET,      #body
+    CTRLWD_RESET,      #rshoulder
+    CTRLWD_RESET,      #rshoulder
+    CTRLWD_RESET,      #rshoulder
+    CTRLWD_RESET,      #relbow
+    CTRLWD_RESET,      #relbow
+    CTRLWD_RESET,      #relbow
+    CTRLWD_RESET,      #rwrist
+    CTRLWD_RESET,      #rwrist
+    CTRLWD_RESET,      #rwrist
+    CTRLWD_RESET,      #lshoulder
+    CTRLWD_RESET,      #lshoulder
+    CTRLWD_RESET,      #lshoulder
+    CTRLWD_RESET,      #lelbow
+    CTRLWD_RESET,      #lelbow
+    CTRLWD_RESET,      #lelbow
+    CTRLWD_RESET,      #lwrist
+    CTRLWD_RESET,      #lwrist
+    CTRLWD_RESET,      #lwrist
+    CTRLWD_RESET,      #rhand
+    CTRLWD_RESET,      #rhand
+    CTRLWD_RESET,      #rhand
+    CTRLWD_RESET,      #rhand
+    CTRLWD_RESET,      #rhand
+    CTRLWD_RESET,      #lhand
+    CTRLWD_RESET,      #lhand
+    CTRLWD_RESET,      #lhand
+    CTRLWD_RESET,      #lhand
+    CTRLWD_RESET,      #lhand
 )
 
 # unreset the driver in the end
 EHA_UNRESET = ( #0x0200
-    512,      #rhip
-    512,      #rhip
-    512,      #rhip
-    512,      #rknee
-    512,      #rknee
-    512,      #rknee
-    512,      #rankle
-    512,      #rankle
-    512,      #lhip
-    512,      #lhip
-    512,      #lhip
-    512,      #lknee
-    512,      #lknee
-    512,      #lknee
-    512,      #lankle
-    512,      #lankle
-    512,      #body
-    512,      #body
-    512,      #body
-    512,      #rshoulder
-    512,      #rshoulder
-    512,      #rshoulder
-    512,      #relbow
-    512,      #relbow
-    512,      #relbow
-    512,      #rwrist
-    512,      #rwrist
-    512,      #rwrist
-    512,      #lshoulder
-    512,      #lshoulder
-    512,      #lshoulder
-    512,      #lelbow
-    512,      #lelbow
-    512,      #lelbow
-    512,      #lwrist
-    512,      #lwrist
-    512,      #lwrist
-    512,      #rhand
-    512,      #rhand
-    512,      #rhand
-    512,      #rhand
-    512,      #rhand
-    512,      #lhand
-    512,      #lhand
-    512,      #lhand
-    512,      #lhand
-    512,      #lhand
+    CTRLWD_UNRESET,      #rhip
+    CTRLWD_UNRESET,      #rhip
+    CTRLWD_UNRESET,      #rhip
+    CTRLWD_UNRESET,      #rknee
+    CTRLWD_UNRESET,      #rknee
+    CTRLWD_UNRESET,      #rknee
+    CTRLWD_UNRESET,      #rankle
+    CTRLWD_UNRESET,      #rankle
+    CTRLWD_UNRESET,      #lhip
+    CTRLWD_UNRESET,      #lhip
+    CTRLWD_UNRESET,      #lhip
+    CTRLWD_UNRESET,      #lknee
+    CTRLWD_UNRESET,      #lknee
+    CTRLWD_UNRESET,      #lknee
+    CTRLWD_UNRESET,      #lankle
+    CTRLWD_UNRESET,      #lankle
+    CTRLWD_UNRESET,      #body
+    CTRLWD_UNRESET,      #body
+    CTRLWD_UNRESET,      #body
+    CTRLWD_UNRESET,      #rshoulder
+    CTRLWD_UNRESET,      #rshoulder
+    CTRLWD_UNRESET,      #rshoulder
+    CTRLWD_UNRESET,      #relbow
+    CTRLWD_UNRESET,      #relbow
+    CTRLWD_UNRESET,      #relbow
+    CTRLWD_UNRESET,      #rwrist
+    CTRLWD_UNRESET,      #rwrist
+    CTRLWD_UNRESET,      #rwrist
+    CTRLWD_UNRESET,      #lshoulder
+    CTRLWD_UNRESET,      #lshoulder
+    CTRLWD_UNRESET,      #lshoulder
+    CTRLWD_UNRESET,      #lelbow
+    CTRLWD_UNRESET,      #lelbow
+    CTRLWD_UNRESET,      #lelbow
+    CTRLWD_UNRESET,      #lwrist
+    CTRLWD_UNRESET,      #lwrist
+    CTRLWD_UNRESET,      #lwrist
+    CTRLWD_UNRESET,      #rhand
+    CTRLWD_UNRESET,      #rhand
+    CTRLWD_UNRESET,      #rhand
+    CTRLWD_UNRESET,      #rhand
+    CTRLWD_UNRESET,      #rhand
+    CTRLWD_UNRESET,      #lhand
+    CTRLWD_UNRESET,      #lhand
+    CTRLWD_UNRESET,      #lhand
+    CTRLWD_UNRESET,      #lhand
+    CTRLWD_UNRESET,      #lhand
 )
 
 ''' whether linear encoder direction and
@@ -318,7 +310,6 @@ EHA_MOTOR_LENC_INV_WHOLEBODY = (
     False,      #lhand
 )
 
-
 ''' whether strain gauge direction and
     motor current direction is flipped
     when the rod is compressed, the strain value decreases '''
@@ -372,50 +363,6 @@ EHA_STRAIN_MOTOR_INV_WHOLEBODY = (
     False,      #lhand
 )
 
-EHA_SERVO_DIR_WHOLEBODY = ()
-for it, val in enumerate(EHA_MOTOR_LENC_INV_WHOLEBODY):
-    servo_dir = 0
-    if EHA_LENC_PHY_INV_WHOLEBODY[it]:
-        servo_dir += 1   # dir |= 0x01
-    if not EHA_MOTOR_LENC_INV_WHOLEBODY[it]:
-        servo_dir += 16  # dir |= 0x10
-    if EHA_STRAIN_MOTOR_INV_WHOLEBODY[it]:
-        servo_dir += 32  # dir |= 0x20
-    EHA_SERVO_DIR_WHOLEBODY += (servo_dir, )
-
-''' whether linear encoder direction and
-    physical EHA direction in the robot flipped '''
-EHA_LENC_PHY_INV_SINGLEAXIS = (
-    False,      #singleaxis
-)
-
-''' whether linear encoder direction and
-    motor current direction is flipped '''
-EHA_MOTOR_LENC_INV_SINGLEAXIS = (
-    #True,      #singleaxis
-    False,      #singleaxis
-)
-
-''' whether strain gauge direction and
-    motor current direction is flipped
-    when the rod is compressed, the strain value decreases '''
-EHA_STRAIN_MOTOR_INV_SINGLEAXIS = (
-    False,      #singleaxis
-)
-
-EHA_SERVO_DIR_SINGLEAXIS = ()
-for it, val in enumerate(EHA_MOTOR_LENC_INV_SINGLEAXIS):
-    servo_dir = 0
-    if EHA_LENC_PHY_INV_SINGLEAXIS[it]:
-        servo_dir += 1   # dir |= 0x01
-    if not EHA_MOTOR_LENC_INV_SINGLEAXIS[it]:
-        servo_dir += 16  # dir |= 0x10
-    if EHA_STRAIN_MOTOR_INV_SINGLEAXIS[it]:
-        servo_dir += 32  # dir |= 0x20
-    EHA_SERVO_DIR_SINGLEAXIS += (servo_dir, )
-
-
-
 EHA_POS_GAIN_P_WHOLEBODY = (
     80,      #rhip
     150,      #rhip
@@ -466,11 +413,6 @@ EHA_POS_GAIN_P_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_POS_GAIN_P_SINGLEAXIS = ( #[100N/m]
-    100,
-)
-
-
 EHA_POS_GAIN_I_WHOLEBODY = (
     0,      #rhip
     0,      #rhip
@@ -519,10 +461,6 @@ EHA_POS_GAIN_I_WHOLEBODY = (
     0,      #lhand
     0,      #lhand
     0,      #lhand
-)
-
-EHA_POS_GAIN_I_SINGLEAXIS = (
-    0,
 )
 
 EHA_POS_GAIN_D_WHOLEBODY = (
@@ -575,11 +513,6 @@ EHA_POS_GAIN_D_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_POS_GAIN_D_SINGLEAXIS = (
-    0,
-)
-
-
 EHA_VEL_GAIN_P_WHOLEBODY = (
     0,      #rhip
     0,      #rhip
@@ -628,10 +561,6 @@ EHA_VEL_GAIN_P_WHOLEBODY = (
     0,      #lhand
     0,      #lhand
     0,      #lhand
-)
-
-EHA_VEL_GAIN_P_SINGLEAXIS = (
-    0,
 )
 
 EHA_VEL_GAIN_I_WHOLEBODY = (
@@ -684,10 +613,6 @@ EHA_VEL_GAIN_I_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_VEL_GAIN_I_SINGLEAXIS = (
-    0,
-)
-
 EHA_VEL_GAIN_D_WHOLEBODY = (
     0,      #rhip
     0,      #rhip
@@ -738,15 +663,155 @@ EHA_VEL_GAIN_D_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_VEL_GAIN_D_SINGLEAXIS = (
-    0,
+EHA_TAU_GAIN_P_WHOLEBODY = (
+    0,      #rhip
+    0,      #rhip
+    0,      #rhip
+    0,      #rknee
+    0,      #rknee
+    0,      #rknee
+    0,      #rankle
+    0,      #rankle
+    0,      #lhip
+    0,      #lhip
+    0,      #lhip
+    0,      #lknee
+    0,      #lknee
+    0,      #lknee
+    0,      #lankle
+    0,      #lankle
+    0,      #body
+    0,      #body
+    0,      #body
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #relbow
+    0,      #relbow
+    0,      #relbow
+    0,      #rwrist
+    0,      #rwrist
+    0,      #rwrist
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lwrist
+    0,      #lwrist
+    0,      #lwrist
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
 )
 
-''' for current gain, only the upper 8bits is used
-    but they are sent as 16 bit, with the eight 0 in the LSB side '''
+EHA_TAU_GAIN_I_WHOLEBODY = (
+    0,      #rhip
+    0,      #rhip
+    0,      #rhip
+    0,      #rknee
+    0,      #rknee
+    0,      #rknee
+    0,      #rankle
+    0,      #rankle
+    0,      #lhip
+    0,      #lhip
+    0,      #lhip
+    0,      #lknee
+    0,      #lknee
+    0,      #lknee
+    0,      #lankle
+    0,      #lankle
+    0,      #body
+    0,      #body
+    0,      #body
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #relbow
+    0,      #relbow
+    0,      #relbow
+    0,      #rwrist
+    0,      #rwrist
+    0,      #rwrist
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lwrist
+    0,      #lwrist
+    0,      #lwrist
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+)
 
-CUR_PGAIN_MAXON_4P_200W = 0x1c # 0x1c00
-CUR_IGAIN_MAXON_4P_200W = 0x4
+EHA_TAU_GAIN_D_WHOLEBODY = (
+    0,      #rhip
+    0,      #rhip
+    0,      #rhip
+    0,      #rknee
+    0,      #rknee
+    0,      #rknee
+    0,      #rankle
+    0,      #rankle
+    0,      #lhip
+    0,      #lhip
+    0,      #lhip
+    0,      #lknee
+    0,      #lknee
+    0,      #lknee
+    0,      #lankle
+    0,      #lankle
+    0,      #body
+    0,      #body
+    0,      #body
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #rshoulder
+    0,      #relbow
+    0,      #relbow
+    0,      #relbow
+    0,      #rwrist
+    0,      #rwrist
+    0,      #rwrist
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lshoulder
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lelbow
+    0,      #lwrist
+    0,      #lwrist
+    0,      #lwrist
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #rhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+    0,      #lhand
+)
 
 EHA_CUR_GAIN_P_WHOLEBODY = (
     CUR_PGAIN_MAXON_4P_200W  << 8,      #rhip
@@ -798,11 +863,6 @@ EHA_CUR_GAIN_P_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_CUR_GAIN_P_SINGLEAXIS = (
-    CUR_PGAIN_MAXON_4P_200W  << 8,
-)
-
-
 EHA_CUR_GAIN_I_WHOLEBODY = (
     CUR_IGAIN_MAXON_4P_200W << 8,      #rhip
     CUR_IGAIN_MAXON_4P_200W << 8,      #rhip
@@ -851,10 +911,6 @@ EHA_CUR_GAIN_I_WHOLEBODY = (
     0,      #lhand
     0,      #lhand
     0,      #lhand
-)
-
-EHA_CUR_GAIN_I_SINGLEAXIS = (
-    CUR_IGAIN_MAXON_4P_200W << 8,
 )
 
 EHA_CUR_GAIN_D_WHOLEBODY = (
@@ -907,115 +963,3 @@ EHA_CUR_GAIN_D_WHOLEBODY = (
     0,      #lhand
 )
 
-EHA_CUR_GAIN_D_SINGLEAXIS = (
-    0,
-)
-
-
-
-class GainBase(object):
-    ''' base class of gain '''
-    def __init__(self, name_in, addr, size, gain):
-        self.name = name_in
-        self.addr = addr
-        self.data = gain
-        self.size = size
-
-class GainWholebody(GainBase):
-    ''' gain for whole body ethercat cofiguration'''
-    def __init__(self, name_in, addr, size, gain):
-        GainBase.__init__(self, name_in, addr, size, gain)
-        self.box = ( # boad_type, box_id ,slave_id, axis0, 1, 2, box_name
-            (0, 0, 0, (0, 1, 2), "r_hip"),               #rhip
-            (0, 1, 1, (3, 4, 5), "r_knee"),               #rknee
-            (1, 0, 2, (6, 7), "r_ankle"),                 #rankle
-            (0, 2, 3, (8, 9, 10), "l_hip"),              #lhip
-            (0, 3, 4, (11, 12, 13), "l_knee"),            #lknee
-            (1, 1, 5, (14, 15), "l_ankle"),                #lankle
-            (0, 4, 7, (16, 17, 18), "body"),            #body
-            (0, 5, 8, (19, 20, 21), "r_shoulder"),            #rshoulder
-            (0, 6, 9, (22, 23, 24), "r_elbow"),            #relbow
-            (0, 7, 10, (25, 26, 27), "r_wrist"),           #rwrist
-            (2, 0, 11, (37, 38, 39, 40, 41), "r_hand"),   #rhand
-            (0, 8, 12, (28, 29, 30), "l_shoulder"),           #lshoulder
-            (0, 9, 13, (31, 32, 33), "l_elbow"),           #lelbow
-            (0, 10, 14, (34, 35, 36), "l_wrist"),          #lwrist
-            (2, 1, 15, (42, 43, 44, 45, 46), "l_hand")    #lhand
-        )
-
-class GainSingleAxis(GainBase):
-    ''' gain for the single axis acturator on the desk '''
-    def __init__(self, name_in, addr, size, gain):
-        GainBase.__init__(self, name_in, addr, size, gain)
-        self.box = ( # boad_type, box_id ,slave_id, axis0, 1, 2, box_name
-            #(0, 0, 0, (0, 1, 2), "r_hip"),               #rhip
-            (0, 0, 0, (0,), "singleaxis"),               #rhip
-        )
-
-
-GAINS = (
-    GainWholebody("Reset", 7000, 2, EHA_RESET),
-    GainWholebody("ServoDirection", 7046, 1, EHA_SERVO_DIR_WHOLEBODY),
-    GainWholebody("PosPGain", 7011, 2, EHA_POS_GAIN_P_WHOLEBODY),
-    GainWholebody("PosIGain", 7012, 2, EHA_POS_GAIN_I_WHOLEBODY),
-    GainWholebody("PosDGain", 7013, 2, EHA_POS_GAIN_D_WHOLEBODY),
-    GainWholebody("VelPGain", 7021, 2, EHA_VEL_GAIN_P_WHOLEBODY),
-    GainWholebody("VelIGain", 7022, 2, EHA_VEL_GAIN_I_WHOLEBODY),
-    GainWholebody("VelDGain", 7023, 2, EHA_VEL_GAIN_D_WHOLEBODY),
-    GainWholebody("CurPGain", 7031, 2, EHA_CUR_GAIN_P_WHOLEBODY),
-    GainWholebody("CurIGain", 7032, 2, EHA_CUR_GAIN_I_WHOLEBODY),
-    GainWholebody("CurDGain", 7033, 2, EHA_CUR_GAIN_D_WHOLEBODY),
-    GainWholebody("LencOffset", 7050, 4, EHA_LENC_OFFSET_WHOLEBODY),
-    GainWholebody("MencOffset", 7051, 4, EHA_MENC_OFFSET_WHOLEBODY),
-    GainWholebody("UnReset", 7000, 2, EHA_UNRESET),
-)
-
-F_WHOLEBODY = open('hydra_gains_wholebody.csv', 'w')
-
-for GAIN in GAINS:
-    BUF = ''
-    # boadtype, box_id, axis_id, slave_id, index(adress), size, value
-
-    for box in GAIN.box:
-        offset = 0
-        for jnt in box[3]:
-            BUF += '%d,%d,%d,%d,0x%d,%d,%d, // %s \n' \
-            % (box[0], box[1], offset, box[2],
-               GAIN.addr + offset*100, GAIN.size, GAIN.data[jnt], box[4]+'_'+GAIN.name)
-
-            offset = offset + 1
-
-    F_WHOLEBODY.write(BUF)
-
-GAINS = (
-    GainSingleAxis("Reset", 7000, 2, EHA_RESET),
-    GainSingleAxis("ServoDirection", 7046, 1, EHA_SERVO_DIR_SINGLEAXIS),
-    GainSingleAxis("PosPGain", 7011, 2, EHA_POS_GAIN_P_SINGLEAXIS),
-    GainSingleAxis("PosIGain", 7012, 2, EHA_POS_GAIN_I_SINGLEAXIS),
-    GainSingleAxis("PosDGain", 7013, 2, EHA_POS_GAIN_D_SINGLEAXIS),
-    GainSingleAxis("VelPGain", 7021, 2, EHA_VEL_GAIN_P_SINGLEAXIS),
-    GainSingleAxis("VelIGain", 7022, 2, EHA_VEL_GAIN_I_SINGLEAXIS),
-    GainSingleAxis("VelDGain", 7023, 2, EHA_VEL_GAIN_D_SINGLEAXIS),
-    GainSingleAxis("CurPGain", 7031, 2, EHA_CUR_GAIN_P_SINGLEAXIS),
-    GainSingleAxis("CurIGain", 7032, 2, EHA_CUR_GAIN_I_SINGLEAXIS),
-    GainSingleAxis("CurDGain", 7033, 2, EHA_CUR_GAIN_D_SINGLEAXIS),
-    GainSingleAxis("LencOffset", 7050, 4, EHA_LENC_OFFSET_SINGLEAXIS),
-    GainSingleAxis("MencOffset", 7051, 4, EHA_MENC_OFFSET_SINGLEAXIS),
-    GainSingleAxis("UnReset", 7000, 2, EHA_UNRESET),
-)
-
-F_SINGLEAXIS = open('hydra_gains_singleaxis.csv', 'w')
-
-for GAIN in GAINS:
-    BUF = ''
-    # boadtype, box_id, axis_id, slave_id, index(adress), size, value
-
-    for box in GAIN.box:
-        offset = 0
-        for jnt in box[3]:
-            BUF += '%d,%d,%d,%d,0x%d,%d,%d, // %s \n' \
-            % (box[0], box[1], offset, box[2],
-               GAIN.addr + offset*100, GAIN.size, GAIN.data[jnt], box[4]+'_'+GAIN.name)
-            offset = offset + 1
-
-    F_SINGLEAXIS.write(BUF)
