@@ -1,3 +1,4 @@
 
 サルでもわかるgitコマンド
 add
+merge
