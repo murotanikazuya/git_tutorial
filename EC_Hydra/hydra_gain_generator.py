@@ -377,7 +377,7 @@ for it, val in enumerate(EHA_MOTOR_LENC_INV_WHOLEBODY):
     servo_dir = 0
     if EHA_LENC_PHY_INV_WHOLEBODY[it]:
         servo_dir += 1   # dir |= 0x01
-    if EHA_MOTOR_LENC_INV_WHOLEBODY[it]:
+    if not EHA_MOTOR_LENC_INV_WHOLEBODY[it]:
         servo_dir += 16  # dir |= 0x10
     if EHA_STRAIN_MOTOR_INV_WHOLEBODY[it]:
         servo_dir += 32  # dir |= 0x20
@@ -392,7 +392,8 @@ EHA_LENC_PHY_INV_SINGLEAXIS = (
 ''' whether linear encoder direction and
     motor current direction is flipped '''
 EHA_MOTOR_LENC_INV_SINGLEAXIS = (
-    True,      #singleaxis
+    #True,      #singleaxis
+    False,      #singleaxis
 )
 
 ''' whether strain gauge direction and
@@ -407,7 +408,7 @@ for it, val in enumerate(EHA_MOTOR_LENC_INV_SINGLEAXIS):
     servo_dir = 0
     if EHA_LENC_PHY_INV_SINGLEAXIS[it]:
         servo_dir += 1   # dir |= 0x01
-    if EHA_MOTOR_LENC_INV_SINGLEAXIS[it]:
+    if not EHA_MOTOR_LENC_INV_SINGLEAXIS[it]:
         servo_dir += 16  # dir |= 0x10
     if EHA_STRAIN_MOTOR_INV_SINGLEAXIS[it]:
         servo_dir += 32  # dir |= 0x20

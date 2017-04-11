@@ -1,3 +1,7 @@
 CMakeFiles/
 HydraECAT
 *.cmake
+*.cbp
+.env_pre_paramfile
+CMakeLists.txt.user*
+*.csv
