@@ -61,6 +61,7 @@ public:
     void SetAllJointServoSwitch(bool in);
 
 
+    double time;
     jnt_data jnt;
     eha_data eha;
     fs_data  fs;

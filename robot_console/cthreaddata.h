@@ -22,6 +22,8 @@ public:
     //const int interp_length = 10000; //10sec
     const int interp_length = 1000; //10sec
 
+    bool log_en_jnt[HYDRA_JNT_MAX];
+    bool log_en_eha[EHA_MAX];
 
 
     int argc;

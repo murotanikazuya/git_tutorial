@@ -42,10 +42,41 @@ void CHydraDataLogger::takeLog(void)
 {
     while(!buffer.empty()){
 
-        //CthreadData* hydraData = buffer.begin();
+        // first of all, time stamp
+        fprintf(fp,"%lf,", buffer.begin()->time);
 
+        // joints
         for(int i=0;i<HYDRA_JNT_MAX;i++){
-            fprintf(fp,"%lf,", buffer.begin()->jnt.act.pos[i]);
+            if(hydraData->log_en_jnt[i]){
+                fprintf(fp,"%d,", buffer.begin()->jnt.act.enabled[i]);
+                // position
+                fprintf(fp,"%lf,", buffer.begin()->jnt.ref_checked.pos[i]);
+                fprintf(fp,"%lf,", buffer.begin()->jnt.act.pos[i]);
+                // tau
+                fprintf(fp,"%lf,", buffer.begin()->jnt.ref_checked.tau[i]);
+                fprintf(fp,"%lf,", buffer.begin()->jnt.act.tau[i]);
+
+                fprintf(fp,"%lf,", buffer.begin()->jnt.act.vel[i]);
+
+            }
+        }
+
+        // EHA
+        for(int i=0;i<EHA_MAX;i++){
+            if(hydraData->log_en_eha[i]){
+                // position
+                fprintf(fp,"%lf,", buffer.begin()->eha.ref.pos[i]);
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.pos[i]);
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.enc_raw[i]);
+                // tau
+                fprintf(fp,"%lf,", buffer.begin()->eha.ref.tau[i]);
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.tau[i]);
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.tau2[i]);
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.tau3[i]);
+
+                fprintf(fp,"%lf,", buffer.begin()->eha.act.vel[i]);
+
+            }
         }
 
         fprintf(fp,"\n");

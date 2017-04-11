@@ -180,6 +180,8 @@ static void sig_handler(int sig);
 
 double slowmotion_rate;
 
+int logging_mode;
+
 double** AllocateMotionData(int num_joints, int length)
 {
     int i, j;
@@ -326,7 +328,7 @@ int main(int argc,char *argv[])
     strcpy(tgt_addr, DEFAULT_TGT_ADDR);
 
     /* process command line options */
-    while( (getopt_result=getopt(argc, argv, "r:t:a:f:l:s:dgh"))!=-1 ) {
+    while( (getopt_result=getopt(argc, argv, "r:t:a:f:l:s:m:dgh"))!=-1 ) {
         switch(getopt_result) {
         case 'f':
             strcpy(motionfilename, optarg);
@@ -337,6 +339,9 @@ int main(int argc,char *argv[])
             break;
         case 't':
             tgt_port = atoi(optarg);
+            break;
+        case 'm':
+            logging_mode = atoi(optarg);
             break;
         case 'a':
             strcpy(tgt_addr, optarg);
@@ -753,6 +758,33 @@ int initialize(CthreadData* hydraData)
     }
     all_joint_finalpos[JOINT_HYDRA_RWRIST_YAW] = M_PI / 2.0;
     all_joint_finalpos[JOINT_HYDRA_LWRIST_YAW] = -M_PI / 2.0;
+
+    switch(logging_mode){
+    case 1:  // wholebody
+        for(int i=0;i<HYDRA_JNT_MAX;i++)
+            hydraData->log_en_jnt[i] = true;
+        for(int i=0;i<EHA_MAX;i++)
+            hydraData->log_en_eha[i] = true;
+        break;
+    case 2:  // lower body
+        for(int i=0;i<14;i++)
+            hydraData->log_en_jnt[i] = true;
+        for(int i=0;i<18;i++)
+            hydraData->log_en_eha[i] = true;
+        break;
+    case 3: // upper body
+        for(int i=14;i<HYDRA_JNT_MAX;i++)
+            hydraData->log_en_jnt[i] = true;
+        for(int i=18;i<EHA_MAX;i++)
+            hydraData->log_en_eha[i] = true;
+        break;
+    case 4:  // single axis
+        hydraData->log_en_eha[0] = true;
+        hydraData->log_en_eha[1] = true;
+        hydraData->log_en_eha[2] = true;
+        break;
+
+    }
 
     return 0;
 }
