@@ -11,10 +11,17 @@ CthreadData:: CthreadData()
     flags["logging_en"] = false;
     flags["logging_newfile"] = false;
 
+    for(int i=0;i<HYDRA_JNT_MAX;i++)
+        log_en_jnt[i] = false;
+
+    for(int i=0;i<EHA_MAX;i++)
+        log_en_eha[i] = false;
+
     fp_msg = fopen("log_msg","w");
     //fprintf(fp_msg,"CthreadData constrution done\n");
     //fflush(fp_msg);
     this->dbgMsg("CthradData construction done \n");
+
 }
 
 void CthreadData::dbgMsg(const char* format, ...)

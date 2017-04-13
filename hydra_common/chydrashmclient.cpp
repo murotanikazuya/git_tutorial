@@ -121,6 +121,8 @@ int CHydraShmClient::ReadStatus(CHydraData* hydraData)
 {
     int loop;
 
+    hydraData->time = SHM_MSEC(0);
+
     // read shm and store data
     for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
         hydraData->jnt.act.pos[loop] = SHM_HYDRA_JOINT_POS_IN(0, loop);
