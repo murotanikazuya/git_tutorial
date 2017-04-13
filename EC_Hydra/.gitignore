@@ -5,3 +5,4 @@ HydraECAT
 .env_pre_paramfile
 CMakeLists.txt.user*
 *.csv
+log/

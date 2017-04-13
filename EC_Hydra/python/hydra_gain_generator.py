@@ -49,11 +49,40 @@ class GainWholebody(GainBase):
             (0, 5, 8, (19, 20, 21), "r_shoulder"),            #rshoulder
             (0, 6, 9, (22, 23, 24), "r_elbow"),            #relbow
             (0, 7, 10, (25, 26, 27), "r_wrist"),           #rwrist
-            (2, 0, 11, (37, 38, 39, 40, 41), "r_hand"),   #rhand
+            #(2, 0, 11, (37, 38, 39, 40, 41), "r_hand"),   #rhand
             (0, 8, 12, (28, 29, 30), "l_shoulder"),           #lshoulder
             (0, 9, 13, (31, 32, 33), "l_elbow"),           #lelbow
             (0, 10, 14, (34, 35, 36), "l_wrist"),          #lwrist
-            (2, 1, 15, (42, 43, 44, 45, 46), "l_hand")    #lhand
+            #(2, 1, 15, (42, 43, 44, 45, 46), "l_hand")    #lhand
+        )
+
+class GainLowerbody(GainBase):
+    ''' gain for whole body ethercat cofiguration'''
+    def __init__(self, name_in, addr, size, gain):
+        GainBase.__init__(self, name_in, addr, size, gain)
+        self.box = ( # boad_type, box_id ,slave_id, axis0, 1, 2, box_name
+            (0, 0, 0, (0, 1, 2), "r_hip"),               #rhip
+            (0, 1, 1, (3, 4, 5), "r_knee"),               #rknee
+            (1, 0, 2, (6, 7), "r_ankle"),                 #rankle
+            (0, 2, 3, (8, 9, 10), "l_hip"),              #lhip
+            (0, 3, 4, (11, 12, 13), "l_knee"),            #lknee
+            (1, 1, 5, (14, 15), "l_ankle"),                #lankle
+            (0, 4, 7, (16, 17, 18), "body"),            #body
+        )
+
+class GainUpperbody(GainBase):
+    ''' gain for whole body ethercat cofiguration'''
+    def __init__(self, name_in, addr, size, gain):
+        GainBase.__init__(self, name_in, addr, size, gain)
+        self.box = ( # boad_type, box_id ,slave_id, axis0, 1, 2, box_name
+            (0, 0, 0, (19, 20, 21), "r_shoulder"),            #rshoulder
+            (0, 1, 1, (22, 23, 24), "r_elbow"),            #relbow
+            (0, 2, 2, (25, 26, 27), "r_wrist"),           #rwrist
+            #(2, 0, 3, (37, 38, 39, 40, 41), "r_hand"),   #rhand
+            (0, 3, 4, (28, 29, 30), "l_shoulder"),           #lshoulder
+            (0, 4, 5, (31, 32, 33), "l_elbow"),           #lelbow
+            (0, 5, 6, (34, 35, 36), "l_wrist"),          #lwrist
+            #(2, 1, 7, (42, 43, 44, 45, 46), "l_hand")    #lhand
         )
 
 class GainSingleAxis(GainBase):
@@ -78,8 +107,16 @@ GAINS = (
     GainWholebody("CurPGain", 0x7031, 2, EHA_CUR_GAIN_P_WHOLEBODY),
     GainWholebody("CurIGain", 0x7032, 2, EHA_CUR_GAIN_I_WHOLEBODY),
     GainWholebody("CurDGain", 0x7033, 2, EHA_CUR_GAIN_D_WHOLEBODY),
+    GainWholebody("TauPGain", 0x7034, 2, EHA_TAU_GAIN_P_WHOLEBODY),
+    GainWholebody("TauIGain", 0x7035, 2, EHA_TAU_GAIN_I_WHOLEBODY),
+    GainWholebody("TauDGain", 0x7036, 2, EHA_TAU_GAIN_D_WHOLEBODY),
     GainWholebody("LencOffset", 0x7050, 4, EHA_LENC_OFFSET_WHOLEBODY),
     GainWholebody("MencOffset", 0x7051, 4, EHA_MENC_OFFSET_WHOLEBODY),
+    GainWholebody("PresPGain", 0x7037, 2, EHA_PRES_GAIN_P_WHOLEBODY),
+    GainWholebody("PresIGain", 0x7038, 2, EHA_PRES_GAIN_I_WHOLEBODY),
+    GainWholebody("PresDGain", 0x7039, 2, EHA_PRES_GAIN_D_WHOLEBODY),
+    GainWholebody("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB_WHOLEBODY),
+    GainWholebody("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF_WHOLEBODY),
     GainWholebody("UnReset", 0x7000, 2, EHA_UNRESET),
 )
 
@@ -101,6 +138,90 @@ for GAIN in GAINS:
     F_WHOLEBODY.write(BUF)
 
 GAINS = (
+    GainLowerbody("Reset", 0x7000, 2, EHA_RESET),
+    GainLowerbody("ServoDirection", 0x7046, 1, EHA_SERVO_DIR_WHOLEBODY),
+    GainLowerbody("PosPGain", 0x7011, 2, EHA_POS_GAIN_P_WHOLEBODY),
+    GainLowerbody("PosIGain", 0x7012, 2, EHA_POS_GAIN_I_WHOLEBODY),
+    GainLowerbody("PosDGain", 0x7013, 2, EHA_POS_GAIN_D_WHOLEBODY),
+    GainLowerbody("VelPGain", 0x7021, 2, EHA_VEL_GAIN_P_WHOLEBODY),
+    GainLowerbody("VelIGain", 0x7022, 2, EHA_VEL_GAIN_I_WHOLEBODY),
+    GainLowerbody("VelDGain", 0x7023, 2, EHA_VEL_GAIN_D_WHOLEBODY),
+    GainLowerbody("CurPGain", 0x7031, 2, EHA_CUR_GAIN_P_WHOLEBODY),
+    GainLowerbody("CurIGain", 0x7032, 2, EHA_CUR_GAIN_I_WHOLEBODY),
+    GainLowerbody("CurDGain", 0x7033, 2, EHA_CUR_GAIN_D_WHOLEBODY),
+    GainLowerbody("TauPGain", 0x7034, 2, EHA_TAU_GAIN_P_WHOLEBODY),
+    GainLowerbody("TauIGain", 0x7035, 2, EHA_TAU_GAIN_I_WHOLEBODY),
+    GainLowerbody("TauDGain", 0x7036, 2, EHA_TAU_GAIN_D_WHOLEBODY),
+    GainLowerbody("LencOffset", 0x7050, 4, EHA_LENC_OFFSET_WHOLEBODY),
+    GainLowerbody("MencOffset", 0x7051, 4, EHA_MENC_OFFSET_WHOLEBODY),
+    GainLowerbody("PresPGain", 0x7037, 2, EHA_PRES_GAIN_P_WHOLEBODY),
+    GainLowerbody("PresIGain", 0x7038, 2, EHA_PRES_GAIN_I_WHOLEBODY),
+    GainLowerbody("PresDGain", 0x7039, 2, EHA_PRES_GAIN_D_WHOLEBODY),
+    GainLowerbody("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB_WHOLEBODY),
+    GainLowerbody("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF_WHOLEBODY),
+    GainLowerbody("UnReset", 0x7000, 2, EHA_UNRESET),
+)
+
+F_LOWERBODY = open('./hydra_gains_lowerbody.csv', 'w')
+
+for GAIN in GAINS:
+    BUF = ''
+    # boadtype, box_id, axis_id, slave_id, index(adress), size, value
+
+    for box in GAIN.box:
+        offset = 0
+        for jnt in box[3]:
+            BUF += '%d,%d,%d,%d,0x%04x,%d,%d, // %s \n' \
+            % (box[0], box[1], offset, box[2],
+               GAIN.addr + offset*0x0100, GAIN.size, GAIN.data[jnt], box[4]+'_'+GAIN.name)
+
+            offset = offset + 1
+
+    F_LOWERBODY.write(BUF)
+
+GAINS = (
+    GainUpperbody("Reset", 0x7000, 2, EHA_RESET),
+    GainUpperbody("ServoDirection", 0x7046, 1, EHA_SERVO_DIR_WHOLEBODY),
+    GainUpperbody("PosPGain", 0x7011, 2, EHA_POS_GAIN_P_WHOLEBODY),
+    GainUpperbody("PosIGain", 0x7012, 2, EHA_POS_GAIN_I_WHOLEBODY),
+    GainUpperbody("PosDGain", 0x7013, 2, EHA_POS_GAIN_D_WHOLEBODY),
+    GainUpperbody("VelPGain", 0x7021, 2, EHA_VEL_GAIN_P_WHOLEBODY),
+    GainUpperbody("VelIGain", 0x7022, 2, EHA_VEL_GAIN_I_WHOLEBODY),
+    GainUpperbody("VelDGain", 0x7023, 2, EHA_VEL_GAIN_D_WHOLEBODY),
+    GainUpperbody("CurPGain", 0x7031, 2, EHA_CUR_GAIN_P_WHOLEBODY),
+    GainUpperbody("CurIGain", 0x7032, 2, EHA_CUR_GAIN_I_WHOLEBODY),
+    GainUpperbody("CurDGain", 0x7033, 2, EHA_CUR_GAIN_D_WHOLEBODY),
+    GainUpperbody("TauPGain", 0x7034, 2, EHA_TAU_GAIN_P_WHOLEBODY),
+    GainUpperbody("TauIGain", 0x7035, 2, EHA_TAU_GAIN_I_WHOLEBODY),
+    GainUpperbody("TauDGain", 0x7036, 2, EHA_TAU_GAIN_D_WHOLEBODY),
+    GainUpperbody("LencOffset", 0x7050, 4, EHA_LENC_OFFSET_WHOLEBODY),
+    GainUpperbody("MencOffset", 0x7051, 4, EHA_MENC_OFFSET_WHOLEBODY),
+    GainUpperbody("PresPGain", 0x7037, 2, EHA_PRES_GAIN_P_WHOLEBODY),
+    GainUpperbody("PresIGain", 0x7038, 2, EHA_PRES_GAIN_I_WHOLEBODY),
+    GainUpperbody("PresDGain", 0x7039, 2, EHA_PRES_GAIN_D_WHOLEBODY),
+    GainUpperbody("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB_WHOLEBODY),
+    GainUpperbody("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF_WHOLEBODY),
+    GainUpperbody("UnReset", 0x7000, 2, EHA_UNRESET),
+)
+
+F_UPPERBODY = open('./hydra_gains_upperbody.csv', 'w')
+
+for GAIN in GAINS:
+    BUF = ''
+    # boadtype, box_id, axis_id, slave_id, index(adress), size, value
+
+    for box in GAIN.box:
+        offset = 0
+        for jnt in box[3]:
+            BUF += '%d,%d,%d,%d,0x%04x,%d,%d, // %s \n' \
+            % (box[0], box[1], offset, box[2],
+               GAIN.addr + offset*0x0100, GAIN.size, GAIN.data[jnt], box[4]+'_'+GAIN.name)
+
+            offset = offset + 1
+
+    F_UPPERBODY.write(BUF)
+
+GAINS = (
     GainSingleAxis("Reset", 0x7000, 2, EHA_RESET),
     GainSingleAxis("ServoDirection", 0x7046, 1, EHA_SERVO_DIR_SINGLEAXIS),
     GainSingleAxis("PosPGain", 0x7011, 2, EHA_POS_GAIN_P_SINGLEAXIS),
@@ -120,8 +241,8 @@ GAINS = (
     GainSingleAxis("PresPGain", 0x7037, 2, EHA_PRES_GAIN_P_SINGLEAXIS),
     GainSingleAxis("PresIGain", 0x7038, 2, EHA_PRES_GAIN_I_SINGLEAXIS),
     GainSingleAxis("PresDGain", 0x7039, 2, EHA_PRES_GAIN_D_SINGLEAXIS),
-    GainSingleAxis("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB),
-    GainSingleAxis("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF),
+    GainSingleAxis("GainCurDob", 0x7017, 2, EHA_GAIN_CUR_DOB_SINGLEAXIS),
+    GainSingleAxis("GainCurFF", 0x7018, 2, EHA_GAIN_CUR_FF_SINGLEAXIS),
     GainSingleAxis("UnReset", 0x7000, 2, EHA_UNRESET),
 )
 

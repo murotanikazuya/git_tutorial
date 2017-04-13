@@ -32,8 +32,8 @@ EHA_STRAIN_MOTOR_INV_SINGLEAXIS = (
 )
 
 EHA_POS_GAIN_P_SINGLEAXIS = ( #[100N/m]
-    #100, # original
-    1000, # only for debug
+    100, # original
+    #1000, # only for debug
 )
 
 
@@ -79,24 +79,24 @@ EHA_TAU_GAIN_D_SINGLEAXIS = (
 )
 
 EHA_PRES_GAIN_P_SINGLEAXIS = (
-    1000,
+    PRES_GAIN_P,
 )
 
 
 EHA_PRES_GAIN_I_SINGLEAXIS = (
-    0,
+    PRES_GAIN_I,
 )
 
 
 EHA_PRES_GAIN_D_SINGLEAXIS = (
-    0,
+    PRES_GAIN_D,
 )
 
-EHA_GAIN_CUR_FF = (
+EHA_GAIN_CUR_FF_SINGLEAXIS = (
     GAIN_CUR_FF,
 )
 
-EHA_GAIN_CUR_DOB = (
+EHA_GAIN_CUR_DOB_SINGLEAXIS = (
     GAIN_CUR_DOB,
 )
 
