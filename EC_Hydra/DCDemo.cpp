@@ -59,12 +59,16 @@ using namespace std;
 #endif /* LINUX */
 
 #define PARAM_OUTPUT
+//#define ONLY_UPPER_BODY
+#define LOWERBODY_3M_NUM 5
 
 //#define DBG_KNEE
 
 /*-TYPEDEFS------------------------------------------------------------------*/
 
 /*-GLOBAL VARIABLES-----------------------------------------------------------*/
+
+extern EC_T_BOOL HydraOnlyUpperbody;
 
 /*-LOCAL VARIABLES-----------------------------------------------------------*/
 EC_T_DWORD          dwClntId = 0;
@@ -1316,6 +1320,7 @@ static EC_T_DWORD myAppSetup(
 	{
 		EC_T_DWORD				dwOutDataLen 	= 0;
 		EC_T_INT				loop;
+        EC_T_INT                loop_jnt;
 		EC_T_INT                jnt;
 		EC_T_BYTE               servo_dir;
 		EC_T_DWORD              offset;
@@ -1347,15 +1352,24 @@ static EC_T_DWORD myAppSetup(
 
 		//setup 3M
 		for(loop = 0; loop < tAllSlv.MD4KW_3MSlaves; loop++) {
+        if(HydraOnlyUpperbody){
+            loop_jnt = loop + LOWERBODY_3M_NUM;
+            if(loop_jnt>10){
+                LogError( "TOO MANY SLAVES: This version is for the upperbody only!!");
+                return EC_E_ERROR;
+            }
+        }else{
+            loop_jnt = loop;
+        }
 			for(jnt = 0; jnt < 3; jnt++) {
 #if 1 //3M_1
 				//servo direction
 				servo_dir = 0x00;
-				if( eha_phys_pos_hydra_MD4KW_3M[loop][jnt]<0)
+                if( eha_phys_pos_hydra_MD4KW_3M[loop_jnt][jnt]<0)
 					servo_dir |= 0x01;
-				if( eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]<0)
+                if( eha_pos_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0)
 					servo_dir |= 0x10;
-                if( eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0)
+                if( eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0)
                     servo_dir |= 0x20;
 
 				/*********** Reset ************************************************/
@@ -1378,7 +1392,7 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Reset\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
@@ -1399,12 +1413,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo Direction\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, servo_dir);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Servo P Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_pos_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)((eha_pos_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_pos_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_pos_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7011|(jnt<<8)), 0x00);
 
@@ -1421,13 +1435,13 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo P Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Servo D Gain ************************************************/
 				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
-            	wGain = (EC_T_WORD)(eha_pos_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)(eha_pos_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7013|(jnt<<8)), 0x00);
@@ -1445,12 +1459,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo D Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Servo I Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_pos_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)((eha_pos_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_pos_i_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_pos_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7012|(jnt<<8)), 0x00);
 				
@@ -1467,28 +1481,28 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Servo I Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 
 				/*********** Vel P Gain ************************************************/
-                int jnt_num = joint_num_hydra_MD4KW_3M[loop][jnt];
+                int jnt_num = joint_num_hydra_MD4KW_3M[loop_jnt][jnt];
                 switch(EHA_CtrlWd_ON[jnt_num]){
                 case EHA_CTRLWD_POS:
-                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_PRES:
-                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_STRAIN:
-                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_COMPLE:
-                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)((eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_tau_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 default:
-                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)((eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_vel_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 }
 
@@ -1510,26 +1524,26 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel P Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel D Gain ************************************************/
                 switch(EHA_CtrlWd_ON[jnt_num]){
                 case EHA_CTRLWD_POS:
-                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_PRES:
-                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_STRAIN:
-                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_COMPLE:
-                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 default:
-                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_vel_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 }
 
@@ -1551,26 +1565,26 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel D Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Vel I Gain ************************************************/
                 switch(EHA_CtrlWd_ON[jnt_num]){
                 case EHA_CTRLWD_POS:
-                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_PRES:
-                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_STRAIN:
-                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 case EHA_CTRLWD_FORCE_COMPLE:
-                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_tau_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 default:
-                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                    wGain = (EC_T_WORD)(eha_vel_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
                     break;
                 }
 
@@ -1592,12 +1606,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Vel I Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Cur P Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt] : eha_cur_p_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)((eha_cur_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_cur_p_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_cur_p_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7031|(jnt<<8)), 0x00);
 
@@ -1614,13 +1628,13 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur P Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur P Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Cur D Gain ************************************************/
 				//wGain = (EC_T_WORD)((eha_vel_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_vel_gain_hydra_MD4KW_3M[loop][jnt] : eha_vel_gain_hydra_MD4KW_3M[loop][jnt]);
-            	wGain = (EC_T_WORD)(eha_cur_d_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)(eha_cur_d_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7033|(jnt<<8)), 0x00);
@@ -1638,12 +1652,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur D Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur D Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** Cur I Gain ************************************************/
-				wGain = (EC_T_WORD)((eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt]<0) ? -eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt] : eha_cur_i_gain_hydra_MD4KW_3M[loop][jnt]);
+                wGain = (EC_T_WORD)((eha_cur_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]<0) ? -eha_cur_i_gain_hydra_MD4KW_3M[loop_jnt][jnt] : eha_cur_i_gain_hydra_MD4KW_3M[loop_jnt][jnt]);
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 					   tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7032|(jnt<<8)), 0x00);
 				
@@ -1660,7 +1674,7 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur I Gain\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Cur I Gain\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
@@ -1668,7 +1682,7 @@ static EC_T_DWORD myAppSetup(
 
 
 				/*********** Enc Offset ************************************************/
-				offset = enc_offset_MD4KW_3M[loop][jnt];
+                offset = enc_offset_MD4KW_3M[loop_jnt][jnt];
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7050|(jnt<<8)), 0x00);
 
@@ -1685,12 +1699,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Enc Offset\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** MEnc Offset ************************************************/
-				offset = menc_offset_MD4KW_3M[loop][jnt];
+                offset = menc_offset_MD4KW_3M[loop_jnt][jnt];
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7051|(jnt<<8)), 0x00);
 
@@ -1707,12 +1721,12 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// MEnc Offset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// MEnc Offset\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, offset);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
 				/*********** motor k_emf ************************************************/
-				wGain = motor_KEMF_MD4KW_3M[loop][jnt];
+                wGain = motor_KEMF_MD4KW_3M[loop_jnt][jnt];
 				LogMsg("<CoE> Slave:%s(cfg-addr:%d) SDO Download Idx:%04xh.Sub:%xh", 
 						tAllSlv.MD4KW_3M[loop].Info.abyDeviceName, tAllSlv.MD4KW_3M[loop].Info.wPhysAddress, (0x7045|(jnt<<8)), 0x00);
 
@@ -1729,7 +1743,7 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef	PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Motor KEMF\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Motor KEMF\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wGain);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
@@ -1753,7 +1767,7 @@ static EC_T_DWORD myAppSetup(
 
 #ifdef PARAM_OUTPUT
 				OsMemset(tmpBuf, 0, DATA_BUF_SIZE);
-				snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_3M, loop, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
+                snprintf(tmpBuf, DATA_BUF_SIZE, "%d,%d,%d,%d,0x%04x,%d,%d,\t\t// Un-Reset\n", BDTYPE_MD4KW_3M, loop_jnt, jnt, dwSlaveId, wObIndex, dwDataLen, wReset);
 				OsFwrite(tmpBuf, OsStrlen(tmpBuf), 1, fpPO);
 #endif  // PARAM_OUTPUT
 
@@ -2457,6 +2471,7 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
     EC_T_DWORD 		dwRes 	= EC_E_ERROR;
     EC_T_BYTE*  	pbyPDIn = EC_NULL;
     EC_T_INT		loop;
+    EC_T_INT        loop_jnt;
 
     static EC_T_REAL all_joint_pos_prev[HYDRA_JNT_MAX];
     static EC_T_REAL all_EHA_pos_prev[EHA_MAX];
@@ -2503,6 +2518,11 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
     err_reported = false;
     // YNL MD4KW_3M
     for(loop = 0; loop < pAllSlv->MD4KW_3MSlaves; loop++) {
+    if(HydraOnlyUpperbody)
+        loop_jnt = loop + LOWERBODY_3M_NUM;
+    else
+        loop_jnt = loop;
+
         //送受信の最新データ
         // pAllSlv 	: ローカルテーブルへ
         // SHM_TM～	：共有メモリへ
@@ -2511,11 +2531,11 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
 
         eha_status = EHA_NO_ERR;
         ch_num = 0;
-        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
+        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop_jnt][ch_num];
         eha_state[eha_num_hydra].DATA.rawpos_act =
                 (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_PosActIn;
 
-        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop_jnt][ch_num];
 
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis0_Tau2ActIn*CURRENT_BIT2PHY;
@@ -2529,11 +2549,11 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
 
         eha_status = EHA_NO_ERR;
         ch_num = 1;
-        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
+        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop_jnt][ch_num];
         eha_state[eha_num_hydra].DATA.rawpos_act =
                 (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_PosActIn;
 
-        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop_jnt][ch_num];
 
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis1_Tau2ActIn*CURRENT_BIT2PHY; //ref
@@ -2543,12 +2563,12 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
 
         eha_status = EHA_NO_ERR;
         ch_num = 2;
-        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop][ch_num];
+        eha_num_hydra = joint_num_hydra_MD4KW_3M[loop_jnt][ch_num];
 
         eha_state[eha_num_hydra].DATA.rawpos_act = (int)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_PosActIn;
-        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num];
+        eha_state[eha_num_hydra].DATA.pos_act = eha_state[eha_num_hydra].DATA.rawpos_act*eha_phys_pos_hydra_MD4KW_3M[loop_jnt][ch_num];
 
-        eha_state[eha_num_hydra].DATA.vel_act  = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop][ch_num]/2e-4;
+        eha_state[eha_num_hydra].DATA.vel_act  = pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_VelActIn*eha_phys_pos_hydra_MD4KW_3M[loop_jnt][ch_num]/2e-4;
 
         all_EHA_tau[eha_num_hydra]  = eha_state[eha_num_hydra].DATA.tau_act  = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_TauActIn*EHA_force_bit2phy[eha_num_hydra];
         all_EHA_tau2[eha_num_hydra] = eha_state[eha_num_hydra].DATA.tau2_act = (short)pAllSlv->MD4KW_3M[loop].Pdo.tInp.Axis2_Tau2ActIn*CURRENT_BIT2PHY;
@@ -2734,12 +2754,10 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
         initial = false;
     }
 
-    //if( pAllSlv->MD4KW_3MSlaves>1){
-    if( 0 ){
-        if(	CylinderToJointAll(all_EHA_pos, all_joint_pos, all_joint_pos_prev) < 0)
-            printf("Parallel Joint IK Failed");
-        else {
-            if(cnt==0) {
+    if(	CylinderToJointAll(all_EHA_pos, all_joint_pos, all_joint_pos_prev) < 0)
+        printf("Parallel Joint IK Failed");
+    else {
+        if(cnt==0) {
 
 #ifdef DBG_KNEE
             LogMsg("RKnee: %08x, %08x, %f, %f, %f",
@@ -2793,21 +2811,12 @@ static EC_T_DWORD myAppPdoInput(T_ALL_SLAVE_INFO* pAllSlv)
                     all_joint_pos[10],
                     all_joint_pos[11]);
 #endif
-            }
         }
-    }else{
-         all_joint_pos[0] = all_EHA_pos[0];
     }
-
     cnt++;
-
-    if( pAllSlv->MD4KW_3MSlaves>1){
-        ActForceToTorqueAll(all_joint_pos, all_EHA_tau, all_joint_tau);
+    ActForceToTorqueAll(all_joint_pos, all_EHA_tau, all_joint_tau);
     //ActForceToTorqueAll(all_joint_pos, all_EHA_tau2, all_joint_tau2);
     //ActForceToTorqueAll(all_joint_pos, all_EHA_tau3, all_joint_tau3);
-    }else{
-        all_joint_tau[0] = all_EHA_tau[0];
-    }
 
     for(loop = 0; loop<HYDRA_JNT_MAX; loop++) {
         joint_state[loop].DATA.pos_act = all_joint_pos[loop];
@@ -2843,6 +2852,7 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
     EC_T_DWORD 		dwRes 	= EC_E_ERROR;
     EC_T_BYTE*  	pbyPDOut= EC_NULL;
     EC_T_INT		loop;
+    EC_T_INT        loop_jnt;
     static int cnt=0;
 
     pbyPDOut = ecatGetProcessImageOutputPtr();/* pointer to process data output buffer */
@@ -2885,6 +2895,11 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
     cnt++;
     // YNL MD4KW_3M
     for(loop = 0; loop < pAllSlv->MD4KW_3MSlaves; loop++) {
+    if(HydraOnlyUpperbody)
+        loop_jnt = loop + LOWERBODY_3M_NUM;
+    else
+        loop_jnt = loop;
+
         T_MD4KW_3M_RXPDO_BASIC *pTmp = (T_MD4KW_3M_RXPDO_BASIC*)(pbyPDOut + pAllSlv->MD4KW_3M[loop].Info.dwPdOffsOut/8);
         T_MD4KW_3M_RXPDO_BASIC TmpRecv;
         //送受信の最新データ
@@ -2894,19 +2909,19 @@ static EC_T_DWORD myAppPdoOutput(T_ALL_SLAVE_INFO* pAllSlv)
         //TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][0]]/eha_phys_pos_hydra_MD4KW_3M[loop][0]) + enc_offset_MD4KW_3M[loop][0];
         //TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][1]]/eha_phys_pos_hydra_MD4KW_3M[loop][1]) + enc_offset_MD4KW_3M[loop][1];
         //TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][2]]/eha_phys_pos_hydra_MD4KW_3M[loop][2]) + enc_offset_MD4KW_3M[loop][2];
-        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][0]]/eha_phys_pos_hydra_MD4KW_3M[loop][0]);
-        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][1]]/eha_phys_pos_hydra_MD4KW_3M[loop][1]);
-        TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop][2]]/eha_phys_pos_hydra_MD4KW_3M[loop][2]);
+        TmpRecv.Axis0_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop_jnt][0]]/eha_phys_pos_hydra_MD4KW_3M[loop_jnt][0]);
+        TmpRecv.Axis1_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop_jnt][1]]/eha_phys_pos_hydra_MD4KW_3M[loop_jnt][1]);
+        TmpRecv.Axis2_PosRefOut = (EC_T_DWORD) (all_EHA_pos_out[joint_num_hydra_MD4KW_3M[loop_jnt][2]]/eha_phys_pos_hydra_MD4KW_3M[loop_jnt][2]);
         // TmpRecv.Axis0_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][0]];
         // TmpRecv.Axis1_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][1]];
         // TmpRecv.Axis2_VelRefOut = all_EHA_vel_out[joint_num_hydra_MD4KW_3M[loop][2]];
-         TmpRecv.Axis0_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][0]];
-         TmpRecv.Axis1_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][1]];
-         TmpRecv.Axis2_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop][2]];
+         TmpRecv.Axis0_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop_jnt][0]];
+         TmpRecv.Axis1_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop_jnt][1]];
+         TmpRecv.Axis2_TauRefOut = all_EHA_tau_out[joint_num_hydra_MD4KW_3M[loop_jnt][2]];
 
-        TmpRecv.Axis0_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop][0]].DATA.ctlword;
-        TmpRecv.Axis1_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop][1]].DATA.ctlword;
-        TmpRecv.Axis2_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop][2]].DATA.ctlword;
+        TmpRecv.Axis0_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop_jnt][0]].DATA.ctlword;
+        TmpRecv.Axis1_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop_jnt][1]].DATA.ctlword;
+        TmpRecv.Axis2_CtrlWordOut = eha_cmd[joint_num_hydra_MD4KW_3M[loop_jnt][2]].DATA.ctlword;
 
         //	  TmpRecv.Axis0_CtrlWordOut = 0x0101;
         //	  TmpRecv.Axis1_CtrlWordOut = 0x0101;

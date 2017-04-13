@@ -19,7 +19,7 @@ ENI_PATH=../ENI
 
 ENI_FILE=$ENI_PATH/upperbody.xml
 
-OP_S="-s hydra_gains_upperbody.csv"
+OP_S="-s hydra_gains_upperbody.csv -upperbody"
 
 
 #各種OPTION指定                                                                                                                     
