@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./build/HydraConsole -f ./dat/i.dat -d
+./build/HydraConsole -f ./dat/i.dat

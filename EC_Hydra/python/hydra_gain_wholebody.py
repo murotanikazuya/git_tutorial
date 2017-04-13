@@ -261,43 +261,43 @@ EHA_LENC_PHY_INV_WHOLEBODY = (
 ''' whether linear encoder direction and
     motor current direction is flipped '''
 EHA_MOTOR_LENC_INV_WHOLEBODY = (
-    True,      #rhip
-    False,      #rhip
-    True,      #rhip
-    True,      #rknee
-    True,      #rknee
-    False,      #rknee
-    False,      #rankle
-    False,      #rankle
-    True,      #lhip
-    False,      #lhip
-    True,      #lhip
-    True,      #lknee
-    True,      #lknee
-    False,      #lknee
-    True,      #lankle
-    False,      #lankle
-    True,      #body
-    False,      #body
-    False,      #body
-    True,      #rshoulder
-    False,      #rshoulder
-    True,      #rshoulder
-    False,      #relbow
-    True,      #relbow
-    False,      #relbow
-    False,      #rwrist
-    False,      #rwrist
-    True,      #rwrist
-    True,      #lshoulder
-    True,      #lshoulder
-    False,      #lshoulder
-    False,      #lelbow
-    True,      #lelbow
-    True,      #lelbow
-    False,      #lwrist
-    False,      #lwrist
-    True,      #lwrist
+    False,      #rhip-
+    True,      #rhip-
+    True,      #rhip-
+    False,      #rknee-
+    False,      #rknee-
+    True,      #rknee-
+    True,      #rankle-
+    True,      #rankle-
+    False,      #lhip-
+    True,      #lhip-
+    False,      #lhip-
+    False,      #lknee-
+    False,      #lknee-
+    True,      #lknee-
+    False,      #lankle-
+    True,      #lankle-
+    False,      #body-
+    True,      #body-
+    True,      #body-
+    False,      #rshoulder-
+    True,      #rshoulder-
+    False,      #rshoulder-
+    True,      #relbow-
+    False,      #relbow-
+    True,      #relbow-
+    True,      #rwrist-
+    True,      #rwrist prev:false
+    False,      #rwrist prev:true
+    False,      #lshoulder-
+    False,      #lshoulder-
+    True,      #lshoulder-
+    True,      #lelbow-
+    False,      #lelbow-
+    False,      #lelbow-
+    True,      #lwrist-
+    True,      #lwrist-
+    False,      #lwrist-
     False,      #rhand
     False,      #rhand
     False,      #rhand
@@ -390,8 +390,8 @@ EHA_POS_GAIN_P_WHOLEBODY = (
     50,      #relbow
     50,      #relbow
     50,      #rwrist
-    50,      #rwrist
-    50,      #rwrist
+    500,      #rwrist
+    500,      #rwrist
     30,      #lshoulder
     30,      #lshoulder
     30,      #lshoulder
