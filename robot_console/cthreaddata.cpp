@@ -10,6 +10,8 @@ CthreadData:: CthreadData()
     flags["interp_run"] = false;
     flags["logging_en"] = false;
     flags["logging_newfile"] = false;
+    flags["filetorque_en"] = false;
+    flags["skip_jntcnv"] = false; // for single axis, skip joint <-> eha conversion
 
     for(int i=0;i<HYDRA_JNT_MAX;i++)
         log_en_jnt[i] = false;

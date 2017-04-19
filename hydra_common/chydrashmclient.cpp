@@ -132,10 +132,12 @@ int CHydraShmClient::ReadStatus(CHydraData* hydraData)
         //hydraData->GetJointStatePtr()[loop].DATA.tau3_act = SHM_HYDRA_JOINT_TAU3_IN(0, loop);
         hydraData->jnt.act.enabled[loop]  = SHM_HYDRA_JOINT_STATUS_IN(0, loop);
     }
+    /*
     for(loop = 0; loop < HYDRA_HAND_JNT_MAX; loop++) {
         hydraData->jnt.act.pos[loop+HYDRA_JNT_MAX] = SHM_HYDRA_HAND_POS_IN(0, loop);
         hydraData->jnt.act.vel[loop+HYDRA_JNT_MAX] = SHM_HYDRA_HAND_VEL_IN(0, loop);
     }
+    */
 
     for(loop = 0; loop < EHA_MAX; loop++) {
         hydraData->eha.act.pos[loop]    = SHM_HYDRA_EHA_POS_IN(0, loop);

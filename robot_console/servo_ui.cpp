@@ -484,6 +484,15 @@ int main(int argc,char *argv[])
 
         p_hydra_shm->ReadStatus(hydraData);
 
+        // cancel eha->joint conversion in single axis mode
+        if(hydraData->flags["skip_jntcnv"]){
+            for(int it=0;it<3;it++){
+                hydraData->jnt.act.pos[it] = hydraData->eha.act.pos[it];
+                hydraData->jnt.act.tau[it] = hydraData->eha.act.tau[it];
+            }
+        }
+
+
 
         //eef_to_print[0] = JointAbsPos[22][0]; // rwrist_pitch
         //eef_to_print[1] = JointAbsPos[22][1];
@@ -517,6 +526,11 @@ int main(int argc,char *argv[])
         hydraData->CheckJntRef();
 
         hydraData->UpdateEHAcmdFromJnt();
+        //skip eha->joint conversion for single box
+        if(hydraData->flags["skip_jntcnv"]){
+            hydraData->eha.ref.pos[0] = hydraData->jnt.ref_raw.pos[0];
+            hydraData->eha.ref.tau[0] = hydraData->jnt.ref_raw.tau[0];
+        }
 
         p_hydra_shm->WriteCommand((CHydraData*) hydraData);
 
@@ -608,9 +622,16 @@ int main_func(CthreadData* hydraData)
     }
     else if(hydraData->flags["filemotion_run"]) {
         if(motion_line < motion_length) {
-            for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
-                hydraData->jnt.ref_raw.pos[loop]
+            if(hydraData->flags["filetorque_en"]){
+                for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                    hydraData->jnt.ref_raw.tau[loop]
                         = motion_data[motion_line][loop+1];
+                }
+            }else{
+                for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                    hydraData->jnt.ref_raw.pos[loop]
+                        = motion_data[motion_line][loop+1];
+                }
             }
             //if(hydraData->interp_cnt%100==0)
             if(motion_line%100==0)
@@ -622,6 +643,12 @@ int main_func(CthreadData* hydraData)
             motion_line    = 0;
             hydraData->flags["filemotion_run"]    = false;
             hydraData->flags["interp_ready"]  = false;
+            if(hydraData->flags["filetorque"]){
+                for(loop = 0; loop < HYDRA_JNT_MAX; loop++) {
+                    hydraData->jnt.ref_raw.tau[loop] = 0;
+                }
+            }
+
             fprintf(fp_log, "filemotion end\n");
             //ofs<<"Interpolation end"<<std::endl;
         }
@@ -780,10 +807,12 @@ int initialize(CthreadData* hydraData)
             hydraData->log_en_eha[i] = true;
         break;
     case 5:  // single axis, torque filemotion
+        hydraData->flags["filetorque_en"] = true;
     case 4:  // single axis
         hydraData->log_en_eha[0] = true;
         hydraData->log_en_eha[1] = true;
         hydraData->log_en_eha[2] = true;
+        hydraData->flags["skip_jntcnv"] = true;
         break;
 
     }

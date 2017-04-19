@@ -604,7 +604,7 @@ void *servo_ui(void *param)
             */
 
         case 'r':
-            if( (hydraData->flags["interp_ready"])&&(!hydraData->flags["filemotion_run"]) ) {
+            if( ((hydraData->flags["interp_ready"])&&(!hydraData->flags["filemotion_run"])) || hydraData->flags["filetorque_en"] ) {
                 hydraData->flags["filemotion_run"] = true;
                 ofs << "file motion run enabled" << std::cout;
             } else {
