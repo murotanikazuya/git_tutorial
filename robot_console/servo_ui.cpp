@@ -180,7 +180,8 @@ static void sig_handler(int sig);
 
 double slowmotion_rate;
 
-int logging_mode;
+// switch singleaxis, filetorque, walking...
+int control_mode;
 
 double** AllocateMotionData(int num_joints, int length)
 {
@@ -341,7 +342,7 @@ int main(int argc,char *argv[])
             tgt_port = atoi(optarg);
             break;
         case 'm':
-            logging_mode = atoi(optarg);
+            control_mode = atoi(optarg);
             break;
         case 'a':
             strcpy(tgt_addr, optarg);
@@ -759,7 +760,7 @@ int initialize(CthreadData* hydraData)
     all_joint_finalpos[JOINT_HYDRA_RWRIST_YAW] = M_PI / 2.0;
     all_joint_finalpos[JOINT_HYDRA_LWRIST_YAW] = -M_PI / 2.0;
 
-    switch(logging_mode){
+    switch(control_mode){
     case 1:  // wholebody
         for(int i=0;i<HYDRA_JNT_MAX;i++)
             hydraData->log_en_jnt[i] = true;
@@ -778,6 +779,7 @@ int initialize(CthreadData* hydraData)
         for(int i=18;i<EHA_MAX;i++)
             hydraData->log_en_eha[i] = true;
         break;
+    case 5:  // single axis, torque filemotion
     case 4:  // single axis
         hydraData->log_en_eha[0] = true;
         hydraData->log_en_eha[1] = true;
