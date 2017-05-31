@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <math.h>
 
+
 //#include "CalcParallelJoint.h"
 #include "robot_hydra_id.h"
 #include "hydra_types.h"
@@ -76,6 +77,8 @@ walk::walk(){
     t = 0;
     t_plot = 0;
     t_before = 0;
+
+
     walk_log.open("log_walk", std::ios::out);//for debug
     zmp_plot.open("plot_zmp.csv", std::ios::out);
     zmp_plot << "t " << "zmp_des.x " << "zmp_des.y " << "zmp_act.x " << "zmp_act.y" << std::endl;
@@ -456,17 +459,14 @@ void walk::TaskPriority(){
 
     dq_ref.setZero();
     P = MatrixXd::Identity(HYDRA_JNT_MAX+1,HYDRA_JNT_MAX+1);
-//    dq_ref += NullSpace(World_Jacobian(COM_Jacobian(), p_0_com), dp_com_ref);//in case of "-0.1*Vector3d::UnitY()", it seems to work.
-    dq_ref += NullSpace(jnt[14].I_J_rot, omeg_body);//waist roll
+    dq_ref += NullSpace(World_Jacobian_lin(COM_Jacobian(), p_0_com), dp_com_ref);//in case of "-0.1*Vector3d::UnitY()", it seems to work.
+    dq_ref += NullSpace(World_Jacobian_rot(jnt[14].I_J_rot), omeg_body);//waist roll
 
-//    dq_ref += NullSpace(World_Jacobian(jnt[fixed_joint_num].I_J_lin, jnt[fixed_joint_num].p_0_j), dp_fixed_leg_ref);
-    dq_ref += NullSpace(World_Jacobian(jnt[moving_joint_num].I_J_lin, jnt[moving_joint_num].p_0_j), dp_moving_leg_ref);
-//    dq_ref += NullSpace(jnt[fixed_joint_num].I_J_lin, dp_fixed_leg_ref);
-//    dq_ref += NullSpace(jnt[moving_joint_num].I_J_lin, dp_moving_leg_ref);
-
+//    dq_ref += NullSpace(World_Jacobian_lin(jnt[fixed_joint_num].I_J_lin, jnt[fixed_joint_num].p_0_j), dp_fixed_leg_ref);
+    dq_ref += NullSpace(World_Jacobian_lin(jnt[moving_joint_num].I_J_lin, jnt[moving_joint_num].p_0_j), dp_moving_leg_ref);
 
 //    dq_ref += NullSpace(jnt[fixed_joint_num].I_J_rot, omeg_fixed_leg_ref);//don't use
-    dq_ref += NullSpace(jnt[moving_joint_num].I_J_rot, omeg_moving_leg_ref);//don't use
+    dq_ref += NullSpace(World_Jacobian_rot(jnt[moving_joint_num].I_J_rot), omeg_moving_leg_ref);
 
 //    dq_ref += NullSpace(jnt[23].I_J_lin, dp_rhand_ref);
 //    dq_ref += NullSpace(jnt[31].I_J_lin, dp_lhand_ref);
@@ -474,18 +474,16 @@ void walk::TaskPriority(){
     q_ref =  q_ref + dq_ref*dt_loop;
 
     if(step_count >= 4){
-        q_ref.setZero();
+//        q_ref.setZero();
     }
 
         walk_log << "t = " << t << std::endl;
-//        walk_log << "dp_moving_leg_ref = " << dp_moving_leg_ref << std::endl;
-//        walk_log << "dp_fixed_leg_ref = " << dp_fixed_leg_ref << std::endl;
+        walk_log << "dt_loop = " << dt_loop << std::endl;
+//        walk_log << "fixed_leg_num = " << fixed_joint_num << std::endl;
 //        walk_log << "x_zmp_act = " << x_zmp_act << std::endl;
 //        walk_log << "x_zmp_des = " << x_zmp_des << std::endl;
 //        walk_log << "p_com_act = " << p_com_act << std::endl;
 //        walk_log << "jnt[0].R_W_j = " << jnt[0].R_W_j << std::endl;
-        walk_log << "jnt[12].p_0_j = " << jnt[12].p_0_j << std::endl;
-        walk_log << "jnt[12].p_W_j = " << jnt[12].p_W_j << std::endl;
 //        walk_log << "jnt[6].R_W_j = " << jnt[6].R_W_j << std::endl;
 }
 #if 0

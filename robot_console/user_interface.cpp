@@ -612,6 +612,20 @@ void *servo_ui(void *param)
                 ofs << "file motion run disabled" << std::cout;
             }
             break;
+
+        //2017/05/12 murotani
+        case 'w':
+            if((hydraData->flags["interp_ready"])&&(!hydraData->flags["walking_run"])) {
+                hydraData->flags["interp_run"] = false;
+                ofs << "interporation disabled" << std::endl;
+                hydraData->flags["walking_run"] = true;
+                ofs << "walking run enabled" << std::endl;
+            } else {
+                hydraData->flags["walking_run"] = false;
+                ofs << "walking run disabled" << std::endl;
+            }
+            break;
+        //2017/05/12 murotani
 /*
         case 'l':
         {

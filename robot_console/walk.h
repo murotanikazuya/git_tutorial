@@ -41,9 +41,10 @@ public:
     void ZMPcalculate();
     void COMcalculate();
     MatrixXd COM_Jacobian();
-    MatrixXd World_Jacobian(const MatrixXd &J, const Vector3d &p_0_j);
+    MatrixXd World_Jacobian_lin(const MatrixXd &J, const Vector3d &p_0_j);
+    MatrixXd World_Jacobian_rot(const MatrixXd &J);
     void CPcalculate();
-    void t_update(double time);
+    void t_update();
 
     //mathmatical function
     MatrixXd PseudoInverse(const MatrixXd& m);
@@ -59,6 +60,8 @@ private:
     double t;
     double t_plot;
     double t_before;
+    std::chrono::system_clock::time_point t_start;
+    std::chrono::system_clock::time_point t_end;
 
     //walking parameters
     const double dT_step = 0.6;
@@ -73,7 +76,7 @@ private:
     const double leg_front = 0.2;
     const double leg_back = -0.1;
     const double leg_height = 0.03;
-    const double step_height = 0.1;
+    const double step_height = 0.03;
 
     //CP_control parameters
     int step_count = 0;
@@ -183,10 +186,16 @@ inline void walk::CPcalculate(){
     cp_plot << x_cp_act.transpose() << std::endl;
 }
 
-inline MatrixXd walk::World_Jacobian(const MatrixXd &J, const Vector3d &p_0_j){
+inline MatrixXd walk::World_Jacobian_lin(const MatrixXd &J, const Vector3d &p_0_j){
     MatrixXd World_J;
     World_J = jnt[0].R_W_j*(J - jnt[fixed_joint_num].I_J_lin + sqew_symmetric(p_0_j - jnt[fixed_joint_num].p_0_j)*(jnt[fixed_joint_num].I_J_rot));
     return World_J;
+}
+
+inline MatrixXd walk::World_Jacobian_rot(const MatrixXd &J){
+    MatrixXd World_J_rot;
+    World_J_rot = jnt[0].R_W_j*(J - jnt[fixed_joint_num].I_J_rot);
+    return World_J_rot;
 }
 
 /*inline VectorXd walk::q_act(){
@@ -214,9 +223,19 @@ inline Matrix3d walk::sqew_symmetric(Vector3d vector){
     return A;
 }
 
-inline void walk::t_update(double time){
-    dt_loop = time - t_before;
-    dt_loop = 1e-3;///////////////////////////////////////
+inline void walk::t_update(){
+    t_end = std::chrono::system_clock::now();
+    if(t == 0 && step_count == 0){
+        dt_loop = 1e-3;
+    }else{
+        dt_loop = 1e-3*std::chrono::duration_cast<std::chrono::milliseconds>(t_end-t_start).count();
+    }
+    t_start = t_end;
+
+    dt_loop = 2e-3;
+
+//    dt_loop = time - t_before;
+//    dt_loop = 1e-3;///////////////////////////////////////
     t += dt_loop;
     t_plot += dt_loop;
     t_before = t;

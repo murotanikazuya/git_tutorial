@@ -43,6 +43,8 @@
 #include "chydradatalogger.h"
 
 #include "cipcomm.h"
+
+#include "walk.h"
 CIPComm   *p_comm = NULL;
 
 #define BUF_SIZE          8192
@@ -129,8 +131,9 @@ double JointAbsPos[31][3];
 #define IK_GAIN_LARM   0.01;
 
 
-#include "kinematics/chydrakinematics.h"
-CHydraKinematics hydra_kinematics;
+//#include "kinematics/chydrakinematics.h" //murotani 2017/05/04
+//CHydraKinematics hydra_kinematics;//2017/05/12
+walk hydra_walk;//2017/05/12
 
 #define INTERP_LEN 10000 // 1000[Hz] * 10[sec]
 #define SMOOTH_SLOW
@@ -542,7 +545,6 @@ int main(int argc,char *argv[])
 
         //hydraData->IncrementIndex();
 
-
 #ifdef USE_RTP
 //        p_rtp_comm->Poll();
 #endif
@@ -580,13 +582,16 @@ int main_func(CthreadData* hydraData)
 
     cnt++;
 
-    hydra_kinematics.SetJointPosition(hydraData->jnt.act.pos.data());
-    hydra_kinematics.ForwardKinematics();
-    hydra_kinematics.GetJointTorque(all_joint_tau_fk);
-    hydra_kinematics.GetJointAbsPos(JointAbsPos);
-
-
-
+    hydra_walk.SetJointPosition(hydraData->jnt.act.pos.data());
+    hydra_walk.SetJointVelocity(hydraData->jnt.act.vel.data());//2017/05/10 murotani
+    hydra_walk.SetIMUacc(hydraData->imu.acc.data());//2017/05/10 murotani
+    hydra_walk.SetIMUgyro(hydraData->imu.gyro.data());//2017/05/10 murotani    
+    hydra_walk.SetForceSensor(0, hydraData->fs.right.wrench.data());
+    hydra_walk.SetForceSensor(1, hydraData->fs.left.wrench.data());
+//    hydra_walk.ForwardKinematics_imu();
+    hydra_walk.ForwardKinematics_from_body();
+//    hydra_walk.GetJointTorque(all_joint_tau_fk);//comment out 2017/05/12 murotani
+//    hydra_walk.GetJointAbsPos(JointAbsPos);//comment out 2017/05/12 murotani
 
     // 指令値の設定
     if(hydraData->flags["interp_run"]) {
@@ -652,6 +657,10 @@ int main_func(CthreadData* hydraData)
             fprintf(fp_log, "filemotion end\n");
             //ofs<<"Interpolation end"<<std::endl;
         }
+    }else if(hydraData->flags["walking_run"]){//2017/05/12 murotani
+        hydra_walk.t_update();
+        hydra_walk.walkingcontroll();//2017/05/12 murotani
+        hydra_walk.writeReference_pos(hydraData->jnt.ref_raw.pos.data());//2017/05/12 murotani
     }
     /*
     else if(hydraData->grasp_run) {
@@ -784,8 +793,14 @@ int initialize(CthreadData* hydraData)
     for(int i=0; i<HYDRA_JNT_MAX; i++){
         all_joint_finalpos[i] = 0;
     }
-    all_joint_finalpos[JOINT_HYDRA_RWRIST_YAW] = M_PI / 2.0;
-    all_joint_finalpos[JOINT_HYDRA_LWRIST_YAW] = -M_PI / 2.0;
+    //all_joint_finalpos[JOINT_HYDRA_RWRIST_YAW] = M_PI / 2.0;
+    //all_joint_finalpos[JOINT_HYDRA_LWRIST_YAW] = -M_PI / 2.0;
+    all_joint_finalpos[1] = -M_PI/12;//r_hip_pitch
+    all_joint_finalpos[3] = M_PI/6;//r_knee
+    all_joint_finalpos[5] = -M_PI/12;//r_ankle_pitch
+    all_joint_finalpos[7] = -M_PI/12;//l_hip_pitch
+    all_joint_finalpos[9] = M_PI/6;//l_knee
+    all_joint_finalpos[11] = -M_PI/12;//l_ankle_pitch
 
     switch(control_mode){
     case 1:  // wholebody

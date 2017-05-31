@@ -12,6 +12,7 @@ CthreadData:: CthreadData()
     flags["logging_newfile"] = false;
     flags["filetorque_en"] = false;
     flags["skip_jntcnv"] = false; // for single axis, skip joint <-> eha conversion
+    flags["walking_run"] = false;//2017/05/12 murotani
 
     for(int i=0;i<HYDRA_JNT_MAX;i++)
         log_en_jnt[i] = false;
