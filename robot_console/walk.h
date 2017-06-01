@@ -124,7 +124,7 @@ private:
     Vector3d dp_fixed_leg_ref;
     Vector3d omeg_fixed_leg_ref;
 
-    Matrix3d Kp_com = 0.3*Matrix3d::Identity();//maybe fixed to Matrix3d
+    Matrix3d Kp_com = 0*Matrix3d::Identity();//maybe fixed to Matrix3d
     Vector3d omeg_body;
     Matrix3d R_body_ref;
     Matrix3d Ko_body = 2*Matrix3d::Identity();
@@ -232,7 +232,7 @@ inline void walk::t_update(){
     }
     t_start = t_end;
 
-    dt_loop = 2e-3;
+    dt_loop = 1e-3;
 
 //    dt_loop = time - t_before;
 //    dt_loop = 1e-3;///////////////////////////////////////

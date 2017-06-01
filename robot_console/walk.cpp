@@ -404,7 +404,7 @@ void walk::OperationalSpace(){
     omeg_body = -Ko_body*(e_des.w()*e_act_eps - e_act.w()*e_des_eps + sqew_symmetric(e_des_eps)*e_act_eps);
 
     //moving_leg; (need to consider posture
-    Vector3d step1(STEP[0].x(), STEP[0].y(), leg_height);
+    Vector3d step1(STEP[1].x(), STEP[1].y(), leg_height);
     if(step_count == 0){
         dp_moving_leg_ref = Kp_moving_leg*(step1 - jnt[moving_joint_num].p_W_j);
 //        dp_moving_leg_ref = jnt[moving_joint_num].v_W_j + dt_loop*(3*(step1 - jnt[moving_joint_num].p_W_j) - 0.5*jnt[moving_joint_num].v_W_j);
@@ -473,8 +473,8 @@ void walk::TaskPriority(){
 
     q_ref =  q_ref + dq_ref*dt_loop;
 
-    if(step_count >= 4){
-//        q_ref.setZero();
+    if(step_count >= 5){
+        q_ref.setZero();
     }
 
         walk_log << "t = " << t << std::endl;

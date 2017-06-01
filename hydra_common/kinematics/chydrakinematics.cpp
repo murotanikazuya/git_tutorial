@@ -1,6 +1,9 @@
 #include "chydrakinematics.h"
 #include "hydra_kinematics.h"
 #include "hydra_types.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 CHydraKinematics::CHydraKinematics()
 {
@@ -23,6 +26,7 @@ CHydraKinematics::CHydraKinematics()
         jnt[i].s_j_j.z() = sij[i][2];
         jnt[i].m         = mass[i];
         jnt[i].num_parent = parent[i][0];
+        jnt[i].parent_id = parent[i][1];
         for(int j=0; j<jnt[i].num_parent; j++){
             jnt[i].parent[j] = &jnt[parent[i][j+1]];
         }
@@ -31,10 +35,20 @@ CHydraKinematics::CHydraKinematics()
             jnt[i].child[j] = &jnt[child[i][j+1]];
         }
 
-        jnt[i].I_J_lin.resize(3,58+6);
+        jnt[i].I_J_lin.resize(3,HYDRA_JNT_MAX+1);//58+6 -> HYDRA_JNT_MAX 2017/05/17 murotani
         jnt[i].I_J_lin.setZero();
-        jnt[i].I_J_rot.resize(3,58+6);
+        jnt[i].I_J_rot.resize(3,HYDRA_JNT_MAX+1);//58+6 -> HYDRA_JNT_MAX 2017/05/17 murotani
         jnt[i].I_J_rot.setZero();
+
+        //2017/05/12 murotani
+        for(int j=0; j<3; j++){
+            for(int k=0; k<3; k++){
+                jnt[i].I_j_j(j,k) = Iii[i][j][k];
+            }
+        }
+//        log_kinema.open("log_kinema", std::ios::out);
+//        log_kinema << "opened" << std::endl;
+        //2017/05/12 murotani
     }
 }
 CHydraKinematics::~CHydraKinematics()
@@ -50,13 +64,72 @@ void CHydraKinematics::SetJointPosition(double q[])
     }
 }
 
-void CHydraKinematics::ForwardKinematics()
+void CHydraKinematics::SetJointVelocity(double dq[])//2017/05/10 murotani
 {
-    int i, j, j1, j2, j3;
-    jnt[0].R_i_ij = jnt[0].R_i_ij_ini * AngleAxisd(jnt[0].q_ij, Vector3d::UnitZ());//Rodrigues( Vector3d::UnitZ(), jnt[0].q_ij);
-    jnt[0].R_0_j  = jnt[0].R_i_ij;
-    jnt[0].p_0_ij = jnt[0].R_0_j * jnt[0].p_i_ij;
-    jnt[0].p_0_j  = jnt[0].p_0_ij;
+    for(int i=0; i<HYDRA_JNT_MAX; i++)
+    {
+        jnt[i+1].dq_ij = dq[i];
+    }
+}
+
+void CHydraKinematics::SetIMUacc(double acc[])//2017/05/10 murotani
+{
+    for(int i=0; i<3; i++){
+        imu.acc[i] = acc[i];
+    }
+    imu.acc = jnt[0].R_W_j*imu.acc;//2017/05/15 murotani
+}
+
+void CHydraKinematics::SetIMUgyro(double gyro[])//2017/05/10 murotani
+{
+    for(int i=0; i<3; i++){
+        imu.gyro[i] = gyro[i];
+    }
+    imu.gyro = jnt[0].R_W_j*imu.gyro;//2017/05/15 murotani
+}
+
+void CHydraKinematics::SetForceSensor(int i, float force[]){
+    for(int j=0; j<3; j++){
+        FTsensor[i].force(j) = force[j];
+        FTsensor[i].torque(j) = force[j+3];
+    }
+}
+
+void CHydraKinematics::ForwardKinematics_imu(){//not yet completed
+    jnt[0].R_i_ij = Rodrigues(imu.gyro, dt_loop) * jnt[0].R_W_j;////////////////////////////////////incorrect.
+    jnt[0].v_W_ij += imu.acc*dt_loop;//need to consider gravity
+    jnt[0].v_W_j = jnt[0].v_W_ij;
+    jnt[0].p_W_ij += jnt[0].v_W_j*dt_loop;
+    jnt[0].p_W_j = jnt[0].p_W_ij;
+    jnt[0].omeg_W_j = imu.gyro;
+
+    jnt[0].R_W_j  = jnt[0].R_i_ij;
+    jnt[0].p_W_j  = jnt[0].p_W_ij;
+
+    jnt[0].s_W_jj = jnt[0].R_W_j * jnt[0].s_j_j;
+    jnt[0].s_W_j  = jnt[0].p_W_j + jnt[0].s_W_jj;
+
+    for(int i=1; i<58; i++)
+    {
+        jnt[i].R_i_ij = jnt[i].R_i_ij_ini * AngleAxisd(jnt[i].q_ij,Vector3d::UnitZ());
+
+        jnt[i].R_W_j  = jnt[i].parent[0]->R_W_j * jnt[i].R_i_ij;
+        jnt[i].p_W_ij = jnt[i].parent[0]->R_W_j * jnt[i].p_i_ij;
+        jnt[i].p_W_j  = jnt[i].parent[0]->p_W_j + jnt[i].p_W_ij;
+
+        jnt[i].v_W_j = jnt[i].parent[0]->v_W_j + jnt[i].parent[0]->omeg_W_j.cross(jnt[i].p_W_ij);
+        jnt[i].omeg_W_j = jnt[i].parent[0]->omeg_W_j + jnt[i].parent[0]->R_W_j*jnt[i].R_i_ij_ini*Vector3d::UnitZ()*jnt[i].dq_ij;
+    }
+}
+
+void CHydraKinematics::ForwardKinematics_from_body()
+{
+    int i;
+    jnt[0].v_0_j.setZero();
+    jnt[0].p_0_j.setZero();
+    jnt[0].omeg_0_j.setZero();
+
+    jnt[0].R_0_j  = Matrix3d::Identity();
 
     jnt[0].s_0_jj = jnt[0].R_0_j * jnt[0].s_j_j;
     jnt[0].s_0_j  = jnt[0].p_0_j + jnt[0].s_0_jj;
@@ -69,18 +142,17 @@ void CHydraKinematics::ForwardKinematics()
         jnt[i].R_0_j  = jnt[i].parent[0]->R_0_j * jnt[i].R_i_ij;
         jnt[i].p_0_ij = jnt[i].parent[0]->R_0_j * jnt[i].p_i_ij;
         jnt[i].p_0_j  = jnt[i].parent[0]->p_0_j + jnt[i].p_0_ij;
-#if 0
-        jnt[i].R_0_j  = jnt[parent[i][1]].R_0_j * jnt[i].R_i_ij;
-        jnt[i].p_0_ij = jnt[parent[i][1]].R_0_j * jnt[i].p_i_ij;
-        jnt[i].p_0_j  = jnt[parent[i][1]].p_0_j + jnt[i].p_0_ij;
-#endif
+
         jnt[i].s_0_jj = jnt[i].R_0_j * jnt[i].s_j_j;
         jnt[i].s_0_j  = jnt[i].p_0_j + jnt[i].s_0_jj;
+
+        jnt[i].v_0_j = jnt[i].parent[0]->v_0_j + jnt[i].parent[0]->omeg_0_j.cross(jnt[i].p_0_ij);//2017/05/12 murotani
+        jnt[i].omeg_0_j = jnt[i].parent[0]->omeg_0_j + jnt[i].parent[0]->R_0_j*jnt[i].R_i_ij_ini*Vector3d::UnitZ()*jnt[i].dq_ij;//2017/05/18 murotani
     }
 
 
     // Calculate jacobians
-    for(int i=1; i<58; i++){
+    for(int i=1; i<HYDRA_JNT_MAX; i++){//2017/05/12 murotani
         GetJointLinJac(i);
         GetJointRotJac(i);
     }
@@ -113,24 +185,94 @@ void CHydraKinematics::ForwardKinematics()
     }
 }
 
-void CHydraKinematics::GetJointLinJac(int joint){
-    jnt[joint].I_J_lin.block(0,0,3,3) = Matrix<double,3,3>::Identity();
-    int parent_i = -1;
-    for(int i = 0; i < jnt[joint].num_parent; ++i){
-        parent_i = parent[joint][1+i]; //jnt[joint].parent[i];
-        Vector3d a_0_ij = jnt[parent_i].R_0_j * jnt[parent_i].a_i_ij; // could probably be put into kinematics
-        Vector3d p_0_ij = jnt[joint].p_0_j - jnt[parent_i].p_0_j;
-        jnt[joint].I_J_lin.block(0,parent_i,3,1) = a_0_ij.cross(p_0_ij);
+void CHydraKinematics::ForwardKinematics_from_fixed_joint(int joint, Vector3d pos, Matrix3d R){
+//    int n = jnt[joint].parent_id;
+    int n = joint;
+    std::ofstream log_kinema;
+    log_kinema.open("log_kinema", std::ios::app);
+//    log_kinema << "n = " << n << std::endl;
+//    log_kinema << "joint = " << joint << std::endl;
+//    log_kinema << "pos = " << pos << std::endl;
+//    log_kinema << "R = " << R << std::endl;
+
+    Vector3d p_j_ji;
+    jnt[joint].v_W_j.setZero();
+    jnt[joint].omeg_W_j.setZero();
+    jnt[joint].p_W_j = pos;
+    jnt[joint].R_W_j = R;
+    jnt[joint].s_W_jj = jnt[joint].R_W_j * jnt[joint].s_j_j;
+    jnt[joint].s_W_j  = jnt[joint].p_W_j + jnt[joint].s_W_jj;
+
+    for(int i=0; i<58; i++){
+        jnt[i].R_i_ij = jnt[i].R_i_ij_ini * AngleAxisd(jnt[i].q_ij,Vector3d::UnitZ());
+    }
+
+    while(n > 0){//backward iteration for calculating body position/posture, velocity/angular velocity.
+        p_j_ji = -jnt[n].R_i_ij.transpose()*jnt[n].p_i_ij;
+
+        jnt[n].parent[0]->p_W_j = jnt[n].p_W_j + jnt[n].R_W_j*p_j_ji;
+        jnt[n].parent[0]->R_W_j = jnt[n].R_W_j*jnt[n].R_i_ij.transpose();
+
+//        jnt[n].s_W_jj = jnt[n].R_W_j * jnt[n].s_j_j;
+//        jnt[n].s_W_j  = jnt[n].p_W_j + jnt[n].s_W_jj;
+
+        jnt[n].parent[0]->v_W_j = jnt[n].v_W_j + jnt[n].omeg_W_j.cross(jnt[n].R_W_j*p_j_ji);
+        jnt[n].parent[0]->omeg_W_j = jnt[n].omeg_W_j + jnt[n].R_W_j*Vector3d::UnitZ()*jnt[n].dq_ij;
+        log_kinema << "jnt[" << n << "].parent[0]->R_W_j = " << jnt[n].parent[0]->R_W_j << std::endl;
+        n = jnt[n].parent_id;
+
+
+
+
+/*        p_j_ji = -jnt[n].child[0]->R_i_ij.transpose()*jnt[n].child[0]->p_i_ij;
+
+        jnt[n].p_W_j = jnt[n].child[0]->p_W_j + jnt[n].child[0]->R_W_j*p_j_ji;
+        jnt[n].R_W_j = jnt[n].child[0]->R_W_j*jnt[n].child[0]->R_i_ij.transpose();
+
+//        jnt[n].s_W_jj = jnt[n].R_W_j * jnt[n].s_j_j;
+//        jnt[n].s_W_j  = jnt[n].p_W_j + jnt[n].s_W_jj;
+
+        jnt[n].v_W_j = jnt[n].child[0]->v_W_j + jnt[n].child[0]->omeg_W_j.cross(jnt[n].child[0]->R_W_j*p_j_ji);
+        jnt[n].omeg_W_j = jnt[n].child[0]->omeg_W_j + jnt[n].child[0]->R_W_j*Vector3d::UnitZ()*jnt[n].child[0]->dq_ij;
+//        log_kinema << "jnt[" << n << "].R_W_j = " << jnt[n].R_W_j << std::endl;
+        n = jnt[n].parent_id;*/
+    }
+    for(int i=1; i<58; i++)
+    {
+        jnt[i].R_W_j  = jnt[i].parent[0]->R_W_j * jnt[i].R_i_ij;
+        jnt[i].p_W_ij = jnt[i].parent[0]->R_W_j * jnt[i].p_i_ij;
+        jnt[i].p_W_j  = jnt[i].parent[0]->p_W_j + jnt[i].p_W_ij;
+
+        jnt[i].s_W_jj = jnt[i].R_W_j * jnt[i].s_j_j;
+        jnt[i].s_W_j  = jnt[i].p_W_j + jnt[i].s_W_jj;
+
+        jnt[i].v_W_j = jnt[i].parent[0]->v_W_j + jnt[i].parent[0]->omeg_W_j.cross(jnt[i].p_W_ij);
+        jnt[i].omeg_W_j = jnt[i].parent[0]->omeg_W_j + jnt[i].parent[0]->R_W_j*jnt[i].R_i_ij_ini*Vector3d::UnitZ()*jnt[i].dq_ij;
     }
 }
 
-void CHydraKinematics::GetJointRotJac(int joint){
-    jnt[joint].I_J_rot.block(0,3,3,3) = Matrix<double,3,3>::Identity();
-    int parent_i = -1;
-    for(int i = 0; i < jnt[joint].num_parent; ++i){
-        parent_i = parent[joint][1+i]; //jnt[joint].parent[i];
-        Vector3d a_0_ij = jnt[parent_i].R_0_j * jnt[parent_i].a_i_ij;
-        jnt[joint].I_J_lin.block(0,parent_i,3,1) = a_0_ij;
+
+void CHydraKinematics::GetJointLinJac(int joint){//2017/05/12 murotani
+    Vector3d a_0_ij;
+    Vector3d p_0_ij;
+    int parent_i = parent[joint][1]; //jnt[joint].parent[i];
+    while(parent_i != 0){
+        a_0_ij = jnt[parent_i].parent[0]->R_0_j * jnt[parent_i].R_i_ij_ini*Vector3d::UnitZ();
+        p_0_ij = jnt[joint].p_0_j - jnt[parent_i].p_0_j;
+        jnt[joint].I_J_lin.col(parent_i) = a_0_ij.cross(p_0_ij);
+        parent_i = parent[parent_i][1];
+    }
+}
+
+void CHydraKinematics::GetJointRotJac(int joint){//2017/05/16 murotani
+    Vector3d a_0_ij;
+    a_0_ij = jnt[joint].parent[0]->R_0_j * jnt[joint].R_i_ij_ini*Vector3d::UnitZ();
+    jnt[joint].I_J_rot.col(joint) = a_0_ij;
+    int parent_i = parent[joint][1]; //jnt[joint].parent[i];
+    while(parent_i != 0){
+        a_0_ij = jnt[parent_i].parent[0]->R_0_j * jnt[parent_i].R_i_ij_ini*Vector3d::UnitZ();
+        jnt[joint].I_J_rot.col(parent_i) = a_0_ij;
+        parent_i = parent[parent_i][1];
     }
 }
 
@@ -144,21 +286,12 @@ MatrixXd CHydraKinematics::GetJrotTEST(int j){
 
 Matrix3d CHydraKinematics::Rodrigues(Vector3d w, double dt)
 {
-    Matrix3d R;
+    Matrix3d R = Matrix3d::Identity();
     Vector3d wn;
     Matrix3d w_dash;
-    double norm_w = sqrt(w(0)*w(0)+w(1)*w(1)+w(2)*w(2));
+    double norm_w = sqrt(w.dot(w));
     double theta = norm_w*dt;
 
-    R(0,0) = 1;
-    R(1,1) = 1;
-    R(2,2) = 1;
-    R(0,1) = 0;
-    R(0,2) = 0;
-    R(1,0) = 0;
-    R(1,2) = 0;
-    R(2,0) = 0;
-    R(2,1) = 0;
     if(norm_w != 0)
     {
         wn = w / norm_w;
@@ -174,9 +307,7 @@ Matrix3d CHydraKinematics::Rodrigues(Vector3d w, double dt)
 
         R = R + w_dash*sin(theta)+w_dash*w_dash*(1-cos(theta));
     }
-
     return R;
-
 }
 
 void CHydraKinematics::GetJointAbsPos(double pos[][3])
