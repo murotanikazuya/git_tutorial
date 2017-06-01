@@ -1,4 +1,0 @@
-INPUT                  = /home/murotani/ethercat/ecmaster_integration/robot_console/include
-IMAGE_PATH             = /home/murotani/ethercat/ecmaster_integration/robot_console/doc/pictures
-FILE_PATTERNS          = *.h *.idl
-
