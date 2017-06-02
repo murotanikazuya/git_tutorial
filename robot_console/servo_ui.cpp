@@ -478,7 +478,8 @@ int main(int argc,char *argv[])
     while(process_end_flg && rtn_main_func && thread_end_flg)
     {
         /* wait for semaphore to be released in realtime software */
-        ret = p_hydra_shm->WaitSemaphore();
+//        ret = p_hydra_shm->WaitSemaphore();//comment out 2017/06/02 murotani
+        ret = p_hydra_shm->PostSemaphore();//murotani 2017/06/02
         if (ret == -1)
         {
             perror("usc_ecat_work - sem_wait NG\n");

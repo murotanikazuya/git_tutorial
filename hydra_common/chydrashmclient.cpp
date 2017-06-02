@@ -246,6 +246,20 @@ int CHydraShmClient::WaitSemaphore(void)
 }
 */
 
+int CHydraShmClient::PostSemaphore(void)//murotani 2017/06/02
+{
+    int ret,semcnt;
+    ret = sem_post(semSync);
+    if (ret == -1){
+        return ret;
+    }
+    ret = sem_getvalue(semSync,&semcnt);
+    if (ret == -1){
+        return ret;
+    }
+    return semcnt;
+}
+
 int CHydraShmClient::WaitSemaphore(void)
 {
     int ret,semcnt;

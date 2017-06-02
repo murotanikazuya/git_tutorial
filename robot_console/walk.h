@@ -112,19 +112,19 @@ private:
     Vector3d dp_com_ref;
 
     //Operational_space parameters
-    Matrix3d Kp_moving_leg = 0*Matrix3d::Identity();
-    Matrix3d Ko_moving_leg = 0*Matrix3d::Identity();
+    Matrix3d Kp_moving_leg = 0.1*Matrix3d::Identity();
+    Matrix3d Ko_moving_leg = 0.1*Matrix3d::Identity();
 
     Vector3d dp_moving_leg_ref;
     Vector3d omeg_moving_leg_ref;
 
-    Matrix3d Kp_fixed_leg = 0*Matrix3d::Identity();
+//    Matrix3d Kp_fixed_leg = 0*Matrix3d::Identity();
 //    Matrix3d Ko_fixed_leg = 0.3*Matrix3d::Identity();
 
     Vector3d dp_fixed_leg_ref;
     Vector3d omeg_fixed_leg_ref;
 
-    Matrix3d Kp_com = 0*Matrix3d::Identity();//maybe fixed to Matrix3d
+    Matrix3d Kp_com = 0.3*Matrix3d::Identity();//maybe fixed to Matrix3d
     Vector3d omeg_body;
     Matrix3d R_body_ref;
     Matrix3d Ko_body = 2*Matrix3d::Identity();

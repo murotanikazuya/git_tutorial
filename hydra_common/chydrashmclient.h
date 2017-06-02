@@ -17,6 +17,7 @@ public:
     int WriteCommand(const joint_cmd_t jnt_cmd[], const eha_cmd_t eha_cmd[], const sensor_cmd_t sensor_cmd[]);
     int WriteCommand(CHydraDataManager* hydraData);
     int WriteCommand(CHydraData* hydraData);
+    int PostSemaphore(void);//murotani 2017/06/02
     int WaitSemaphore(void);
     int Sync(void);
 

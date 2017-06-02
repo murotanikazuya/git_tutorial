@@ -462,10 +462,8 @@ void walk::TaskPriority(){
     dq_ref += NullSpace(World_Jacobian_lin(COM_Jacobian(), p_0_com), dp_com_ref);//in case of "-0.1*Vector3d::UnitY()", it seems to work.
     dq_ref += NullSpace(World_Jacobian_rot(jnt[14].I_J_rot), omeg_body);//waist roll
 
-//    dq_ref += NullSpace(World_Jacobian_lin(jnt[fixed_joint_num].I_J_lin, jnt[fixed_joint_num].p_0_j), dp_fixed_leg_ref);
     dq_ref += NullSpace(World_Jacobian_lin(jnt[moving_joint_num].I_J_lin, jnt[moving_joint_num].p_0_j), dp_moving_leg_ref);
 
-//    dq_ref += NullSpace(jnt[fixed_joint_num].I_J_rot, omeg_fixed_leg_ref);//don't use
     dq_ref += NullSpace(World_Jacobian_rot(jnt[moving_joint_num].I_J_rot), omeg_moving_leg_ref);
 
 //    dq_ref += NullSpace(jnt[23].I_J_lin, dp_rhand_ref);
