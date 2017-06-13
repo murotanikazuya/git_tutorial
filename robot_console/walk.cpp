@@ -141,13 +141,13 @@ void walk::STEPset(){
     STEP[0].y() = 0.125;
     STEP[1].x() = 0;
     STEP[1].y() = -0.125;
-    STEP[2].x() = 0.2;
+    STEP[2].x() = 0;
     STEP[2].y() = 0.125;
-    STEP[3].x() = 0.4;
+    STEP[3].x() = 0;
     STEP[3].y() = -0.125;
-    STEP[4].x() = 0.6;
+    STEP[4].x() = 0;
     STEP[4].y() = 0.125;
-    STEP[5].x() = 0.6;
+    STEP[5].x() = 0;
     STEP[5].y() = -0.125;
 }
 
@@ -156,13 +156,13 @@ void walk::ZMPset(){
     ZMP[0].y() = 0;
     ZMP[1].x() = 0;
     ZMP[1].y() = -0.125;
-    ZMP[2].x() = 0.2;
+    ZMP[2].x() = 0;
     ZMP[2].y() = 0.125;
-    ZMP[3].x() = 0.4;
+    ZMP[3].x() = 0;
     ZMP[3].y() = -0.125;
-    ZMP[4].x() = 0.6;
+    ZMP[4].x() = 0;
     ZMP[4].y() = 0.125;
-    ZMP[5].x() = 0.6;
+    ZMP[5].x() = 0;
     ZMP[5].y() = 0;
 }
 
@@ -175,6 +175,16 @@ void walk::CPset(){//need to change
         i--;
     }
 }
+
+/*void walk::COMset(){
+    COM_ini[5] = ZMP[5];
+    int i = 4;
+    while(i > -1){
+        COM_eos[i] = COM_ini[i+1];
+        COM_ini[i] = (ZMP[i] - CP_ini[i])/2*exp(2*kappa*dT_step) + (COM_eos[i] - ZMP[i])*exp(kappa*dT_step) + (CP_ini[i] + ZMP[i])/2;
+        i--;
+    }
+}*/
 
 void walk::ZMPprojection(){
     int joint_num = 6;
@@ -349,17 +359,27 @@ void walk::COMcalculate(){
 }
 
 void walk::ZMPcalculate(){
-    double d = 0.02;///////////////////////////////////////////////////////////
+    Vector3d p_sensor(0, 0.09799998188, 0);
+    Vector3d a_sensor(1.000000, 0.000000, 0.000000);
+    Matrix3d R_sensor = Matrix3d::Identity()*AngleAxisd(1.570796, a_sensor);
+
+    double d = 0.001;///////////////////////////////////////////////////////////
     Vector3d x_zmp_R((-FTsensor[0].torque(1) - FTsensor[0].force(0)*d)/FTsensor[0].force(2), (FTsensor[0].torque(0) - FTsensor[0].force(1)*d)/FTsensor[0].force(2), 0);
     Vector3d x_zmp_L((-FTsensor[1].torque(1) - FTsensor[1].force(0)*d)/FTsensor[1].force(2), (FTsensor[1].torque(0) - FTsensor[1].force(1)*d)/FTsensor[1].force(2), 0);
+//    walk_log << t_plot << " " << x_zmp_R.x() << " "<<x_zmp_R.y()<<" " <<x_zmp_L.x()<< " " << x_zmp_L.y() << std::endl;
+//    walk_log << jnt[6].R_W_j << std::endl;
+
     //foot coordinate to world coordinate
     x_zmp_R = jnt[6].p_W_j + jnt[6].R_W_j*x_zmp_R;
+//    x_zmp_R = jnt[6].p_W_j + jnt[6].R_0_j*(p_sensor + R_sensor*x_zmp_R);
     x_zmp_L = jnt[12].p_W_j + jnt[12].R_W_j*x_zmp_L;
+//    x_zmp_L = jnt[12].p_W_j + jnt[12].R_0_j*(p_sensor + R_sensor*x_zmp_L);
     x_zmp_act.x() = (x_zmp_R.x()*FTsensor[0].force(2) + x_zmp_L.x()*FTsensor[1].force(2))/(FTsensor[0].force(2) + FTsensor[1].force(2));
     x_zmp_act.y() = (x_zmp_R.y()*FTsensor[0].force(2) + x_zmp_L.y()*FTsensor[1].force(2))/(FTsensor[0].force(2) + FTsensor[1].force(2));
 
-//    walk_log << "Right FTsensor = " << FTsensor[0].force << std::endl;
-//    walk_log << "Left FTsensor = " << FTsensor[1].force << std::endl;
+    walk_log << "Right FTsensor = " << FTsensor[0].force << std::endl;
+    walk_log << "Left FTsensor = " << FTsensor[1].force << std::endl;
+//    walk_log << t_plot << " " << x_zmp_R.x() << " "<<x_zmp_R.y()<<" " <<x_zmp_L.x()<< " " << x_zmp_L.y() << std::endl;
 
 }
 
@@ -473,16 +493,22 @@ void walk::TaskPriority(){
 
     if(step_count >= 5){
         q_ref.setZero();
+        q_ref[2] = -M_PI/12;//r_hip_pitch
+        q_ref[4] = M_PI/6;//r_knee
+        q_ref[6] = -M_PI/12;//r_ankle_pitch
+        q_ref[8] = -M_PI/12;//l_hip_pitch
+        q_ref[10] = M_PI/6;//l_knee
+        q_ref[12] = -M_PI/12;//l_ankle_pitch
     }
 
-        walk_log << "t = " << t << std::endl;
-        walk_log << "dt_loop = " << dt_loop << std::endl;
+//        walk_log << "t = " << t << std::endl;
+//        walk_log << "dt_loop = " << dt_loop << std::endl;
 //        walk_log << "fixed_leg_num = " << fixed_joint_num << std::endl;
 //        walk_log << "x_zmp_act = " << x_zmp_act << std::endl;
 //        walk_log << "x_zmp_des = " << x_zmp_des << std::endl;
 //        walk_log << "p_com_act = " << p_com_act << std::endl;
 //        walk_log << "jnt[0].R_W_j = " << jnt[0].R_W_j << std::endl;
-//        walk_log << "jnt[6].R_W_j = " << jnt[6].R_W_j << std::endl;
+//        walk_log << "jnt[fixed_joint].R_W_j = " << jnt[fixed_joint_num].R_W_j << std::endl;
 }
 #if 0
 void walk::TaskPriority(){

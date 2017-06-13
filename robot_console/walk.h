@@ -28,6 +28,7 @@ public:
     void STEPset();
     void ZMPset();
     void CPset();
+//    void COMset();
     void ZMPcontrol();
     void ZMPprojection();
     Vector3d moving_leg_path(double t, Vector2d x_fixed_leg_bef, Vector2d x_fixed_leg_next);
@@ -36,7 +37,7 @@ public:
     void OperationalSpace();
     Vector3d WorldtoBase_dp(Vector3d pos_act, Vector3d vel_des);
     void TaskPriority();
-//    VectorXd q_act();
+    VectorXd q_act();
     VectorXd NullSpace(const MatrixXd &J, const VectorXd &task);
     void ZMPcalculate();
     void COMcalculate();
@@ -67,7 +68,7 @@ private:
     const double dT_step = 0.6;
     const double dT_ech = 0.08;
     const double kf = 0.5;//force controll coefficient;
-    const double COM_height = 0.935;
+    const double COM_height = 0.867;
     const double waist_height = 1.11;
     const double Hydra_weight = 103;
     const double g = 9.8;
@@ -76,7 +77,7 @@ private:
     const double leg_front = 0.2;
     const double leg_back = -0.1;
     const double leg_height = 0.03;
-    const double step_height = 0.03;
+    const double step_height = 0.02;
 
     //CP_control parameters
     int step_count = 0;
@@ -84,6 +85,8 @@ private:
     Vector2d STEP[6];
     Vector2d CP_eos[6];
     Vector2d CP_ini[6];
+//    Vector2d COM_eos[6];
+//    Vector2d COM_ini[6];
     Vector2d x_cp_eos;
     Vector2d x_cp_0;
 //    Vector2d x_fixed_leg_bef;
@@ -112,8 +115,8 @@ private:
     Vector3d dp_com_ref;
 
     //Operational_space parameters
-    Matrix3d Kp_moving_leg = 0.1*Matrix3d::Identity();
-    Matrix3d Ko_moving_leg = 0.1*Matrix3d::Identity();
+    Matrix3d Kp_moving_leg = 0.2*Matrix3d::Identity();
+    Matrix3d Ko_moving_leg = 2*Matrix3d::Identity();
 
     Vector3d dp_moving_leg_ref;
     Vector3d omeg_moving_leg_ref;
@@ -147,6 +150,9 @@ inline void walk::ZMPcontrol(){
     double k1 = exp(kappa*dT_ech);
     double k2 = exp(kappa*t)*k1;
     x_zmp_des = 1/(1 - k1)*(k2*CP_ini[step_count] + (1 - k2)*ZMP[step_count]) - k1/(1 - k1)*x_cp_act;
+//    x_zmp_des = ZMP[step_count];
+//    x_zmp_des.x() = 0.001;
+//    x_zmp_des.y() = 0.1;
 
     //zmp_log
     zmp_plot << t_plot << " ";
@@ -156,6 +162,9 @@ inline void walk::ZMPcontrol(){
 
 inline void walk::COMgenerate(){
     ddx_com_des = kf*Hydra_weight*g/COM_height*(x_zmp_act - x_zmp_des);
+//    Vector2d x_com_ref = (CP_ini[step_count] - ZMP[step_count])/2*exp(kappa*dT_step) + (COM_ini[step_count] - (CP_ini[step_count] + ZMP[step_count])/2)*exp(-kappa*dT_step) + ZMP[step_count];
+//    ddx_com_des = g/COM_height*(x_com_ref - ZMP[step_count]) + kf*Hydra_weight*g/COM_height*(x_zmp_act - x_zmp_des);
+
     dx_com_des =  dx_com_act + ddx_com_des*dt_loop;
     x_com_des = x_com_act + dx_com_des*dt_loop;
 
@@ -198,14 +207,14 @@ inline MatrixXd walk::World_Jacobian_rot(const MatrixXd &J){
     return World_J_rot;
 }
 
-/*inline VectorXd walk::q_act(){
+inline VectorXd walk::q_act(){
     VectorXd q_act;
     q_act.resize(HYDRA_JNT_MAX+1);
     for(int i=0; i<HYDRA_JNT_MAX+1; i++){
         q_act(i) = jnt[i].q_ij;
     }
     return q_act;
-}*/
+}
 
 inline Matrix3d walk::sqew_symmetric(Vector3d vector){
     Matrix3d A;

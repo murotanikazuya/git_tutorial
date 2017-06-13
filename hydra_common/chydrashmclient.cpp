@@ -156,12 +156,12 @@ int CHydraShmClient::ReadStatus(CHydraData* hydraData)
     hydraData->fs.right.wrench[4] = SHM_HYDRA_FS_MY_IN(0, 0);
     hydraData->fs.right.wrench[5] = SHM_HYDRA_FS_MZ_IN(0, 0);
 
-    hydraData->fs.left.wrench[0] = SHM_HYDRA_FS_FX_IN(0, 0);
-    hydraData->fs.left.wrench[1] = SHM_HYDRA_FS_FY_IN(0, 0);
-    hydraData->fs.left.wrench[2] = SHM_HYDRA_FS_FZ_IN(0, 0);
-    hydraData->fs.left.wrench[3] = SHM_HYDRA_FS_MX_IN(0, 0);
-    hydraData->fs.left.wrench[4] = SHM_HYDRA_FS_MY_IN(0, 0);
-    hydraData->fs.left.wrench[5] = SHM_HYDRA_FS_MZ_IN(0, 0);
+    hydraData->fs.left.wrench[0] = SHM_HYDRA_FS_FX_IN(0, 1);
+    hydraData->fs.left.wrench[1] = SHM_HYDRA_FS_FY_IN(0, 1);
+    hydraData->fs.left.wrench[2] = SHM_HYDRA_FS_FZ_IN(0, 1);
+    hydraData->fs.left.wrench[3] = SHM_HYDRA_FS_MX_IN(0, 1);
+    hydraData->fs.left.wrench[4] = SHM_HYDRA_FS_MY_IN(0, 1);
+    hydraData->fs.left.wrench[5] = SHM_HYDRA_FS_MZ_IN(0, 1);
 
     hydraData->imu.gyro[0] = SHM_HYDRA_IMU_GYROX_IN(0);
     hydraData->imu.gyro[1] = SHM_HYDRA_IMU_GYROY_IN(0);
